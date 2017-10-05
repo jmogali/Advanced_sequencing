@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 #endif
 {
 #ifdef WINDOWS
-	size_t uiFrames = 8;
+	size_t uiFrames = 7;
 	size_t uiRobots = 2;
 	double dWidth = 6;
 	double dHeight = 4;
