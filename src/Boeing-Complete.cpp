@@ -20,13 +20,6 @@
 #include "Kosaraju_Algo.h"
 #include "Alternative_Graph.h"
 
-#ifdef WINDOWS
-#include <direct.h>
-#else 
-#include <sys/stat.h>
-#include <sys/types.h>
-#endif
-
 using namespace boost;
 using namespace std;
 
