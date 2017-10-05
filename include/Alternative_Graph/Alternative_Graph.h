@@ -91,8 +91,8 @@ class Alternative_Graph
 		inline size_t getArcCost(arc inp_arc) const { return m_vec_adj_set_out.at(inp_arc.first).at(inp_arc.second); };
 		inline bool containsPrecArc(arc inp_arc) const { return m_vec_adj_set_out.at(inp_arc.first).find(inp_arc.second) != m_vec_adj_set_out.at(inp_arc.first).end() ? true : false; };
 
-		const std::unordered_map<size_t, std::unordered_map<size_t, size_t>>& getGraph() { return m_vec_adj_set_out; }
-		const std::unordered_map<size_t, std::unordered_map<size_t, size_t>>& getReverseGraph() { return m_vec_adj_set_in; }
+		const std::unordered_map<size_t, std::unordered_map<size_t, size_t>>& getGraph() const { return m_vec_adj_set_out; }
+		const std::unordered_map<size_t, std::unordered_map<size_t, size_t>>& getReverseGraph() const { return m_vec_adj_set_in; }
 
 		void add_vertex_ownership_pos(size_t uiVtx, size_t uiRobot, size_t uiPos);
 		inline size_t get_vertex_ownership(size_t uiVtx) const { return m_map_vertex_robot_pos_map.at(uiVtx).first; };

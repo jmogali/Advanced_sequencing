@@ -156,11 +156,28 @@ bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_L
 
 bool CheckForPositiveLoops(const std::list<std::unordered_set<size_t>> &listComp, const Alternative_Graph &alt_graph)
 {
-	size_t uiVtx1, uiVtx2;
+	size_t uiVtx1, uiVtx2, uiRobot;
+	const auto& out_graph = alt_graph.getGraph();
+
 	for (auto it_list = listComp.begin(); it_list != listComp.end(); it_list++)
 	{
 		if (1 == it_list->size()) continue;
+
 		for (auto it_vtx1 = it_list->begin(); it_vtx1 != it_list->end(); it_vtx1++)
+		{
+			uiVtx1 = *it_vtx1;
+			uiRobot = alt_graph.get_vertex_ownership(uiVtx1);
+			
+			for (auto it_vtx2 = out_graph.at(uiVtx1).begin(); it_vtx2 != out_graph.at(uiVtx1).end(); it_vtx2++)
+			{
+				uiVtx2 = it_vtx2->first;
+				if (uiRobot == alt_graph.get_vertex_ownership(uiVtx2))
+				{
+					if (it_list->end() != it_list->find(uiVtx2)) return true;
+				}
+			}
+		}
+		/*for (auto it_vtx1 = it_list->begin(); it_vtx1 != it_list->end(); it_vtx1++)
 		{
 			uiVtx1 = *it_vtx1;
 			for (auto it_vtx2 = it_list->begin(); it_vtx2 != it_list->end(); it_vtx2++)
@@ -174,7 +191,7 @@ bool CheckForPositiveLoops(const std::list<std::unordered_set<size_t>> &listComp
 					if (0 < alt_graph.getArcCost(inp_arc))	return true;
 				}
 			}
-		}
+		}*/
 	}
 	return false;
 }
