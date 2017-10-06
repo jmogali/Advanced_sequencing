@@ -88,12 +88,15 @@ int main(int argc, char** argv)
 	Boeing_Fuesalage obj(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace, "DEFAULT");
 #ifdef WINDOWS
 	std::string strDatasetFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Dataset/";
+	std::string strPlotFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Graphical_Plots/";
 #else
 	std::string strDatasetFolder = "Dataset/";
+	std::string strDatasetFolder = "Graphical_Plots/";
 #endif	
 	
 	std::string strFolder = getFolderName(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace);
 	std::string strFilePath = generate_data(obj, strDatasetFolder, strFolder);
+	strPlotFolder += strFolder+"/";
 
 	cout << "Tag: File: " << strFolder << endl;
 
@@ -107,7 +110,7 @@ int main(int argc, char** argv)
 
 	Node_Partitions partition(graph);
 	Local_Search obj_ls(partition, graph);
-	obj_ls.perform_local_search();
+	obj_ls.perform_local_search(strPlotFolder);
 
 	cout << "Tag: \n\n\n";
 }

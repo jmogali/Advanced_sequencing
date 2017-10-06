@@ -1,5 +1,6 @@
 #include "Greedy_Heuristic.h"
 #include <iostream>
+#include "Sequence_Visualizer.h"
 
 void print_sequence(const std::vector<std::list<size_t>> &rob_seq)
 {
@@ -123,19 +124,30 @@ void Greedy_Heuristic::populate_root_node_info(State &root, const std::vector<st
 	}	
 }
 
-int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
+int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strFolder)
 {
+	Sequence_Visualization obj_vis;
 	clear_prev_info_buffers();
-	//print_sequence(rob_seq);
-
+	
 	bool bFeasible = perform_initializations(rob_seq);
-	if (false == bFeasible) { return -1; }
+	if (false == bFeasible) 
+	{ 
+		print_sequence(rob_seq);
+		obj_vis.plot_alternative_graph(strFolder , m_alt_graph);
+		return -1; 
+	}
 
 	State root(m_uiNumRobots);
 	populate_root_node_info(root , rob_seq);
 	int iRetVal = compute_DFS(root, 0, 0);
 	if (1 == iRetVal) { vectorize_schedule(rob_seq , vec_rob_sch); }
 	else { m_set_to_do_verts.clear(); }
+
+	if (-1 == iRetVal)
+	{
+		obj_vis.plot_alternative_graph(strFolder, m_alt_graph);
+		print_sequence(rob_seq);
+	}
 
 	return iRetVal;
 }

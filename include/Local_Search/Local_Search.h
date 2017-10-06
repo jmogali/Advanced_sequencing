@@ -30,7 +30,7 @@ class Local_Search
 		bool swap_intra_sequence(size_t uiRobot , std::vector<std::list<size_t>> &rob_seq);
 		bool string_cross_intra_sequence(size_t uiRobot, std::vector<std::list<size_t>> &rob_seq, bool bDist);
 		void convert_hole_seq_to_full_seq(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &full_rob_seq);
-		int perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
+		int perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolderPath);
 		int perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
 
 		void remove_holes_that_are_not_assigned_to_robots_from_enabler_seq(size_t c_uiNumRobots, std::vector<std::vector<size_t>> &vec_com_hole_par, std::vector<std::list<size_t>> &vec_rob_enab_seq);
@@ -39,7 +39,7 @@ class Local_Search
 
 	public:
 		Local_Search(const Node_Partitions &node_data, const Layout_LS &graph);
-		void perform_local_search();
+		void perform_local_search(std::string strFolderPath);
 };
 
 #endif

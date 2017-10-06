@@ -69,7 +69,7 @@ class Greedy_Heuristic
 		
 	public:
 		Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power);
-		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
+		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strFolder);
 };
 
 #endif

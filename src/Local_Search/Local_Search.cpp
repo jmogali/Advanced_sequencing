@@ -96,7 +96,7 @@ std::pair<bool, size_t> Local_Search::intra_rand_oper(std::vector<std::list<size
 	return std::make_pair(false , -1);
 }
 
-void Local_Search::perform_local_search()
+void Local_Search::perform_local_search(std::string strFolderPath)
 {
 	std::vector<std::list<size_t>> rob_seq;
 	generate_constructive_sequence(rob_seq);
@@ -154,7 +154,7 @@ void Local_Search::perform_local_search()
 			std::vector<std::vector<Vertex_Schedule>> full_rob_sch;
 			std::vector<std::vector<Vertex_Schedule>> full_rob_sch_old;
 
-			int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch);
+			int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strFolderPath);
 			int iRetVal_old = perform_greedy_scheduling_old(heur_old, rob_seq, full_rob_sch_old);
 			
 			if(iRetVal != iRetVal_old)
@@ -222,7 +222,7 @@ void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size
 	}
 }
 
-int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)
+int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolderPath)
 {
 	std::vector<std::list<size_t>> full_rob_seq;
 
@@ -235,7 +235,7 @@ int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, const std::v
 	convert_hole_seq_to_full_seq(rob_seq1, full_rob_seq);*/
 		
 	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
-	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch);
+	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch, strFolderPath);
 }
 
 int Local_Search::perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)

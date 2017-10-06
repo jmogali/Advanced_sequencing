@@ -98,7 +98,8 @@ class Alternative_Graph
 		inline size_t get_vertex_ownership(size_t uiVtx) const { return m_map_vertex_robot_pos_map.at(uiVtx).first; };
 		inline size_t get_vertex_position(size_t uiVtx) const { return m_map_vertex_robot_pos_map.at(uiVtx).second; };
 		//bool get_topological_order(size_t uiRobot1, size_t uiRobot2, std::list<size_t> &stack_topo_order) const;
-		std::pair<bool, size_t> get_best_preceding_arc(size_t uiVtx, size_t uiOtherRobot) const;			
+		std::pair<bool, size_t> get_best_preceding_arc(size_t uiVtx, size_t uiOtherRobot) const;	
+		friend class Sequence_Visualization;
 };
 
 #endif 
