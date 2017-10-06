@@ -106,9 +106,9 @@ bool add_enabling_cons(const std::vector<std::list<size_t>> &rob_seq, const Layo
 	for (size_t uiRobot = 0; uiRobot < uiNumRobots; uiRobot++)
 	{
 		std::unordered_set<size_t> set_dep_vert;
-		get_verts_not_self_enabled(uiRobot, set_dep_vert, rob_seq, layout_graph);
-		bFeasible = add_prec_arcs_for_dep_vert_of_job(uiRobot, set_dep_vert, rob_seq, layout_graph, alt_graph);
-		if (false == bFeasible) return false;
+		//get_verts_not_self_enabled(uiRobot, set_dep_vert, rob_seq, layout_graph);
+		//bFeasible = add_prec_arcs_for_dep_vert_of_job(uiRobot, set_dep_vert, rob_seq, layout_graph, alt_graph);
+		//if (false == bFeasible) return false;
 	}
 	return true;
 }

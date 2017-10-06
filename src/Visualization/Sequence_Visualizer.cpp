@@ -88,9 +88,9 @@ void Sequence_Visualization::plot_visted_states(std::string strFilePath, const A
 			uiVtx = *it_vert;
 			uiRobot = alt_graph.get_vertex_ownership(uiVtx);
 			uiPos = alt_graph.get_vertex_position(uiVtx);
-			visStateFile << uiPos << " " << uiRobot << "\n";
+			visStateFile << uiPos << " " << uiRobot << " " << "\n";
 		}
-		
+		visStateFile<<"\n";		
 	}
 	visStateFile.close();
 }
