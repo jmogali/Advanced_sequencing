@@ -133,7 +133,7 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 	if (false == bFeasible) 
 	{ 
 		print_sequence(rob_seq);
-		obj_vis.plot_alternative_graph(strFolder , m_alt_graph);
+		obj_vis.plot_alternative_graph(strFolder , m_alt_graph, m_map_states_feas);
 		return -1; 
 	}
 
@@ -145,7 +145,7 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 
 	if (-1 == iRetVal)
 	{
-		obj_vis.plot_alternative_graph(strFolder, m_alt_graph);
+		obj_vis.plot_alternative_graph(strFolder, m_alt_graph, m_map_states_feas);
 		print_sequence(rob_seq);
 #ifdef LINUX
 		exit(1);
