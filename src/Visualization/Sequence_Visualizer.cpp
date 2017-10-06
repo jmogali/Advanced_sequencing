@@ -21,7 +21,7 @@ void Sequence_Visualization::plot_alternative_graph(std::string strFolderPath, c
 void Sequence_Visualization::plot_enabling_cons_alt_graph(std::string strFilePath, const Alternative_Graph &alt_graph)
 {
 	const auto& graph = alt_graph.getGraph();
-	size_t uiVtx1, uiVtx2, uiPos1, uiPos2, uiRobot1, uiRobot2;
+	int uiVtx1, uiVtx2, uiPos1, uiPos2, uiRobot1, uiRobot2;
 	std::ofstream altGraphFile;
 
 	altGraphFile.open(strFilePath.c_str());
@@ -46,7 +46,7 @@ void Sequence_Visualization::plot_enabling_cons_alt_graph(std::string strFilePat
 
 void Sequence_Visualization::plot_coll_cons_alt_graph(std::string strFilePath, const Alternative_Graph &alt_graph)
 {
-	size_t uiVtx1, uiVtx2, uiPos1, uiPos2, uiRobot1, uiRobot2;
+	int uiVtx1, uiVtx2, uiPos1, uiPos2, uiRobot1, uiRobot2;
 	std::ofstream altGraphFile;
 	altGraphFile.open(strFilePath.c_str());
 	
@@ -67,4 +67,6 @@ void Sequence_Visualization::plot_coll_cons_alt_graph(std::string strFilePath, c
 	}
 	altGraphFile.close();
 }
+
+
 

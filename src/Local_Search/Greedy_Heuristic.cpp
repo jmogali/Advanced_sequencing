@@ -147,6 +147,9 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 	{
 		obj_vis.plot_alternative_graph(strFolder, m_alt_graph);
 		print_sequence(rob_seq);
+#ifdef LINUX
+		exit(1);
+#endif		
 	}
 
 	return iRetVal;

@@ -233,8 +233,11 @@ int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, const std::v
 	rob_seq1.push_back(r1);
 	rob_seq1.push_back(r2);
 	convert_hole_seq_to_full_seq(rob_seq1, full_rob_seq);*/
+	
+	full_rob_seq.push_back({0,44,4,69,11,243,17,388,18,421,27,638,28,658,23,535,20,449,6,125,19,435,16,367,21,472,5,94,12,264,14,312,13,282,7,140,10,211,8,163,9,668,1});
+	full_rob_seq.push_back({2,710,42,1549,39,1460,37,1404,40,1488,36,1376,41,1516,35,1344,38,1409,15,748,22,954,25,1045,29,1165,33,1279,30,1188,26,1070,24,1019,32,1253,34,1309,31,1233,43,1611,3});	
 		
-	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
+	//convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
 	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch, strFolderPath);
 }
 

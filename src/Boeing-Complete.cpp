@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 	std::string strPlotFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Graphical_Plots/";
 #else
 	std::string strDatasetFolder = "Dataset/";
-	std::string strDatasetFolder = "Graphical_Plots/";
+	std::string strPlotFolder = "Graphical_Plots/";
 #endif	
 	
 	std::string strFolder = getFolderName(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace);

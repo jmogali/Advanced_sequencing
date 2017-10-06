@@ -162,7 +162,7 @@ bool CheckForPositiveLoops(const std::list<std::unordered_set<size_t>> &listComp
 	for (auto it_list = listComp.begin(); it_list != listComp.end(); it_list++)
 	{
 		if (1 == it_list->size()) continue;
-
+		
 		for (auto it_vtx1 = it_list->begin(); it_vtx1 != it_list->end(); it_vtx1++)
 		{
 			uiVtx1 = *it_vtx1;
