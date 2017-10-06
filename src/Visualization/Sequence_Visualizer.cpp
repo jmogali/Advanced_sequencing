@@ -3,7 +3,7 @@
 Sequence_Visualization::Sequence_Visualization()
 {}
 
-void Sequence_Visualization::plot_alternative_graph(std::string strFolderPath, const Alternative_Graph &alt_graph)
+void Sequence_Visualization::plot_alternative_graph(std::string strFolderPath, const Alternative_Graph &alt_graph, const std::unordered_map<State, int, StateHasher>& map_visited_states)
 {
 #ifdef WINDOWS
 	_mkdir(strFolderPath.c_str());
@@ -16,6 +16,10 @@ void Sequence_Visualization::plot_alternative_graph(std::string strFolderPath, c
 
 	std::string strFileCollisions = strFolderPath + "collisions.dat";
 	plot_coll_cons_alt_graph(strFileCollisions, alt_graph);
+
+	std::string strFileVisStates = strFolderPath + "visited.dat";
+	plot_visted_states(strFileVisStates, alt_graph, map_visited_states);
+
 }
 
 void Sequence_Visualization::plot_enabling_cons_alt_graph(std::string strFilePath, const Alternative_Graph &alt_graph)
@@ -68,3 +72,25 @@ void Sequence_Visualization::plot_coll_cons_alt_graph(std::string strFilePath, c
 	altGraphFile.close();
 }
 
+void Sequence_Visualization::plot_visted_states(std::string strFilePath, const Alternative_Graph &alt_graph, const std::unordered_map<State, int, StateHasher>& map_visited_states)
+{
+	std::ofstream visStateFile;
+	size_t uiVtx, uiPos, uiRobot;
+	visStateFile.open(strFilePath.c_str());
+
+	for (auto it = map_visited_states.begin(); it != map_visited_states.end(); it++)
+	{
+		std::unordered_set<size_t> setvertices;
+		it->first.get_vertices(setvertices);
+		
+		for (auto it_vert = setvertices.begin(); it_vert != setvertices.end(); it_vert++)
+		{
+			uiVtx = *it_vert;
+			uiRobot = alt_graph.get_vertex_ownership(uiVtx);
+			uiPos = alt_graph.get_vertex_position(uiVtx);
+			visStateFile << uiPos << " " << uiRobot << "\n";
+		}
+		
+	}
+	visStateFile.close();
+}
