@@ -113,15 +113,27 @@ bool add_enabling_cons(const std::vector<std::list<size_t>> &rob_seq, const Layo
 	return true;
 }
 
-bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph)
+bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter)
 {
+	size_t uiPos = 0;
 	for (auto it1 = rob_seq[uiRobot1].begin(); it1 != rob_seq[uiRobot1].end(); it1++)
 	{
 		auto it12 = it1;
 		it12++;
 
-		for (auto it2 = rob_seq[uiRobot2].begin(); it2 != rob_seq[uiRobot2].end(); it2++)
+		auto pr1 = coll_filter.get_bounds(*it1, uiRobot2);
+		auto it2_start = rob_seq[uiRobot2].begin();
+		std::advance(it2_start, pr1.first);
+
+		auto it2_end = rob_seq[uiRobot2].begin();
+		std::advance(it2_end, pr1.second);
+		it2_end++;
+
+		for (auto it2 = it2_start; it2 != it2_end; it2++)
 		{
+			auto pr2 = coll_filter.get_bounds(*it2, uiRobot1);
+			if ((uiPos < pr2.first) || (uiPos > pr2.second)) continue;
+
 			if (layout_graph.areColliding(Coll_Pair(*it1, uiRobot1, *it2, uiRobot2)))
 			{
 				auto it22 = it2;
@@ -134,11 +146,12 @@ bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 				else if (bArc1 & bArc2) return false;				
 			}
 		}
+		uiPos++;
 	}
 	return true;
 }
 
-bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph)
+bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter)
 {
 	size_t uiNumRobots = layout_graph.get_num_robots();
 	bool bFeasible;
@@ -147,7 +160,7 @@ bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_L
 	{
 		for (size_t uiRobot2 = uiRobot1+1; uiRobot2 < uiNumRobots; uiRobot2++)
 		{
-			bFeasible = add_coll_cons_bet_pair_jobs(uiRobot1, uiRobot2, rob_seq, layout_graph, alt_graph);
+			bFeasible = add_coll_cons_bet_pair_jobs(uiRobot1, uiRobot2, rob_seq, layout_graph, alt_graph, coll_filter);
 			if (false == bFeasible) return false;
 		}
 	}
@@ -169,7 +182,7 @@ bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const
 	bFeasible = coll_filter.Check_Feasibility_Compute_Bounds_For_Each_Vertex(rob_seq, alt_graph);
 	if (false == bFeasible) return false;
 
-	bFeasible = add_coll_cons(rob_seq, layout_graph, alt_graph);
+	bFeasible = add_coll_cons(rob_seq, layout_graph, alt_graph, coll_filter);
 	if (false == bFeasible) return false;
 	return true;
 }
