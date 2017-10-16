@@ -226,34 +226,17 @@ void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size
 int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolderPath)
 {
 	std::vector<std::list<size_t>> full_rob_seq;
-
-	//For checking
-	/*std::vector<std::list<size_t>> rob_seq1;
-	std::list<size_t> r1{ 0, 4, 5, 13, 6, 11, 7, 8, 1 };
-	std::list<size_t> r2{ 2, 20, 19, 15, 21, 14, 16, 23, 9, 22, 10, 18, 17, 12, 3 };
-	rob_seq1.push_back(r1);
-	rob_seq1.push_back(r2);
-	convert_hole_seq_to_full_seq(rob_seq1, full_rob_seq);*/
+	//convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
 	
-	//full_rob_seq.push_back({0,44,4,69,11,243,17,388,18,421,27,638,28,658,23,535,20,449,6,125,19,435,16,367,21,472,5,94,12,264,14,312,13,282,7,140,10,211,8,163,9,668,1});
-	//full_rob_seq.push_back({2,710,42,1549,39,1460,37,1404,40,1488,36,1376,41,1516,35,1344,38,1409,15,748,22,954,25,1045,29,1165,33,1279,30,1188,26,1070,24,1019,32,1253,34,1309,31,1233,43,1611,3});	
-		
-	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
+	full_rob_seq.push_back({0,111,37,1936,38,1992,40,2103,43,2269,47,2484,45,2381,51,2708,54,2838,21,1059,25,1274,23,1166,24,1205,8,338,5,182,12,561,13,616,14,668,11,533,39,2033,26,1331,27,1387,29,1498,32,1664,36,1879,34,1771,35,1819,28,1435,22,1107,18,889,16,774,9,417,31,1615,41,2125,10,455,15,729,19,933,6,241,17,848,30,1562,42,2202,33,1690,7,283,4,136,20,1024,44,3131,1});
+	full_rob_seq.push_back({2,3156,48,4634,49,4697,46,4511,56,5163,58,5293,57,5247,77,6550,80,6745,79,6679,78,6616,81,6812,82,6880,85,7079,89,7341,91,7471,90,7404,88,7260,74,6347,71,6134,53,4972,62,5556,60,5452,87,7173,52,4920,75,6404,63,5627,67,5888,68,5954,69,6010,59,5383,83,6911,50,4787,72,6216,70,6099,84,6990,64,5681,55,5126,86,7129,73,6272,61,5496,66,5821,65,5766,76,7522,3});
+	
 	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch, strFolderPath);
 }
 
 int Local_Search::perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)
 {
 	std::vector<std::list<size_t>> full_rob_seq;
-
-	//For checking
-	/*std::vector<std::list<size_t>> rob_seq1;
-	std::list<size_t> r1{ 0, 4, 5, 13, 6, 11, 7, 8, 1 };
-	std::list<size_t> r2{ 2, 20, 19, 15, 21, 14, 16, 23, 9, 22, 10, 18, 17, 12, 3 };
-	rob_seq1.push_back(r1);
-	rob_seq1.push_back(r2);
-	convert_hole_seq_to_full_seq(rob_seq1, full_rob_seq);*/
-
 	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
 	return heur_old.compute_greedy_sol(full_rob_seq, full_rob_sch);
 }

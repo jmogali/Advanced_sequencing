@@ -63,7 +63,7 @@ bool Collision_Filtering::Check_Feasibility_Compute_Bounds_For_Each_Vertex(const
 	obj.compute_maximal_components(alt_graph.getGraph(), alt_graph.getReverseGraph(), m_list_Comp);
 	bool bFeasible = !(Check_Pos_Loop_Remove_1comp(alt_graph));
 	if (false == bFeasible) return false;
-
+	
 	construct_in_out_graphs(alt_graph);
 	Topological_sort_out_graph();	
 
