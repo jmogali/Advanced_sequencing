@@ -49,6 +49,7 @@ class Collision_Filtering
 	public:
 		Collision_Filtering() {};
 		bool Check_Feasibility_Compute_Bounds_For_Each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph);
+		std::pair<size_t, size_t> get_bounds(size_t uiVtx, size_t uiOtherRobot);
 };
 #endif
 
