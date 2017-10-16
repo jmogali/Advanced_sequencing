@@ -524,3 +524,10 @@ bool Collision_Filtering::check_bounds_validity(size_t uiRobot, const std::vecto
 	}
 	return true;
 }
+
+std::pair<size_t , size_t> Collision_Filtering::get_bounds(size_t uiVtx, size_t uiOtherRobot)
+{
+	auto it_find = m_map_bounds.at(uiVtx).find(uiOtherRobot);
+	assert(m_map_bounds.at(uiVtx).end() != it_find);
+	return it_find->second;
+}
