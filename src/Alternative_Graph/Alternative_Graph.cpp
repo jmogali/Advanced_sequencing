@@ -2,6 +2,7 @@
 #include "Kosaraju_Algo.h"
 #include <assert.h>
 #include <algorithm>
+#include "Windows_Linux.h"
 
 Arc_status::Arc_status(size_t uiVtx1, size_t uiVtx2) : m_arc(uiVtx1, uiVtx2), m_str_status(UNSELECTED)
 { }
@@ -66,6 +67,15 @@ Alternative_Graph::Alternative_Graph()
 
 void Alternative_Graph::add_prec_arc(size_t uiVtx1, size_t uiVtx2, size_t uiCost)
 {
+	if (m_vec_adj_set_out[uiVtx1].end() != m_vec_adj_set_out[uiVtx1].find(uiVtx2))
+	{
+#ifdef WINDOWS		
+		assert(false);	// need to analyze this state
+#else
+		exit(1);
+#endif
+	}
+
 	m_vec_adj_set_out[uiVtx1].emplace(uiVtx2 , uiCost);
 	m_vec_adj_set_in[uiVtx2].emplace(uiVtx1, uiCost);
 }

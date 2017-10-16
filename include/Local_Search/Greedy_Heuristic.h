@@ -5,6 +5,7 @@
 #include "Greedy_Heuristic_Utils.h"
 #include "Powerset.h"
 #include "Alternative_Graph.h"
+#include "Collision_Filtering.h"
 
 class Greedy_Heuristic
 {
@@ -21,6 +22,7 @@ class Greedy_Heuristic
 		std::unordered_map<State, int, StateHasher> m_map_states_feas;                       // -1 is infeasible, 0 if feasible
 		std::unordered_map<N_Ind, bool, IndHasher> m_map_self_enabling;
 		std::vector<std::unordered_map<N_Ind, ST_Time, IndHasher>> m_rob_hole_times;
+		Collision_Filtering m_coll_filter;
 		
 		bool perform_initializations(const std::vector<std::list<size_t>> &rob_seq);
 		void allocate_buffers(const std::vector<std::list<size_t>> &rob_seq);

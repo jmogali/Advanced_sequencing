@@ -154,57 +154,19 @@ bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_L
 	return true;
 }
 
-bool CheckForPositiveLoops(const std::list<std::unordered_set<size_t>> &listComp, const Alternative_Graph &alt_graph)
-{
-	size_t uiVtx1, uiVtx2, uiRobot;
-	const auto& out_graph = alt_graph.getGraph();
-
-	for (auto it_list = listComp.begin(); it_list != listComp.end(); it_list++)
-	{
-		if (1 == it_list->size()) continue;
-		
-		for (auto it_vtx1 = it_list->begin(); it_vtx1 != it_list->end(); it_vtx1++)
-		{
-			uiVtx1 = *it_vtx1;
-			uiRobot = alt_graph.get_vertex_ownership(uiVtx1);
-			
-			for (auto it_vtx2 = out_graph.at(uiVtx1).begin(); it_vtx2 != out_graph.at(uiVtx1).end(); it_vtx2++)
-			{
-				uiVtx2 = it_vtx2->first;
-				if (uiRobot == alt_graph.get_vertex_ownership(uiVtx2))
-				{
-					if (it_list->end() != it_list->find(uiVtx2)) return true;
-				}
-			}
-		}
-		/*for (auto it_vtx1 = it_list->begin(); it_vtx1 != it_list->end(); it_vtx1++)
-		{
-			uiVtx1 = *it_vtx1;
-			for (auto it_vtx2 = it_list->begin(); it_vtx2 != it_list->end(); it_vtx2++)
-			{
-				uiVtx2 = *it_vtx2;
-				if (uiVtx1 == uiVtx2) continue;
-				
-				arc inp_arc(uiVtx1, uiVtx2);
-				if (true == alt_graph.containsPrecArc(inp_arc))
-				{
-					if (0 < alt_graph.getArcCost(inp_arc))	return true;
-				}
-			}
-		}*/
-	}
-	return false;
-}
-
-bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph)
+bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter)
 {
 	bool bFeasible = add_enabling_cons(rob_seq, layout_graph, alt_graph);
 	if (false == bFeasible) return false;
 	
-	std::list<std::unordered_set<size_t>> listComp;
+	// Needs to be replaced
+	/*std::list<std::unordered_set<size_t>> listComp;
 	Kosaraju_Algo obj;
 	obj.compute_maximal_components(alt_graph.getGraph() , alt_graph.getReverseGraph(), listComp);
 	bFeasible = !(CheckForPositiveLoops(listComp, alt_graph));
+	if (false == bFeasible) return false;*/
+
+	bFeasible = coll_filter.Check_Feasibility_Compute_Bounds_For_Each_Vertex(rob_seq, alt_graph);
 	if (false == bFeasible) return false;
 
 	bFeasible = add_coll_cons(rob_seq, layout_graph, alt_graph);
@@ -216,7 +178,7 @@ bool Greedy_Heuristic::construct_Alt_Graph(const std::vector<std::list<size_t>> 
 {
 	m_alt_graph.allocate_buffer_for_graph(rob_seq);
 	construct_prec_graph_for_each_job(rob_seq, m_graph, m_alt_graph);
-	bool bFeasible = add_enabling_coll_cons(rob_seq, m_graph, m_alt_graph);
+	bool bFeasible = add_enabling_coll_cons(rob_seq, m_graph, m_alt_graph, m_coll_filter);
 	return bFeasible;
 }
 

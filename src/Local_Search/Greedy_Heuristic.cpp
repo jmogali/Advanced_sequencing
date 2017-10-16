@@ -49,9 +49,9 @@ Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &gra
 
 bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_t>> &rob_seq)
 {
-	allocate_buffers(rob_seq);	
 	bool bFeasible = construct_Alt_Graph_STN(rob_seq);
 	if (false == bFeasible) return false;
+	allocate_buffers(rob_seq);		
 	initialize_to_do_verts(rob_seq);
 	compute_NC_makespan(rob_seq);
 	return true;
@@ -132,8 +132,10 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 	bool bFeasible = perform_initializations(rob_seq);
 	if (false == bFeasible) 
 	{ 
+#ifdef PLOT_INFEASIBLE_CASES
 		print_sequence(rob_seq);
 		obj_vis.plot_alternative_graph(strFolder , m_alt_graph, m_map_states_feas);
+#endif
 		return -1; 
 	}
 
@@ -145,11 +147,10 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 
 	if (-1 == iRetVal)
 	{
+#ifdef PLOT_INFEASIBLE_CASES
 		obj_vis.plot_alternative_graph(strFolder, m_alt_graph, m_map_states_feas);
 		print_sequence(rob_seq);
-#ifdef LINUX
-		exit(1);
-#endif		
+#endif
 	}
 
 	return iRetVal;
@@ -231,7 +232,20 @@ int Greedy_Heuristic::make_selection_pos_and_check_if_feasible(size_t uiDepth, c
 	if (-1 == iRetVal) return -1;
 	
 	iRetVal = check_if_enabling_feasible(state);
-	if (2 == m_uiNumRobots) { assert(-1 != iRetVal); }
+	
+	// this condition because, for more robots enabling constraints are not necessarily precedence constraints
+	if (2 == m_uiNumRobots)
+	{ 
+#ifdef WINDOWS
+		assert(-1 != iRetVal); 
+#else
+		if (-1 == iRetVal)
+		{
+			cout << "Failed enabling constraints\n";
+			exit(1);
+		}
+#endif
+	}
 	return iRetVal;
 }
 

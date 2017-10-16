@@ -104,7 +104,7 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 	if (false == bValid) { cout << "Initial seq generated is invalid\n"; }
 
 	std::string strType;
-	size_t uiIter = 0, uiChoice, uiMakeSpan, uiBestSol = std::numeric_limits<size_t>::max();
+	size_t uiIter = 0, uiChoice, uiMakeSpan, uiMakeSpan_old, uiBestSol = std::numeric_limits<size_t>::max();
 	Power_Set power;
 	Greedy_Heuristic heur(m_node_data.m_uiNumRobots, m_graph, power);
 	Greedy_Heuristic_old heur_old(m_node_data.m_uiNumRobots, m_graph, power);
@@ -119,6 +119,7 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 		std::vector<std::list<size_t>> old_rob_seq = rob_seq;
 
 		uiMakeSpan = std::numeric_limits<size_t>::max();
+		uiMakeSpan_old = std::numeric_limits<size_t>::max();
 		bChange = uiIter== 0 ? true : false;
 		uiChoice = rand() % 2;
 		
@@ -156,21 +157,21 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 
 			int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strFolderPath);
 			int iRetVal_old = perform_greedy_scheduling_old(heur_old, rob_seq, full_rob_sch_old);
-			
-			if(iRetVal != iRetVal_old)
-			{
-				cout << "Error found";
-				exit(1);
-			}
-			//assert(iRetVal == iRetVal_old);
+
+#ifdef WINDOWS			
+			assert(iRetVal == iRetVal_old);
+#else LINUX
+			cout << "assert(iRetVal == iRetVal_old)";
+			exit(-1);
+#endif
 			uiMakeSpan = (iRetVal == 1) ? getMakeSpan_From_Schedule(full_rob_sch) : std::numeric_limits<size_t>::max();
+			uiMakeSpan_old = (iRetVal_old == 1) ? getMakeSpan_From_Schedule(full_rob_sch_old) : std::numeric_limits<size_t>::max();
 			if (uiBestSol > uiMakeSpan) {
 				uiBestSol = uiMakeSpan;
 			}
 
-			//if (1 == iRetVal) { print_schedule(full_rob_sch); }
-			cout << " Iteration: " << uiIter <<" , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") <<" , Makespan: " << uiMakeSpan << " , Best Sol: "<< uiBestSol<< endl;
-			//cout << (iRetVal == 1 ? "SUCCESS \n" : "UNSUCCESSFULL \n");			
+			//cout << " Iteration: " << uiIter <<" , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") <<" , Makespan: " << uiMakeSpan <<" , Best Sol: "<< uiBestSol<< endl;
+			cout << " Iteration: " << uiIter << " , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") << " , Makespan: " << uiMakeSpan << " , Old Makespan: " << uiMakeSpan_old << endl;
 			bSuccess = iRetVal == 1 ? true : false;			
 
 			if (uiIter == 0)
