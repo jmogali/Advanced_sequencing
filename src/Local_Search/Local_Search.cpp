@@ -160,7 +160,7 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 
 #ifdef WINDOWS			
 			assert(iRetVal == iRetVal_old);
-#else LINUX
+#else 
 			cout << "assert(iRetVal == iRetVal_old)";
 			exit(-1);
 #endif
