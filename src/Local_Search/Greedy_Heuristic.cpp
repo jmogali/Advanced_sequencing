@@ -126,9 +126,9 @@ void Greedy_Heuristic::populate_root_node_info(State &root, const std::vector<st
 
 int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strFolder)
 {
-#ifdef WINDOWS	
+#ifdef WINDOWS
 	print_sequence(rob_seq);
-#endif	
+#endif
 
 	Sequence_Visualization obj_vis;
 	clear_prev_info_buffers();
