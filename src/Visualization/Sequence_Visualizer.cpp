@@ -66,7 +66,9 @@ void Sequence_Visualization::plot_coll_cons_alt_graph(std::string strFilePath, c
 			uiRobot2 = (int) alt_graph.get_vertex_ownership(uiVtx2);
 			uiPos2 = (int) alt_graph.get_vertex_position(uiVtx2);
 
-			altGraphFile << uiPos1 << " " << uiRobot1 << " " << uiPos2 - uiPos1 << " " << uiRobot2 - uiRobot1 << "\n";
+			if(uiRobot2 < uiRobot1) continue;
+			
+			altGraphFile << uiPos1-1 << " " << uiRobot1 << " " << uiPos2 - uiPos1 + 1 << " " << uiRobot2 - uiRobot1 << "\n";			
 		}
 	}
 	altGraphFile.close();

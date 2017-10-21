@@ -156,22 +156,23 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 			std::vector<std::vector<Vertex_Schedule>> full_rob_sch_old;
 
 			int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strFolderPath);
-			int iRetVal_old = perform_greedy_scheduling_old(heur_old, rob_seq, full_rob_sch_old);
-
+			//int iRetVal_old = perform_greedy_scheduling_old(heur_old, rob_seq, full_rob_sch_old);
+						
 #ifdef WINDOWS			
 			assert(iRetVal == iRetVal_old);
 #else 
-			cout << "assert(iRetVal == iRetVal_old)";
-			exit(-1);
+			/*if(iRetVal != iRetVal_old)
+			{
+				cout<<"assert(iRetVal == iRetVal_old)";
+				exit(-1);
+			}*/
 #endif
 			uiMakeSpan = (iRetVal == 1) ? getMakeSpan_From_Schedule(full_rob_sch) : std::numeric_limits<size_t>::max();
-			uiMakeSpan_old = (iRetVal_old == 1) ? getMakeSpan_From_Schedule(full_rob_sch_old) : std::numeric_limits<size_t>::max();
-			if (uiBestSol > uiMakeSpan) {
-				uiBestSol = uiMakeSpan;
-			}
+			//uiMakeSpan_old = (iRetVal_old == 1) ? getMakeSpan_From_Schedule(full_rob_sch_old) : std::numeric_limits<size_t>::max();
+			if (uiBestSol > uiMakeSpan) uiBestSol = uiMakeSpan;
 
-			//cout << " Iteration: " << uiIter <<" , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") <<" , Makespan: " << uiMakeSpan <<" , Best Sol: "<< uiBestSol<< endl;
-			cout << " Iteration: " << uiIter << " , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") << " , Makespan: " << uiMakeSpan << " , Old Makespan: " << uiMakeSpan_old << endl;
+			cout << " Iteration: " << uiIter <<" , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") <<" , Makespan: " << uiMakeSpan <<" , Best Sol: "<< uiBestSol<< endl;
+			//cout << " Iteration: " << uiIter << " , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") << " , Makespan: " << uiMakeSpan << " , Old Makespan: " << uiMakeSpan_old << endl;
 			bSuccess = iRetVal == 1 ? true : false;			
 
 			if (uiIter == 0)
@@ -227,10 +228,8 @@ int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, const std::v
 {
 	std::vector<std::list<size_t>> full_rob_seq;
 	//convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
-	
 	full_rob_seq.push_back({0,111,37,1936,38,1992,40,2103,43,2269,47,2484,45,2381,51,2708,54,2838,21,1059,25,1274,23,1166,24,1205,8,338,5,182,12,561,13,616,14,668,11,533,39,2033,26,1331,27,1387,29,1498,32,1664,36,1879,34,1771,35,1819,28,1435,22,1107,18,889,16,774,9,417,31,1615,41,2125,10,455,15,729,19,933,6,241,17,848,30,1562,42,2202,33,1690,7,283,4,136,20,1024,44,3131,1});
 	full_rob_seq.push_back({2,3156,48,4634,49,4697,46,4511,56,5163,58,5293,57,5247,77,6550,80,6745,79,6679,78,6616,81,6812,82,6880,85,7079,89,7341,91,7471,90,7404,88,7260,74,6347,71,6134,53,4972,62,5556,60,5452,87,7173,52,4920,75,6404,63,5627,67,5888,68,5954,69,6010,59,5383,83,6911,50,4787,72,6216,70,6099,84,6990,64,5681,55,5126,86,7129,73,6272,61,5496,66,5821,65,5766,76,7522,3});
-	
 	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch, strFolderPath);
 }
 

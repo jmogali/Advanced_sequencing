@@ -2,7 +2,7 @@ reset
 set xlabel "Breadth (In meters)"
 set ylabel "Diameter (In meters)"
 
-set xrange [-0.5:25]
+set xrange [-0.5:30]
 set yrange [-0.5:2.5]
 
 set term png
