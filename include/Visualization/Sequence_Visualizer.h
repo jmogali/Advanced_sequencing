@@ -6,7 +6,7 @@
 #include "Greedy_Heuristic_Utils.h"
 #include <fstream>
 
-#define PLOT_INFEASIBLE_CASES
+//#define PLOT_INFEASIBLE_CASES
 
 class Sequence_Visualization
 {
