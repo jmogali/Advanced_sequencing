@@ -6,6 +6,6 @@
 
 const size_t c_uiMax_SE_Length = 2;
 const size_t c_uiLate_Acceptace_Length = 100;
-const size_t LS_SEARCH_TIME = 600;
+const size_t LS_SEARCH_TIME = 6000;
 
 #endif

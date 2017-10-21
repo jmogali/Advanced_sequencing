@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 	double dWidth = 6;
 	double dHeight = 4;
 	double dHorSpace = 0.1;
-	double dVertSpace = 2.0;
+	double dVertSpace = 1.0;
 #else
 	size_t uiFrames = (size_t) atoi(argv[1]);
 	size_t uiRobots = (size_t)atoi(argv[2]);

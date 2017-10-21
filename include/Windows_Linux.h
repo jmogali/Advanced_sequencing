@@ -2,8 +2,8 @@
 #ifndef WINDOWS_LINUX_H
 #define WINDOWS_LINUX_H
 
-//#define WINDOWS
-#define LINUX
+#define WINDOWS
+//#define LINUX
 
 #ifdef WINDOWS
 #include <direct.h>

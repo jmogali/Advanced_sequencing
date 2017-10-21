@@ -126,18 +126,18 @@ void Greedy_Heuristic::populate_root_node_info(State &root, const std::vector<st
 
 int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strFolder)
 {
+	print_sequence(rob_seq);
+
 	Sequence_Visualization obj_vis;
 	clear_prev_info_buffers();
 	
 	bool bFeasible = perform_initializations(rob_seq);
-	
-	//if (false == bFeasible) 
+	if (false == bFeasible) 
 	{ 
 #ifdef PLOT_INFEASIBLE_CASES
 		print_sequence(rob_seq);
 		obj_vis.plot_alternative_graph(strFolder , m_alt_graph, m_map_states_feas);
 #endif
-		exit(1);
 		return -1; 
 	}
 

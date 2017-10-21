@@ -156,23 +156,22 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 			std::vector<std::vector<Vertex_Schedule>> full_rob_sch_old;
 
 			int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strFolderPath);
-			//int iRetVal_old = perform_greedy_scheduling_old(heur_old, rob_seq, full_rob_sch_old);
-						
+			int iRetVal_old = perform_greedy_scheduling_old(heur_old, rob_seq, full_rob_sch_old);
+
 #ifdef WINDOWS			
 			assert(iRetVal == iRetVal_old);
-#else 
-			/*if(iRetVal != iRetVal_old)
-			{
-				cout<<"assert(iRetVal == iRetVal_old)";
-				exit(-1);
-			}*/
+#else LINUX
+			cout << "assert(iRetVal == iRetVal_old)";
+			exit(-1);
 #endif
 			uiMakeSpan = (iRetVal == 1) ? getMakeSpan_From_Schedule(full_rob_sch) : std::numeric_limits<size_t>::max();
-			//uiMakeSpan_old = (iRetVal_old == 1) ? getMakeSpan_From_Schedule(full_rob_sch_old) : std::numeric_limits<size_t>::max();
-			if (uiBestSol > uiMakeSpan) uiBestSol = uiMakeSpan;
+			uiMakeSpan_old = (iRetVal_old == 1) ? getMakeSpan_From_Schedule(full_rob_sch_old) : std::numeric_limits<size_t>::max();
+			if (uiBestSol > uiMakeSpan) {
+				uiBestSol = uiMakeSpan;
+			}
 
-			cout << " Iteration: " << uiIter <<" , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") <<" , Makespan: " << uiMakeSpan <<" , Best Sol: "<< uiBestSol<< endl;
-			//cout << " Iteration: " << uiIter << " , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") << " , Makespan: " << uiMakeSpan << " , Old Makespan: " << uiMakeSpan_old << endl;
+			//cout << " Iteration: " << uiIter <<" , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") <<" , Makespan: " << uiMakeSpan <<" , Best Sol: "<< uiBestSol<< endl;
+			cout << " Iteration: " << uiIter << " , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") << " , Makespan: " << uiMakeSpan << " , Old Makespan: " << uiMakeSpan_old << endl;
 			bSuccess = iRetVal == 1 ? true : false;			
 
 			if (uiIter == 0)

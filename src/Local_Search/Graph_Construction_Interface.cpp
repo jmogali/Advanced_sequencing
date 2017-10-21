@@ -155,7 +155,6 @@ bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 	return true;
 }
 
-
 bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::unordered_set<Coll_Pair, CollHasher> &set_coll,Collision_Filtering &coll_filter)
 {
 	size_t uiPos = 0;
@@ -164,8 +163,6 @@ bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 		auto it12 = it1;
 		it12++;
 
-		for (auto it2 = rob_seq[uiRobot2].begin(); it2 != rob_seq[uiRobot2].end(); it2++)
-		{
 		auto pr1 = coll_filter.get_bounds(*it1, uiRobot2);
 		auto it2_start = rob_seq[uiRobot2].begin();
 		std::advance(it2_start, pr1.first);
@@ -183,12 +180,6 @@ bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 			{
 				auto it22 = it2;
 				it22++;
-				
-				bool bArc1 = alt_graph.containsPrecArc(arc(*it22, *it1));
-				bool bArc2 = alt_graph.containsPrecArc(arc(*it12, *it2));
-
-				if (!bArc1 & !bArc2) alt_graph.add_alt_arc(*it22, *it1, *it12, *it2); 
-				else if (bArc1 & bArc2) return false;				
 
 				bool bArc1 = alt_graph.containsPrecArc(arc(*it22, *it1));
 				bool bArc2 = alt_graph.containsPrecArc(arc(*it12, *it2));
@@ -201,7 +192,6 @@ bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 	}
 	return true;
 }
-
 
 bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter)
 {
