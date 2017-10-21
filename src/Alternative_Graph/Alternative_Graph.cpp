@@ -295,3 +295,36 @@ void Alternative_Graph::clear_prev_info()
 	m_alt_edges.clear();
 }
 
+std::pair<bool, size_t> Alternative_Graph::get_next_vtx_same_job(size_t uiVtx)
+{
+	size_t uiRobot = get_vertex_ownership(uiVtx);
+	size_t uiNext = std::numeric_limits<size_t>::max();
+
+	for (auto it = m_vec_adj_set_out[uiVtx].begin(); it != m_vec_adj_set_out[uiVtx].end(); it++)
+	{
+		if (uiRobot == get_vertex_ownership(it->first))
+		{
+			uiNext = it->first;
+			break;
+		}
+	}
+	if (std::numeric_limits<size_t>::max() == uiNext) return std::make_pair(false, uiNext);
+	else return std::make_pair(true, uiNext);
+}
+
+std::pair<bool, size_t> Alternative_Graph::get_prec_vtx_same_job(size_t uiVtx)
+{
+	size_t uiRobot = get_vertex_ownership(uiVtx);
+	size_t uiNext = std::numeric_limits<size_t>::max();
+
+	for (auto it = m_vec_adj_set_in[uiVtx].begin(); it != m_vec_adj_set_in[uiVtx].end(); it++)
+	{
+		if (uiRobot == get_vertex_ownership(it->first))
+		{
+			uiNext = it->first;
+			break;
+		}
+	}
+	if (std::numeric_limits<size_t>::max() == uiNext) return std::make_pair(false, uiNext);
+	else return std::make_pair(true, uiNext);
+}

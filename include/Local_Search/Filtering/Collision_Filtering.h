@@ -12,8 +12,8 @@ class Collision_Filtering
 		std::list<int> m_list_order;
 		std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> m_map_bounds; //<N_Ind , <R_Ind , <N_Ind, N_Ind>>>
 		std::unordered_map<int, std::unordered_set<int>> m_in_graph;
-		
-		void clear_prev_info();
+						
+		void clear_prev_bounds_related_info();
 
 		void construct_in_out_graphs(const Alternative_Graph &alt_graph);
 		void copy_to_out_graph(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>>& inp_graph);
@@ -44,12 +44,14 @@ class Collision_Filtering
 		void Initialize_bounds_map(std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &map_bounds, const std::vector<std::list<size_t>> &rob_seq);
 
 		std::pair<bool, size_t> containsVertex(size_t uiRobot, size_t uiComp, const Alternative_Graph &alt_graph);
-		std::pair<bool, size_t> containsVertex(size_t uiRobot, const Alternative_Graph &alt_graph, const std::unordered_set<size_t> &comp);
-	
+		std::pair<bool, size_t> containsVertex(size_t uiRobot, const Alternative_Graph &alt_graph, const std::unordered_set<size_t> &comp);		
+		
 	public:
 		Collision_Filtering() {};
 		bool Check_Feasibility_Compute_Bounds_For_Each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph);
 		std::pair<size_t, size_t> get_bounds(size_t uiVtx, size_t uiOtherRobot);
+		inline const std::list<std::unordered_set<size_t>>& get_scc() const { return m_list_Comp; };
+		bool add_scc_comps(Alternative_Graph &alt_graph, std::list<arc> &list_prec_arcs_betw_jobs) const;
 };
 #endif
 

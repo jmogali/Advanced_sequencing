@@ -9,7 +9,7 @@ bool Greedy_Heuristic::construct_Alt_Graph_STN(const std::vector<std::list<size_
 	return true;
 }
 
-void construct_prec_graph_for_each_job(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph)
+void construct_prec_graph_for_each_operation(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph)
 {
 	size_t uiNumRobots = layout_graph.get_num_robots();
 	
@@ -66,7 +66,7 @@ void get_verts_not_self_enabled(size_t uiRobot, std::unordered_set<size_t> &dep_
 	}
 }
 
-bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::unordered_set<size_t> &dep_vert, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph)
+bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::unordered_set<size_t> &dep_vert, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::list<arc> &list_prec_arcs_betw_jobs)
 {
 	size_t uiNumRobots = layout_graph.get_num_robots();
 	size_t uiVert;
@@ -92,13 +92,17 @@ bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::unordered
 			}
 		}
 		if (0 == vec_pos_enabler.size()) return false;
-		else if (1 == vec_pos_enabler.size()) { alt_graph.add_prec_arc(vec_pos_enabler[0], uiVert, 0); }
+		else if (1 == vec_pos_enabler.size()) 
+		{ 
+			alt_graph.add_prec_arc(vec_pos_enabler[0], uiVert, 0); 
+			list_prec_arcs_betw_jobs.emplace_back(arc(vec_pos_enabler[0], uiVert));
+		}
 		vec_pos_enabler.clear();
 	}
 	return true;
 }
 
-bool add_enabling_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph)
+bool add_enabling_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::list<arc> &list_prec_arcs_betw_jobs)
 {
 	size_t uiNumRobots = layout_graph.get_num_robots();
 	bool bFeasible;
@@ -107,7 +111,7 @@ bool add_enabling_cons(const std::vector<std::list<size_t>> &rob_seq, const Layo
 	{
 		std::unordered_set<size_t> set_dep_vert;
 		get_verts_not_self_enabled(uiRobot, set_dep_vert, rob_seq, layout_graph);
-		bFeasible = add_prec_arcs_for_dep_vert_of_job(uiRobot, set_dep_vert, rob_seq, layout_graph, alt_graph);
+		bFeasible = add_prec_arcs_for_dep_vert_of_job(uiRobot, set_dep_vert, rob_seq, layout_graph, alt_graph, list_prec_arcs_betw_jobs);
 		if (false == bFeasible) return false;
 	}
 	return true;
@@ -151,6 +155,44 @@ bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 	return true;
 }
 
+bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::unordered_set<Coll_Pair, CollHasher> &set_coll,Collision_Filtering &coll_filter)
+{
+	size_t uiPos = 0;
+	for (auto it1 = rob_seq[uiRobot1].begin(); it1 != rob_seq[uiRobot1].end(); it1++)
+	{
+		auto it12 = it1;
+		it12++;
+
+		auto pr1 = coll_filter.get_bounds(*it1, uiRobot2);
+		auto it2_start = rob_seq[uiRobot2].begin();
+		std::advance(it2_start, pr1.first);
+
+		auto it2_end = rob_seq[uiRobot2].begin();
+		std::advance(it2_end, pr1.second);
+		it2_end++;
+
+		for (auto it2 = it2_start; it2 != it2_end; it2++)
+		{
+			auto pr2 = coll_filter.get_bounds(*it2, uiRobot1);
+			if ((uiPos < pr2.first) || (uiPos > pr2.second)) continue;
+
+			if (layout_graph.areColliding(Coll_Pair(*it1, uiRobot1, *it2, uiRobot2)))
+			{
+				auto it22 = it2;
+				it22++;
+
+				bool bArc1 = alt_graph.containsPrecArc(arc(*it22, *it1));
+				bool bArc2 = alt_graph.containsPrecArc(arc(*it12, *it2));
+				
+				if (!bArc1 & !bArc2) set_coll.emplace(Coll_Pair(*it1, uiRobot1, *it2, uiRobot2));
+				else if (bArc1 & bArc2) return false;
+			}
+		}
+		uiPos++;
+	}
+	return true;
+}
+
 bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter)
 {
 	size_t uiNumRobots = layout_graph.get_num_robots();
@@ -167,20 +209,213 @@ bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_L
 	return true;
 }
 
+bool get_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::unordered_set<Coll_Pair, CollHasher> &set_coll, Collision_Filtering &coll_filter)
+{
+	size_t uiNumRobots = layout_graph.get_num_robots();
+	bool bFeasible;
+
+	for (size_t uiRobot1 = 0; uiRobot1 < uiNumRobots; uiRobot1++)
+	{
+		for (size_t uiRobot2 = uiRobot1 + 1; uiRobot2 < uiNumRobots; uiRobot2++)
+		{
+			bFeasible = get_coll_cons_bet_pair_jobs(uiRobot1, uiRobot2, rob_seq, layout_graph, alt_graph, set_coll, coll_filter);
+			if (false == bFeasible) return false;
+		}
+	}
+	return true;
+}
+
+bool add_imp_prec_coll_con(const std::vector<std::list<size_t>> &rob_seq, Alternative_Graph &alt_graph, const arc &inp_arc, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_set<Coll_Pair, CollHasher> &set_coll)
+{
+	size_t uiTailStartVtx = inp_arc.first;
+	size_t uiHeadStartVtx = inp_arc.second;
+
+	size_t uiRobot_Tail = alt_graph.get_vertex_ownership(uiTailStartVtx);
+	size_t uiRobot_Head = alt_graph.get_vertex_ownership(uiHeadStartVtx);
+
+	if (uiTailStartVtx == *rob_seq[uiRobot_Tail].rbegin()) return false;
+	if (set_coll.end() != set_coll.find(Coll_Pair(uiTailStartVtx, uiRobot_Tail, uiHeadStartVtx, uiRobot_Head)))
+	{
+		alt_graph.remove_prec_arc(arc(uiTailStartVtx, uiHeadStartVtx));
+		auto pr = alt_graph.get_next_vtx_same_job(uiTailStartVtx);
+		assert(true == pr.first);
+		size_t uiTailNewVtx = pr.second;
+		if (false == alt_graph.containsPrecArc(arc(uiTailNewVtx, uiHeadStartVtx)))
+		{
+			alt_graph.add_prec_arc(uiTailNewVtx, uiHeadStartVtx, 0);
+			list_prec_arcs_betw_jobs.emplace_back(arc(uiTailNewVtx, uiHeadStartVtx));
+			return true;
+		}
+	}
+	return false;
+}
+
+bool add_imp_con_for_given_pred_arc_forward_dir(const std::vector<std::list<size_t>> &rob_seq, Alternative_Graph &alt_graph, const arc &inp_arc, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_set<Coll_Pair, CollHasher> &set_coll)
+{
+	bool bAdded = false;
+	size_t uiTailStartVtx = inp_arc.first;
+	size_t uiHeadStartVtx = inp_arc.second;
+
+	size_t uiRobot_Tail = alt_graph.get_vertex_ownership(uiTailStartVtx);
+	size_t uiRobot_Head = alt_graph.get_vertex_ownership(uiHeadStartVtx);
+
+	if (uiTailStartVtx == *rob_seq[uiRobot_Tail].rbegin()) return false;
+
+	size_t uiNewHeadVtx = uiHeadStartVtx, uiHeadVtx;
+
+	while (1)
+	{
+		auto pr = alt_graph.get_next_vtx_same_job(uiNewHeadVtx);
+		assert(true == pr.first);
+		uiHeadVtx = pr.second;
+
+		if (set_coll.end() != set_coll.find(Coll_Pair(uiTailStartVtx, uiRobot_Tail, uiHeadVtx, uiRobot_Head)))
+		{
+			uiNewHeadVtx = uiHeadVtx;
+			if (*rob_seq[uiRobot_Head].rbegin() == uiNewHeadVtx) break;
+		}
+		else break;
+	}
+
+	if (uiNewHeadVtx != uiHeadStartVtx)
+	{
+		auto pr = alt_graph.get_next_vtx_same_job(uiTailStartVtx);
+		assert(true == pr.first);
+		size_t uiTailNewVtx = pr.second;
+
+		if (false == alt_graph.containsPrecArc(arc(uiTailNewVtx, uiNewHeadVtx)))
+		{
+			alt_graph.add_prec_arc(uiTailNewVtx, uiNewHeadVtx, 0);
+			list_prec_arcs_betw_jobs.emplace_back(arc(uiTailNewVtx, uiNewHeadVtx));
+			bAdded = true;
+		}
+	}
+	return bAdded;
+}
+
+bool add_imp_con_for_given_pred_arc_reverse_dir(const std::vector<std::list<size_t>> &rob_seq, Alternative_Graph &alt_graph, const arc &inp_arc, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_set<Coll_Pair, CollHasher> &set_coll)
+{
+	bool bAdded = false;
+	size_t uiTailStartVtx = inp_arc.first;
+	size_t uiHeadStartVtx = inp_arc.second;
+
+	size_t uiRobot_Tail = alt_graph.get_vertex_ownership(uiTailStartVtx);
+	size_t uiRobot_Head = alt_graph.get_vertex_ownership(uiHeadStartVtx);
+
+	if (uiTailStartVtx == *rob_seq[uiRobot_Tail].begin()) return false;
+
+	size_t uiNewHeadVtx = uiHeadStartVtx;
+
+	while (1)
+	{
+		auto pr =alt_graph.get_prec_vtx_same_job(uiNewHeadVtx);
+		assert(true == pr.first);
+		size_t uiHeadVtx = pr.second;
+
+		if (set_coll.end() != set_coll.find(Coll_Pair(uiTailStartVtx, uiRobot_Tail, uiHeadVtx, uiRobot_Head)))
+		{
+			uiNewHeadVtx = uiHeadVtx;
+			if (uiNewHeadVtx == *rob_seq[uiRobot_Head].begin()) break;
+		}
+		else break;
+	}
+
+	if (uiNewHeadVtx != uiHeadStartVtx)
+	{
+		auto pr = alt_graph.get_prec_vtx_same_job(uiTailStartVtx);
+		assert(true == pr.first);
+		size_t uiTailNewVtx = pr.second;
+
+		if (false == alt_graph.containsPrecArc(arc(uiTailNewVtx, uiNewHeadVtx)))
+		{
+			alt_graph.add_prec_arc(uiTailNewVtx, uiNewHeadVtx, 0);
+			list_prec_arcs_betw_jobs.emplace_back(arc(uiTailNewVtx, uiNewHeadVtx));
+			bAdded = true;
+		}
+	}	
+	return bAdded;
+}
+
+bool add_imp_con_for_given_pred_arc(const std::vector<std::list<size_t>> &rob_seq, Alternative_Graph &alt_graph, const arc &inp_arc, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_set<Coll_Pair, CollHasher> &set_coll)
+{
+	bool bAdded;
+	bAdded = add_imp_prec_coll_con(rob_seq, alt_graph, inp_arc, list_prec_arcs_betw_jobs, set_coll);
+	if (true == bAdded) return true;
+	bAdded = bAdded | add_imp_con_for_given_pred_arc_forward_dir(rob_seq, alt_graph, inp_arc, list_prec_arcs_betw_jobs, set_coll);
+	bAdded = bAdded | add_imp_con_for_given_pred_arc_reverse_dir(rob_seq, alt_graph, inp_arc, list_prec_arcs_betw_jobs, set_coll);
+	return bAdded;
+}
+
+//adds new implied precedence constraints and removes previously considered precedence constraints
+bool add_impl_cons_rem_prev_cons(const std::vector<std::list<size_t>> &rob_seq, Alternative_Graph &alt_graph, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_set<Coll_Pair, CollHasher> &set_coll)
+{
+	bool bAdded = false;
+	for (auto it = list_prec_arcs_betw_jobs.begin(); it != list_prec_arcs_betw_jobs.end();)
+	{
+		bAdded = bAdded | add_imp_con_for_given_pred_arc(rob_seq, alt_graph, *it, list_prec_arcs_betw_jobs ,set_coll);
+		it = list_prec_arcs_betw_jobs.erase(it);
+	}	
+	return bAdded;
+}
+
+// feasibility, new arc added
+std::pair<bool, bool> add_scc_check_coll_feasible(std::unordered_set<Coll_Pair, CollHasher> &set_coll, Alternative_Graph &alt_graph, const Collision_Filtering &coll_filter, std::list<arc> &list_prec_arcs_betw_jobs)
+{
+	bool bAdded = coll_filter.add_scc_comps(alt_graph, list_prec_arcs_betw_jobs);
+	const auto& list_scc = coll_filter.get_scc();
+	size_t uiRobot1, uiRobot2;
+
+	for (auto it_succ_list = list_scc.begin(); it_succ_list != list_scc.end(); it_succ_list++)
+	{
+		for (auto it_vtx1 = it_succ_list->begin(); it_vtx1 != it_succ_list->end(); it_vtx1++)
+		{
+			uiRobot1 = alt_graph.get_vertex_ownership(*it_vtx1);
+			auto it_vtx2 = it_vtx1;
+			it_vtx2++;
+
+			for (; it_vtx2 != it_succ_list->end(); it_vtx2++)
+			{
+				uiRobot2 = alt_graph.get_vertex_ownership(*it_vtx2);
+				if (set_coll.end() != set_coll.find(Coll_Pair(*it_vtx1, uiRobot1, *it_vtx2, uiRobot2))) return std::make_pair(false, bAdded);
+			}
+		}
+	}
+	return std::make_pair(true, bAdded);
+}
+
 bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter)
 {
-	bool bFeasible = add_enabling_cons(rob_seq, layout_graph, alt_graph);
-	if (false == bFeasible) return false;
-	
-	// Needs to be replaced
-	/*std::list<std::unordered_set<size_t>> listComp;
-	Kosaraju_Algo obj;
-	obj.compute_maximal_components(alt_graph.getGraph() , alt_graph.getReverseGraph(), listComp);
-	bFeasible = !(CheckForPositiveLoops(listComp, alt_graph));
-	if (false == bFeasible) return false;*/
+	bool bChange = true, bFirstIter = true, bFeasible;
+	std::list<arc> list_prec_arcs_betw_jobs;
+	std::unordered_set<Coll_Pair, CollHasher> set_coll;
 
-	bFeasible = coll_filter.Check_Feasibility_Compute_Bounds_For_Each_Vertex(rob_seq, alt_graph);
-	if (false == bFeasible) return false;
+	while (bChange)
+	{
+		bChange = false;
+		if (bFirstIter)
+		{
+			bFeasible = add_enabling_cons(rob_seq, layout_graph, alt_graph, list_prec_arcs_betw_jobs);
+			if (false == bFeasible) return false;
+		}
+
+		bFeasible = coll_filter.Check_Feasibility_Compute_Bounds_For_Each_Vertex(rob_seq, alt_graph);
+		if (false == bFeasible) return false;
+
+		if (bFirstIter)
+		{
+			bFeasible = get_coll_cons(rob_seq, layout_graph, alt_graph, set_coll, coll_filter);
+			if (false == bFeasible) return false;
+		}
+
+		auto pr = add_scc_check_coll_feasible(set_coll, alt_graph, coll_filter, list_prec_arcs_betw_jobs);
+		bFeasible = pr.first;
+		if (false == bFeasible) return false;
+		bChange = bChange | pr.second;
+
+		bChange = bChange | add_impl_cons_rem_prev_cons(rob_seq, alt_graph, list_prec_arcs_betw_jobs, set_coll);
+		
+		bFirstIter = false;
+	}
 
 	bFeasible = add_coll_cons(rob_seq, layout_graph, alt_graph, coll_filter);
 	if (false == bFeasible) return false;
@@ -190,7 +425,7 @@ bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const
 bool Greedy_Heuristic::construct_Alt_Graph(const std::vector<std::list<size_t>> &rob_seq)
 {
 	m_alt_graph.allocate_buffer_for_graph(rob_seq);
-	construct_prec_graph_for_each_job(rob_seq, m_graph, m_alt_graph);
+	construct_prec_graph_for_each_operation(rob_seq, m_graph, m_alt_graph);
 	bool bFeasible = add_enabling_coll_cons(rob_seq, m_graph, m_alt_graph, m_coll_filter);
 	return bFeasible;
 }

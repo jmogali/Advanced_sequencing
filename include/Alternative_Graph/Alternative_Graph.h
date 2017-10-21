@@ -20,6 +20,17 @@ namespace Alternative_Graphs
 	{
 		return (lhs.first == rhs.first) && (lhs.second == rhs.second);
 	}
+
+	struct ArcHasher
+	{
+		std::size_t operator()(const arc& inp_arc) const
+		{
+			size_t seed = 0;
+			::Hash_It(seed, inp_arc.first);
+			::Hash_It(seed, inp_arc.second);
+			return seed;
+		}
+	};
 };
 
 using namespace Alternative_Graphs;
@@ -71,14 +82,14 @@ class Alternative_Graph
 
 		void add_prec_arc(arc new_arc, size_t uiCost);
 		void remove_prec_arc(size_t uiVtx1, size_t uiVtx2);
-		void remove_prec_arc(arc new_arc);
-		
+				
 		//bool get_topological_order_robot_pairwise(std::unordered_map<size_t, std::string> &map_visited_state, std::list<size_t> &stack_topo_order, size_t uiVtx) const;
 
 	public:
 		Alternative_Graph();
 		void add_prec_arc(size_t uiVtx1, size_t uiVtx2, size_t uiCost);
-		void add_alt_arc(size_t uiVtx11, size_t uiVtx12, size_t uiVtx21, size_t uiVtx22);	
+		void add_alt_arc(size_t uiVtx11, size_t uiVtx12, size_t uiVtx21, size_t uiVtx22);
+		void remove_prec_arc(arc new_arc);
 		
 		void allocate_buffer_for_graph(const std::vector<std::list<size_t>> &rob_seq);
 		void clear_prev_info();
@@ -97,8 +108,10 @@ class Alternative_Graph
 		void add_vertex_ownership_pos(size_t uiVtx, size_t uiRobot, size_t uiPos);
 		inline size_t get_vertex_ownership(size_t uiVtx) const { return m_map_vertex_robot_pos_map.at(uiVtx).first; };
 		inline size_t get_vertex_position(size_t uiVtx) const { return m_map_vertex_robot_pos_map.at(uiVtx).second; };
-		//bool get_topological_order(size_t uiRobot1, size_t uiRobot2, std::list<size_t> &stack_topo_order) const;
-		std::pair<bool, size_t> get_best_preceding_arc(size_t uiVtx, size_t uiOtherRobot) const;	
+		std::pair<bool, size_t> get_best_preceding_arc(size_t uiVtx, size_t uiOtherRobot) const;
+		std::pair<bool, size_t> get_next_vtx_same_job(size_t uiVtx);
+		std::pair<bool, size_t> get_prec_vtx_same_job(size_t uiVtx);
+
 		friend class Sequence_Visualization;
 };
 

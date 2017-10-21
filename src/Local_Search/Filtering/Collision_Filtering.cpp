@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "Windows_Linux.h"
 
-void Collision_Filtering::clear_prev_info()
+void Collision_Filtering::clear_prev_bounds_related_info()
 {
 	m_out_graph.clear();
 	m_in_graph.clear();
@@ -55,15 +55,16 @@ void Collision_Filtering::construct_in_graph()
 	}
 }
 
+// Also add redundant strongly connected component arcs
 bool Collision_Filtering::Check_Feasibility_Compute_Bounds_For_Each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph)
 {
-	clear_prev_info();
+	clear_prev_bounds_related_info();
 
 	Kosaraju_Algo obj;
 	obj.compute_maximal_components(alt_graph.getGraph(), alt_graph.getReverseGraph(), m_list_Comp);
 	bool bFeasible = !(Check_Pos_Loop_Remove_1comp(alt_graph));
 	if (false == bFeasible) return false;
-
+	
 	construct_in_out_graphs(alt_graph);
 	Topological_sort_out_graph();	
 
@@ -530,4 +531,33 @@ std::pair<size_t , size_t> Collision_Filtering::get_bounds(size_t uiVtx, size_t 
 	auto it_find = m_map_bounds.at(uiVtx).find(uiOtherRobot);
 	assert(m_map_bounds.at(uiVtx).end() != it_find);
 	return it_find->second;
+}
+
+bool Collision_Filtering::add_scc_comps(Alternative_Graph &alt_graph, std::list<arc> &list_prec_arcs_betw_jobs) const
+{
+	bool bAdded = false;
+	for (auto it_comp = m_list_Comp.begin(); it_comp != m_list_Comp.end(); it_comp++)
+	{
+		for (auto it_vtx1 = it_comp->begin(); it_vtx1 != it_comp->end(); it_vtx1++)
+		{
+			auto it_vtx2 = it_vtx1;
+			it_vtx2++;
+			for (; it_vtx2 != it_comp->end(); it_vtx2++)
+			{
+				if (false == alt_graph.containsPrecArc(arc(*it_vtx1, *it_vtx2)))
+				{
+					alt_graph.add_prec_arc(*it_vtx1, *it_vtx2, 0);
+					list_prec_arcs_betw_jobs.emplace_back(arc(*it_vtx1, *it_vtx2));
+					bAdded = true;
+				}
+				if (false == alt_graph.containsPrecArc(arc(*it_vtx2, *it_vtx1)))
+				{
+					alt_graph.add_prec_arc(*it_vtx2, *it_vtx1, 0);
+					list_prec_arcs_betw_jobs.emplace_back(arc(*it_vtx2, *it_vtx1));
+					bAdded = true;
+				}
+			}
+		}
+	}
+	return bAdded;
 }
