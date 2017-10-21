@@ -73,7 +73,7 @@ void Greedy_Heuristic::clear_prev_info_buffers()
 	m_alt_graph.clear_prev_info();
 	m_vec_map_new_sel_alt_arcs.clear();
 	assert(0 == m_set_to_do_verts.size());
-	m_set_to_do_verts.clear();
+	m_set_to_do_verts.clear();	
 }
 
 // populates buffers for storing timing information

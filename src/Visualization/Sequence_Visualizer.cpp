@@ -67,8 +67,8 @@ void Sequence_Visualization::plot_coll_cons_alt_graph(std::string strFilePath, c
 			uiPos2 = (int) alt_graph.get_vertex_position(uiVtx2);
 
 			if(uiRobot2 < uiRobot1) continue;
-			
-			altGraphFile << uiPos1-1 << " " << uiRobot1 << " " << uiPos2 - uiPos1 + 1 << " " << uiRobot2 - uiRobot1 << "\n";			
+			//the uiPos - 1 is since it is an alternating arc, in order to get collision pair, we have to subtract -1
+			altGraphFile << uiPos1-1 << " " << uiRobot1 << " " << uiPos2 - uiPos1 + 1 << " " << uiRobot2 - uiRobot1 << "\n";
 		}
 	}
 	altGraphFile.close();
