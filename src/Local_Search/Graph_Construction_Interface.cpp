@@ -239,18 +239,18 @@ bool add_imp_prec_coll_con(const std::vector<std::list<size_t>> &rob_seq, Altern
 		alt_graph.remove_prec_arc(arc(uiTailStartVtx, uiHeadStartVtx));
 		auto pr = alt_graph.get_next_vtx_same_job(uiTailStartVtx);
 		assert(true == pr.first);
-		size_t uiTailNewVtx = pr.second;
-		if (false == alt_graph.containsPrecArc(arc(uiTailNewVtx, uiHeadStartVtx)))
+		size_t uiNewTailVtx = pr.second;
+		if (false == alt_graph.containsPrecArc(arc(uiNewTailVtx, uiHeadStartVtx)))
 		{
-			alt_graph.add_prec_arc(uiTailNewVtx, uiHeadStartVtx, 0);
-			list_prec_arcs_betw_jobs.emplace_back(arc(uiTailNewVtx, uiHeadStartVtx));
+			alt_graph.add_prec_arc(uiNewTailVtx, uiHeadStartVtx, 0);
+			list_prec_arcs_betw_jobs.emplace_back(arc(uiNewTailVtx, uiHeadStartVtx));
 			return true;
 		}
 	}
 	return false;
 }
 
-bool add_imp_con_for_given_pred_arc_forward_dir(const std::vector<std::list<size_t>> &rob_seq, Alternative_Graph &alt_graph, const arc &inp_arc, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_set<Coll_Pair, CollHasher> &set_coll)
+bool add_imp_con_for_given_prec_arc_forward_dir(const std::vector<std::list<size_t>> &rob_seq, Alternative_Graph &alt_graph, const arc &inp_arc, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_set<Coll_Pair, CollHasher> &set_coll)
 {
 	bool bAdded = false;
 	size_t uiTailStartVtx = inp_arc.first;
@@ -260,40 +260,29 @@ bool add_imp_con_for_given_pred_arc_forward_dir(const std::vector<std::list<size
 	size_t uiRobot_Head = alt_graph.get_vertex_ownership(uiHeadStartVtx);
 
 	if (uiTailStartVtx == *rob_seq[uiRobot_Tail].rbegin()) return false;
+	if (uiHeadStartVtx == *rob_seq[uiRobot_Head].rbegin()) return false;
 
-	size_t uiNewHeadVtx = uiHeadStartVtx, uiHeadVtx;
+	auto pr_head = alt_graph.get_next_vtx_same_job(uiHeadStartVtx);
+	assert(true == pr_head.first);
+	size_t uiHeadVtx = pr_head.second;
 
-	while (1)
+	if (set_coll.end() != set_coll.find(Coll_Pair(uiTailStartVtx, uiRobot_Tail, uiHeadVtx, uiRobot_Head)))
 	{
-		auto pr = alt_graph.get_next_vtx_same_job(uiNewHeadVtx);
-		assert(true == pr.first);
-		uiHeadVtx = pr.second;
+		auto pr_tail = alt_graph.get_next_vtx_same_job(uiTailStartVtx);
+		assert(true == pr_tail.first);
+		size_t uiTailVtx = pr_tail.second;
 
-		if (set_coll.end() != set_coll.find(Coll_Pair(uiTailStartVtx, uiRobot_Tail, uiHeadVtx, uiRobot_Head)))
+		if (false == alt_graph.containsPrecArc(arc(uiTailVtx, uiHeadVtx)))
 		{
-			uiNewHeadVtx = uiHeadVtx;
-			if (*rob_seq[uiRobot_Head].rbegin() == uiNewHeadVtx) break;
-		}
-		else break;
-	}
-
-	if (uiNewHeadVtx != uiHeadStartVtx)
-	{
-		auto pr = alt_graph.get_next_vtx_same_job(uiTailStartVtx);
-		assert(true == pr.first);
-		size_t uiTailNewVtx = pr.second;
-
-		if (false == alt_graph.containsPrecArc(arc(uiTailNewVtx, uiNewHeadVtx)))
-		{
-			alt_graph.add_prec_arc(uiTailNewVtx, uiNewHeadVtx, 0);
-			list_prec_arcs_betw_jobs.emplace_back(arc(uiTailNewVtx, uiNewHeadVtx));
+			alt_graph.add_prec_arc(uiTailVtx, uiHeadVtx, 0);
+			list_prec_arcs_betw_jobs.emplace_back(arc(uiTailVtx, uiHeadVtx));
 			bAdded = true;
 		}
-	}
+	}		
 	return bAdded;
 }
 
-bool add_imp_con_for_given_pred_arc_reverse_dir(const std::vector<std::list<size_t>> &rob_seq, Alternative_Graph &alt_graph, const arc &inp_arc, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_set<Coll_Pair, CollHasher> &set_coll)
+bool add_imp_con_for_given_prec_arc_reverse_dir(const std::vector<std::list<size_t>> &rob_seq, Alternative_Graph &alt_graph, const arc &inp_arc, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_set<Coll_Pair, CollHasher> &set_coll)
 {
 	bool bAdded = false;
 	size_t uiTailStartVtx = inp_arc.first;
@@ -303,36 +292,25 @@ bool add_imp_con_for_given_pred_arc_reverse_dir(const std::vector<std::list<size
 	size_t uiRobot_Head = alt_graph.get_vertex_ownership(uiHeadStartVtx);
 
 	if (uiTailStartVtx == *rob_seq[uiRobot_Tail].begin()) return false;
+	if (uiHeadStartVtx == *rob_seq[uiRobot_Head].begin()) return false;
 
-	size_t uiNewHeadVtx = uiHeadStartVtx;
+	auto pr_head =alt_graph.get_prec_vtx_same_job(uiHeadStartVtx);
+	assert(true == pr_head.first);
+	size_t uiHeadVtx = pr_head.second;
 
-	while (1)
+	if (set_coll.end() != set_coll.find(Coll_Pair(uiTailStartVtx, uiRobot_Tail, uiHeadVtx, uiRobot_Head)))
 	{
-		auto pr =alt_graph.get_prec_vtx_same_job(uiNewHeadVtx);
-		assert(true == pr.first);
-		size_t uiHeadVtx = pr.second;
+		auto pr_tail = alt_graph.get_prec_vtx_same_job(uiTailStartVtx);
+		assert(true == pr_tail.first);
+		size_t uiTailVtx = pr_tail.second;
 
-		if (set_coll.end() != set_coll.find(Coll_Pair(uiTailStartVtx, uiRobot_Tail, uiHeadVtx, uiRobot_Head)))
+		if (false == alt_graph.containsPrecArc(arc(uiTailVtx, uiHeadVtx)))
 		{
-			uiNewHeadVtx = uiHeadVtx;
-			if (uiNewHeadVtx == *rob_seq[uiRobot_Head].begin()) break;
-		}
-		else break;
-	}
-
-	if (uiNewHeadVtx != uiHeadStartVtx)
-	{
-		auto pr = alt_graph.get_prec_vtx_same_job(uiTailStartVtx);
-		assert(true == pr.first);
-		size_t uiTailNewVtx = pr.second;
-
-		if (false == alt_graph.containsPrecArc(arc(uiTailNewVtx, uiNewHeadVtx)))
-		{
-			alt_graph.add_prec_arc(uiTailNewVtx, uiNewHeadVtx, 0);
-			list_prec_arcs_betw_jobs.emplace_back(arc(uiTailNewVtx, uiNewHeadVtx));
+			alt_graph.add_prec_arc(uiTailVtx, uiHeadVtx, 0);
+			list_prec_arcs_betw_jobs.emplace_back(arc(uiTailVtx, uiHeadVtx));
 			bAdded = true;
 		}
-	}	
+	}
 	return bAdded;
 }
 
@@ -341,8 +319,8 @@ bool add_imp_con_for_given_pred_arc(const std::vector<std::list<size_t>> &rob_se
 	bool bAdded;
 	bAdded = add_imp_prec_coll_con(rob_seq, alt_graph, inp_arc, list_prec_arcs_betw_jobs, set_coll);
 	if (true == bAdded) return true;
-	bAdded = bAdded | add_imp_con_for_given_pred_arc_forward_dir(rob_seq, alt_graph, inp_arc, list_prec_arcs_betw_jobs, set_coll);
-	bAdded = bAdded | add_imp_con_for_given_pred_arc_reverse_dir(rob_seq, alt_graph, inp_arc, list_prec_arcs_betw_jobs, set_coll);
+	bAdded = bAdded | add_imp_con_for_given_prec_arc_forward_dir(rob_seq, alt_graph, inp_arc, list_prec_arcs_betw_jobs, set_coll);
+	bAdded = bAdded | add_imp_con_for_given_prec_arc_reverse_dir(rob_seq, alt_graph, inp_arc, list_prec_arcs_betw_jobs, set_coll);
 	return bAdded;
 }
 
