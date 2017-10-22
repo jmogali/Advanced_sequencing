@@ -22,20 +22,56 @@ void Collision_Filtering::construct_in_out_graphs(const Alternative_Graph &alt_g
 
 void Collision_Filtering::construct_out_graph(const Alternative_Graph &alt_graph)
 {
-	copy_to_out_graph(alt_graph.getGraph());
-	replace_strong_conn_comp_out_graph(alt_graph);
-}
-
-void Collision_Filtering::copy_to_out_graph(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>>& inp_graph)
-{
+	size_t uiVtx;
 	int iVtx;
-	for (auto it = inp_graph.begin(); it != inp_graph.end(); it++)
+	int iNewLabel = -1; // numbering it starting with -1 is very important, note we are decrementing
+	const auto& out_alt_graph = alt_graph.getGraph();
+	const auto& in_alt_graph = alt_graph.getReverseGraph();
+	std::unordered_map<size_t, int> str_comp_vtx_map;	// size_t, int
+
+	// at this point, m_list_Comp contains only compoents with 2 or more vertices
+	//number the SCC
+	for (auto it_list = m_list_Comp.begin(); it_list != m_list_Comp.end(); it_list++)
 	{
-		iVtx = (int) it->first;
-		m_out_graph.emplace(iVtx, std::unordered_set<int>());
-		for (auto it_neighs = it->second.begin(); it_neighs != it->second.end(); it_neighs++)
+		assert(1 < it_list->size());
+		for (auto it_vtx = it_list->begin(); it_vtx != it_list->end(); it_vtx++)
 		{
-			m_out_graph.at(iVtx).emplace((int)(it_neighs->first));
+			str_comp_vtx_map.emplace(*it_vtx, iNewLabel);
+		}
+		iNewLabel--;
+	}
+
+	//allocate adjacency buffers for all vertices
+	for (auto it = out_alt_graph.begin(); it != out_alt_graph.end(); it++)
+	{
+		uiVtx = it->first;
+		auto it_find = str_comp_vtx_map.find(uiVtx);
+		if (str_comp_vtx_map.end() != it_find)
+		{
+			if (m_out_graph.end() != m_out_graph.find(it_find->second)) continue;
+			else m_out_graph.emplace(it_find->second, std::unordered_set<int>());
+		}
+		else
+			m_out_graph.emplace((int)uiVtx, std::unordered_set<int>());
+	}
+
+	//populate adjacency information 
+	for (auto it = out_alt_graph.begin(); it != out_alt_graph.end(); it++)
+	{
+		uiVtx = it->first;
+		auto it_find = str_comp_vtx_map.find(uiVtx);
+		if (str_comp_vtx_map.end() == it_find) iVtx = (int)(uiVtx);
+		else iVtx = it_find->second;		
+
+		for (auto it_succ = out_alt_graph.at(uiVtx).begin(); it_succ != out_alt_graph.at(uiVtx).end(); it_succ++)
+		{
+			auto it_neigh = str_comp_vtx_map.find(it_succ->first);
+			if (str_comp_vtx_map.end() != it_neigh)
+			{
+				if (iVtx == it_neigh->second) continue;
+				m_out_graph.at(iVtx).emplace(it_neigh->second);
+			}
+			else m_out_graph.at(iVtx).emplace((int)it_succ->first);
 		}
 	}
 }
@@ -60,7 +96,7 @@ void Collision_Filtering::construct_in_graph()
 bool Collision_Filtering::Check_Feasibility_Compute_Bounds_For_Each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph)
 {
 	clear_prev_bounds_related_info();
-	
+
 	Kosaraju_Algo obj;
 	obj.compute_maximal_components(alt_graph.getGraph(), alt_graph.getReverseGraph(), m_list_Comp);
 	bool bFeasible = !(Check_Pos_Loop_Remove_1comp(alt_graph));
@@ -106,37 +142,6 @@ bool Collision_Filtering::Check_Pos_Loop_Remove_1comp(const Alternative_Graph &a
 		it_list++;
 	}
 	return false;
-}
-
-void Collision_Filtering::replace_strong_conn_comp_out_graph(const Alternative_Graph &alt_graph)
-{
-	size_t uiVtx;
-	int iNewVtx = -1; // numbering it starting with -1 is very important, note we are decrementing
-	const auto& out_alt_graph = alt_graph.getGraph();
-	const auto& in_alt_graph = alt_graph.getReverseGraph();
-
-	for (auto it_list = m_list_Comp.begin(); it_list != m_list_Comp.end(); it_list++)
-	{
-		assert(1 < it_list->size()); //at this stage, m_list_Comp contains only strongly connected components having more than 1 vertex
-		m_out_graph.emplace(iNewVtx, std::unordered_set<int>());
-		
-		for (auto it_vtx = it_list->begin(); it_vtx != it_list->end(); it_vtx++)
-		{
-			uiVtx = *it_vtx;
-			for (auto it_succ = out_alt_graph.at(uiVtx).begin(); it_succ != out_alt_graph.at(uiVtx).end(); it_succ++)
-			{
-				m_out_graph.at(iNewVtx).emplace((int)it_succ->first);
-			}
-			
-			for (auto it_prec = in_alt_graph.at(uiVtx).begin(); it_prec != in_alt_graph.at(uiVtx).end(); it_prec++)
-			{
-				size_t uiErase = m_out_graph.at((int)it_prec->first).erase((int)uiVtx);
-				assert(1 == uiErase);
-			}
-			m_out_graph.erase((int)uiVtx);
-		}
-		iNewVtx--;
-	}
 }
 
 void Collision_Filtering::Topological_sort_out_graph()

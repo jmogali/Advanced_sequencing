@@ -128,8 +128,7 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 #ifdef WINDOWS
 	print_sequence(rob_seq);
 #endif
-	//print_sequence(rob_seq);
-		
+
 	Sequence_Visualization obj_vis;
 	clear_prev_info_buffers();
 	
@@ -156,7 +155,7 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 		print_sequence(rob_seq);
 #endif
 	}
-		
+
 	return iRetVal;
 }
 
