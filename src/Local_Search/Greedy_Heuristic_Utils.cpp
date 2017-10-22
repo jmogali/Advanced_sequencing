@@ -48,3 +48,16 @@ Comparison_Object::Comparison_Object(size_t dispatch_time, size_t comp_size, siz
 	uiMaxDelay = delay;
 }
 
+void print_sequence(const std::vector<std::list<size_t>> &rob_seq)
+{
+	for (size_t uiRobot = 0; uiRobot < rob_seq.size(); uiRobot++)
+	{
+		for (auto it = rob_seq[uiRobot].begin(); it != rob_seq[uiRobot].end(); it++)
+		{
+			cout << *it << ",";
+		}
+		cout << endl;
+	}
+
+	cout << "\n\n";
+}

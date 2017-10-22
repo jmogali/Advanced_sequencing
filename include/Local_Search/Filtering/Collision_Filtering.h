@@ -16,9 +16,7 @@ class Collision_Filtering
 		void clear_prev_bounds_related_info();
 
 		void construct_in_out_graphs(const Alternative_Graph &alt_graph);
-		void copy_to_out_graph(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>>& inp_graph);
 		bool Check_Pos_Loop_Remove_1comp(const Alternative_Graph &alt_graph);
-		void replace_strong_conn_comp_out_graph(const Alternative_Graph &alt_graph);
 		void construct_out_graph(const Alternative_Graph &alt_graph);
 		void construct_in_graph();
 

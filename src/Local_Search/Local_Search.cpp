@@ -160,15 +160,16 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 #endif
 
 #ifdef ENABLE_LEGACY_CODE
-#ifdef WINDOWS	
-			assert(iRetVal == iRetVal_old);
-#else 
-			if(iRetVal != iRetVal_old)
+			if (iRetVal != iRetVal_old)
 			{
+				print_sequence(rob_seq);
+#ifdef WINDOWS	
+				assert(iRetVal == iRetVal_old);
+#else 
 				cout << "assert(iRetVal == iRetVal_old)";
-				exit(-1);
+				exit(-1);				
+#endif		
 			}
-#endif
 #endif
 
 			uiMakeSpan = (iRetVal == 1) ? getMakeSpan_From_Schedule(full_rob_sch) : std::numeric_limits<size_t>::max();

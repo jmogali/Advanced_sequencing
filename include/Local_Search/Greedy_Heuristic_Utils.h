@@ -7,7 +7,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "Layout_LS.h"
-#include "Windows_Linux.h"
 
 struct ST_Time
 {
@@ -64,6 +63,6 @@ struct Comparison_Object
 	Comparison_Object(size_t dispatch_time, size_t comp_size, size_t makespan, size_t delay);
 };
 
-
+void print_sequence(const std::vector<std::list<size_t>> &rob_seq);
 
 #endif
