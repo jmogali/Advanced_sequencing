@@ -1,5 +1,5 @@
 #include "Greedy_Heuristic_Utils.h"
-#include <iostream>
+
 
 bool operator== (const State& lhs, const State& rhs)
 {

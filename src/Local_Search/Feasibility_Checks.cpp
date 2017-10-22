@@ -1,5 +1,4 @@
 #include "Local_Search.h"
-#include <iostream>
 
 bool Local_Search::check_validity_of_schedule(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)
 {

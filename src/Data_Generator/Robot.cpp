@@ -3,7 +3,6 @@
 #ifdef WINDOWS
 #include "stdafx.h"
 #endif
-#include <iostream>
 using namespace std;
 
 Robot::Robot(const Coordinates &loc , const std::set<size_t> &set_frames) : m_loc(loc)

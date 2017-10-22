@@ -9,7 +9,6 @@
 #include "Robot.h"
 #include "Boeing_Fuesalage.h"
 #include "Data_Generator.h"
-#include <iostream>
 #include <sstream> // stringstream
 #include "Data_Parser.h"
 #include "Layout_Graph.h"

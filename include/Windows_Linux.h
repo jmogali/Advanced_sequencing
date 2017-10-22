@@ -13,5 +13,7 @@
 #include <cstddef>
 #endif
 
+#include <iostream>
+
 #endif // !WINDOWS_LINUX_H
 

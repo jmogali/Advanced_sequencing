@@ -1,5 +1,4 @@
 #include "Greedy_Heuristic.h"
-#include <iostream>
 #include "Kosaraju_Algo.h"
 
 bool Greedy_Heuristic::construct_Alt_Graph_STN(const std::vector<std::list<size_t>> &rob_seq)
@@ -366,7 +365,7 @@ bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const
 	bool bChange = true, bFirstIter = true, bFeasible;
 	std::list<arc> list_prec_arcs_betw_jobs;
 	std::unordered_set<Coll_Pair, CollHasher> set_coll;
-
+	
 	while (bChange)
 	{
 		bChange = false;
@@ -375,7 +374,7 @@ bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const
 			bFeasible = add_enabling_cons(rob_seq, layout_graph, alt_graph, list_prec_arcs_betw_jobs);
 			if (false == bFeasible) return false;
 		}
-
+		
 		bFeasible = coll_filter.Check_Feasibility_Compute_Bounds_For_Each_Vertex(rob_seq, alt_graph);
 		if (false == bFeasible) return false;
 

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "Windows_Linux.h"
 
+
 void Collision_Filtering::clear_prev_bounds_related_info()
 {
 	m_out_graph.clear();
@@ -59,7 +60,7 @@ void Collision_Filtering::construct_in_graph()
 bool Collision_Filtering::Check_Feasibility_Compute_Bounds_For_Each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph)
 {
 	clear_prev_bounds_related_info();
-
+	
 	Kosaraju_Algo obj;
 	obj.compute_maximal_components(alt_graph.getGraph(), alt_graph.getReverseGraph(), m_list_Comp);
 	bool bFeasible = !(Check_Pos_Loop_Remove_1comp(alt_graph));
