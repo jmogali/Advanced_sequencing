@@ -60,9 +60,6 @@ void Greedy_Heuristic::clear_prev_info_buffers()
 	assert(0 == m_set_to_do_verts.size());
 	m_set_to_do_verts.clear();	
 	m_uiSuperVtxThresh = std::numeric_limits<size_t>::min();
-	m_map_superVtx_vecVtx.clear();
-	m_map_vtx_super_vtx.clear();
-	m_map_super_vtx_proc_time.clear();
 	m_map_enabler_pos_vert.clear();
 }
 
@@ -134,7 +131,6 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 	//print_sequence(rob_seq);
 	Sequence_Visualization obj_vis;
 	clear_prev_info_buffers();
-	
 	std::vector<std::list<size_t>> new_rob_seq;
 	bool bFeasible = perform_initializations(rob_seq, new_rob_seq);
 	if (false == bFeasible) 

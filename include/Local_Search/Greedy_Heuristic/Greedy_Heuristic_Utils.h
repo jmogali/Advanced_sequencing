@@ -8,8 +8,6 @@
 #include <unordered_set>
 #include "Layout_LS.h"
 
-#define COMPRESSION_ENABLE
-
 struct ST_Time
 {
 	const static size_t UNSET = std::numeric_limits<size_t>::max();

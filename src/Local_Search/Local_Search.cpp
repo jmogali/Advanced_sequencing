@@ -105,8 +105,17 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 	std::string strType;
 	size_t uiIter = 0, uiChoice, uiMakeSpan, uiMakeSpan_old, uiBestSol = std::numeric_limits<size_t>::max();
 	Power_Set power;
+
+#ifdef COMPRESSION_ENABLE
+	Greedy_Heuristic_Compression heur(m_node_data.m_uiNumRobots, m_graph, power);
+#else
 	Greedy_Heuristic heur(m_node_data.m_uiNumRobots, m_graph, power);
+#endif
+
+#ifdef ENABLE_LEGACY_CODE
 	Greedy_Heuristic_old heur_old(m_node_data.m_uiNumRobots, m_graph, power);
+#endif
+
 	std::vector<size_t> vec_late_accep(c_uiLate_Acceptace_Length, std::numeric_limits<size_t>::max());
 	
 	std::clock_t start_time;
@@ -249,7 +258,11 @@ void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size
 	}
 }
 
+#ifdef COMPRESSION_ENABLE
+int Local_Search::perform_greedy_scheduling(Greedy_Heuristic_Compression &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolderPath)
+#else
 int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolderPath)
+#endif
 {
 	std::vector<std::list<size_t>> full_rob_seq;
 	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);

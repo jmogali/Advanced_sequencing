@@ -1,7 +1,9 @@
-#include "Alternative_Graph.h"
+#include "Alternative_Graph_Compression.h"
 #include <assert.h>
 
-void Alternative_Graph::reallocate_buffers_compressed_vertices(const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx)
+Alternative_Graph_Compression::Alternative_Graph_Compression() {}
+
+void Alternative_Graph_Compression::reallocate_buffers_compressed_vertices(const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx)
 {
 	for (auto it_super = map_superVtx_vecVtx.begin(); it_super != map_superVtx_vecVtx.end(); it_super++)
 	{
@@ -12,7 +14,7 @@ void Alternative_Graph::reallocate_buffers_compressed_vertices(const std::unorde
 	}
 }
 
-void Alternative_Graph::remove_buffer_redundant_vtx(size_t uiVert)
+void Alternative_Graph_Compression::remove_buffer_redundant_vtx(size_t uiVert)
 {
 	assert(m_vec_adj_set_out[uiVert].size() <= 1);
 	assert(m_vec_adj_set_in[uiVert].size() <= 1);
@@ -26,7 +28,7 @@ void Alternative_Graph::remove_buffer_redundant_vtx(size_t uiVert)
 	m_map_vertex_robot_pos_map.erase(uiVert);
 }
 
-void Alternative_Graph::reassign_vertex_ownership_pos(size_t uiVtx, size_t uiRobot, size_t uiPos)
+void Alternative_Graph_Compression::reassign_vertex_ownership_pos(size_t uiVtx, size_t uiRobot, size_t uiPos)
 {
 	if (m_map_vertex_robot_pos_map.end() == m_map_vertex_robot_pos_map.find(uiVtx))
 		m_map_vertex_robot_pos_map.emplace(uiVtx, std::make_pair(uiRobot, uiPos));
@@ -34,7 +36,7 @@ void Alternative_Graph::reassign_vertex_ownership_pos(size_t uiVtx, size_t uiRob
 		m_map_vertex_robot_pos_map[uiVtx] = std::make_pair(uiRobot, uiPos);
 }
 
-void Alternative_Graph::reassign_vertex_ownership_positions(std::vector<std::list<size_t>> &new_rob_seq)
+void Alternative_Graph_Compression::reassign_vertex_ownership_positions(std::vector<std::list<size_t>> &new_rob_seq)
 {
 	size_t uiNumRobots = new_rob_seq.size();
 
@@ -66,7 +68,7 @@ size_t get_total_num_verts(std::vector<std::list<size_t>> &new_rob_seq)
 	return uiVert;
 }
 
-void Alternative_Graph::sanity_check_compression(std::vector<std::list<size_t>> &new_rob_seq)
+void Alternative_Graph_Compression::sanity_check_compression(std::vector<std::list<size_t>> &new_rob_seq)
 {
 #ifdef WINDOWS
 	size_t uiVertNum = get_total_num_verts(new_rob_seq);
@@ -105,7 +107,7 @@ void Alternative_Graph::sanity_check_compression(std::vector<std::list<size_t>> 
 #endif
 }
 
-void Alternative_Graph::compress_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::vector<std::pair<arc, arc>> &alt_coll_edges, std::vector<std::list<size_t>> &new_rob_seq, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time)
+void Alternative_Graph_Compression::compress_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::vector<std::pair<arc, arc>> &alt_coll_edges, std::vector<std::list<size_t>> &new_rob_seq, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time)
 {
 	assert(0 == m_alt_edges.size());
 	reallocate_buffers_compressed_vertices(map_superVtx_vecVtx);
@@ -116,7 +118,7 @@ void Alternative_Graph::compress_graph(const Layout_LS &layout_graph, const std:
 	sanity_check_compression(new_rob_seq);
 }
 
-void Alternative_Graph::compress_prec_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time)
+void Alternative_Graph_Compression::compress_prec_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time)
 {
 	size_t uiSuperVtx;
 	for (auto it_vtx_vec = map_superVtx_vecVtx.begin(); it_vtx_vec != map_superVtx_vecVtx.end(); it_vtx_vec++)
@@ -152,7 +154,7 @@ void Alternative_Graph::compress_prec_graph(const Layout_LS &layout_graph, const
 	}
 }
 
-void Alternative_Graph::add_compressed_alt_edges(const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::vector<std::pair<arc, arc>> &alt_coll_edges)
+void Alternative_Graph_Compression::add_compressed_alt_edges(const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::vector<std::pair<arc, arc>> &alt_coll_edges)
 {
 	size_t uiVtx11, uiVtx12, uiVtx21, uiVtx22;
 	for (auto it = alt_coll_edges.begin(); it != alt_coll_edges.end(); it++)

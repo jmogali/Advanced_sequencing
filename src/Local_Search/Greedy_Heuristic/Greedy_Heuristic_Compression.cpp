@@ -1,4 +1,4 @@
-#include "Greedy_Heuristic.h"
+#include "Greedy_Heuristic_Compression.h"
 
 //initializes to false if a vertex has an incoming or outgoing precedence arc, true otherwise
 size_t initialize_buffer_compr_verts(const Alternative_Graph &alt_graph, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<bool>> &vec_compress_status)
@@ -31,8 +31,25 @@ size_t initialize_buffer_compr_verts(const Alternative_Graph &alt_graph, const s
 	return uiMaxVertInd;
 }
 
-bool Greedy_Heuristic::add_colls_compress_graph(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq)
+Greedy_Heuristic_Compression::Greedy_Heuristic_Compression(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power) :Greedy_Heuristic(uiRobotNum, graph, power)
+{}
+
+void Greedy_Heuristic_Compression::clear_prev_info_buffers()
 {
+	m_map_superVtx_vecVtx.clear();
+	m_map_vtx_super_vtx.clear();
+	m_map_super_vtx_proc_time.clear();	
+}
+
+int Greedy_Heuristic_Compression::compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strFolder)
+{
+	clear_prev_info_buffers();
+	return Greedy_Heuristic::compute_greedy_sol(rob_seq, vec_rob_sch, strFolder);
+}
+
+bool Greedy_Heuristic_Compression::add_colls_compress_graph(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq)
+{
+#ifdef COMPRESSION_ENABLE
 	std::vector<std::vector<bool>> vec_compress_status;
 	std::vector<std::pair<arc, arc>> alt_coll_edges;
 	m_uiSuperVtxThresh = initialize_buffer_compr_verts(m_alt_graph, rob_seq, vec_compress_status);
@@ -42,10 +59,11 @@ bool Greedy_Heuristic::add_colls_compress_graph(const std::vector<std::list<size
 	construct_new_rob_sequence(rob_seq, vec_compress_status, new_rob_seq);
 	m_alt_graph.compress_graph(m_graph, m_map_superVtx_vecVtx, m_map_vtx_super_vtx, alt_coll_edges, new_rob_seq, m_map_super_vtx_proc_time);
 	reassign_enablers();
+#endif
 	return true;
 }
 
-bool Greedy_Heuristic::gather_coll_cons_update_compr_verts(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<bool>> &vec_compress_status, std::vector<std::pair<arc, arc>> &alt_coll_edges)
+bool Greedy_Heuristic_Compression::gather_coll_cons_update_compr_verts(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<bool>> &vec_compress_status, std::vector<std::pair<arc, arc>> &alt_coll_edges)
 {
 	assert(std::numeric_limits<size_t>::min() != m_uiSuperVtxThresh);
 	bool bFeasible;
@@ -61,7 +79,7 @@ bool Greedy_Heuristic::gather_coll_cons_update_compr_verts(const std::vector<std
 }
 
 //At this stage, m_alt_graph is in uncompressed form
-void Greedy_Heuristic::update_compr_verts_by_unself_enabled_and_deps(std::vector<std::vector<bool>> &vec_compress_status)
+void Greedy_Heuristic_Compression::update_compr_verts_by_unself_enabled_and_deps(std::vector<std::vector<bool>> &vec_compress_status)
 {
 	for (auto it = m_map_enabler_pos_vert.begin(); it != m_map_enabler_pos_vert.end(); it++)
 	{
@@ -81,7 +99,7 @@ void Greedy_Heuristic::update_compr_verts_by_unself_enabled_and_deps(std::vector
 }
 
 //at this stage, the m_alt_graph has been compressed and vertex positions have been updated
-void Greedy_Heuristic::reassign_enablers()
+void Greedy_Heuristic_Compression::reassign_enablers()
 {
 	for (auto it = m_map_enabler_pos_vert.begin(); it != m_map_enabler_pos_vert.end(); it++)
 	{
@@ -96,7 +114,7 @@ void Greedy_Heuristic::reassign_enablers()
 	}
 }
 
-bool Greedy_Heuristic::gather_coll_cons_compr_verts_rob_pair(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<bool>> &vec_compress_status, std::vector<std::pair<arc, arc>> &alt_coll_edges)
+bool Greedy_Heuristic_Compression::gather_coll_cons_compr_verts_rob_pair(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<bool>> &vec_compress_status, std::vector<std::pair<arc, arc>> &alt_coll_edges)
 {
 	size_t uiPos = 0;
 	for (auto it1 = rob_seq[uiRobot1].begin(); it1 != rob_seq[uiRobot1].end(); it1++)
@@ -139,7 +157,7 @@ bool Greedy_Heuristic::gather_coll_cons_compr_verts_rob_pair(size_t uiRobot1, si
 	return true;
 }
 
-void Greedy_Heuristic::construct_new_rob_sequence(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<bool>> &vec_compress_status, std::vector<std::list<size_t>> &new_rob_seq)
+void Greedy_Heuristic_Compression::construct_new_rob_sequence(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<bool>> &vec_compress_status, std::vector<std::list<size_t>> &new_rob_seq)
 {
 	assert(m_uiSuperVtxThresh != std::numeric_limits<size_t>::min());
 	size_t uiSuperVtxInd = m_uiSuperVtxThresh;

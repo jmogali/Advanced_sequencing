@@ -9,5 +9,6 @@ const size_t c_uiLate_Acceptace_Length = 100;
 const size_t LS_SEARCH_TIME = 600;
 
 #define ENABLE_LEGACY_CODE
+#define COMPRESSION_ENABLE
 
 #endif
