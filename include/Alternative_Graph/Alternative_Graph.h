@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include "Hashing_Utils.h"
 #include <list>
+#include "Layout_LS.h"
+#include "Windows_Linux.h"
 
 namespace Alternative_Graphs
 {
@@ -81,15 +83,13 @@ class Alternative_Graph
 		bool contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, const std::unordered_set<size_t> &comp);
 
 		void add_prec_arc(arc new_arc, size_t uiCost);
-		void remove_prec_arc(size_t uiVtx1, size_t uiVtx2);
-				
-		//bool get_topological_order_robot_pairwise(std::unordered_map<size_t, std::string> &map_visited_state, std::list<size_t> &stack_topo_order, size_t uiVtx) const;
-
+		void remove_prec_arc(size_t uiVtx1, size_t uiVtx2, bool bAltGraphBackTrack = true);		
+		
 	public:
 		Alternative_Graph();
 		void add_prec_arc(size_t uiVtx1, size_t uiVtx2, size_t uiCost);
 		void add_alt_arc(size_t uiVtx11, size_t uiVtx12, size_t uiVtx21, size_t uiVtx22);
-		void remove_prec_arc(arc new_arc);
+		void remove_prec_arc(arc new_arc, bool bAltGraphBackTrack = true);
 		
 		void allocate_buffer_for_graph(const std::vector<std::list<size_t>> &rob_seq);
 		void clear_prev_info();
@@ -111,6 +111,16 @@ class Alternative_Graph
 		std::pair<bool, size_t> get_best_preceding_arc(size_t uiVtx, size_t uiOtherRobot) const;
 		std::pair<bool, size_t> get_next_vtx_same_job(size_t uiVtx);
 		std::pair<bool, size_t> get_prec_vtx_same_job(size_t uiVtx);
+		inline bool containsVertex(size_t uiVtx) { return m_vec_adj_set_out.find(uiVtx) != m_vec_adj_set_out.end() ? true : false; };
+
+		void compress_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::vector<std::pair<arc, arc>> &alt_coll_edges, std::vector<std::list<size_t>> &new_rob_seq, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time);
+		void compress_prec_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time);
+		void add_compressed_alt_edges(const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::vector<std::pair<arc, arc>> &alt_coll_edges);
+		void remove_buffer_redundant_vtx(size_t uiVert);
+		void reallocate_buffers_compressed_vertices(const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx);
+		void reassign_vertex_ownership_positions(std::vector<std::list<size_t>> &new_rob_seq);
+		void reassign_vertex_ownership_pos(size_t uiVtx, size_t uiRobot, size_t uiPos);
+		void sanity_check_compression(std::vector<std::list<size_t>> &new_rob_seq);
 
 		friend class Sequence_Visualization;
 };
