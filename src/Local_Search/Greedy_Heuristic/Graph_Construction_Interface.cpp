@@ -363,12 +363,11 @@ std::pair<bool, bool> add_scc_check_coll_feasible(std::unordered_set<Coll_Pair, 
 	return std::make_pair(true, bAdded);
 }
 
-bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter, std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &map_enabler_pos_vert)
+bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter, std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &map_enabler_pos_vert, std::unordered_set<Coll_Pair, CollHasher> &set_coll)
 {
 	bool bChange = true, bFirstIter = true, bFeasible;
 	std::list<arc> list_prec_arcs_betw_jobs;
-	std::unordered_set<Coll_Pair, CollHasher> set_coll;
-	
+		
 	while (bChange)
 	{
 		bChange = false;
@@ -396,7 +395,6 @@ bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const
 		
 		bFirstIter = false;
 	}
-
 	return true;
 }
 
@@ -404,7 +402,7 @@ bool Greedy_Heuristic::construct_Alt_Graph(const std::vector<std::list<size_t>> 
 {
 	m_alt_graph.allocate_buffer_for_graph(rob_seq);
 	construct_prec_graph_for_each_operation(rob_seq, m_graph, m_alt_graph);
-	bool bFeasible = add_enabling_coll_cons(rob_seq, m_graph, m_alt_graph, m_coll_filter, m_map_enabler_pos_vert);
+	bool bFeasible = add_enabling_coll_cons(rob_seq, m_graph, m_alt_graph, m_coll_filter, m_map_enabler_pos_vert, m_set_coll);
 	if (false == bFeasible) return false;
 
 #ifdef COMPRESSION_ENABLE
@@ -413,6 +411,7 @@ bool Greedy_Heuristic::construct_Alt_Graph(const std::vector<std::list<size_t>> 
 	new_rob_seq = rob_seq;
 	bFeasible = add_coll_cons(rob_seq, m_graph, m_alt_graph, m_coll_filter);	
 #endif
+
 	if (false == bFeasible) return false;
 	return bFeasible;
 }

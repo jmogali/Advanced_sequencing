@@ -4,7 +4,7 @@
 #include "Windows_Linux.h"
 
 
-void Collision_Filtering::clear_prev_bounds_related_info()
+void Collision_Filtering::clear_prev_info()
 {
 	m_out_graph.clear();
 	m_in_graph.clear();
@@ -95,7 +95,7 @@ void Collision_Filtering::construct_in_graph()
 // Also add redundant strongly connected component arcs
 bool Collision_Filtering::Check_Feasibility_Compute_Bounds_For_Each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph)
 {
-	clear_prev_bounds_related_info();
+	clear_prev_info();
 
 	Kosaraju_Algo obj;
 	obj.compute_maximal_components(alt_graph.getGraph(), alt_graph.getReverseGraph(), m_list_Comp);

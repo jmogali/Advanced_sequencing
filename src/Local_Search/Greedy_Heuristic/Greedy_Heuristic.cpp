@@ -61,6 +61,13 @@ void Greedy_Heuristic::clear_prev_info_buffers()
 	m_set_to_do_verts.clear();	
 	m_uiSuperVtxThresh = std::numeric_limits<size_t>::min();
 	m_map_enabler_pos_vert.clear();
+	m_set_coll.clear();
+
+#ifdef COMPRESSION_ENABLE
+	m_map_superVtx_vecVtx.clear();
+	m_map_vtx_super_vtx.clear();
+	m_map_super_vtx_proc_time.clear();
+#endif
 }
 
 // populates buffers for storing timing information
@@ -658,13 +665,13 @@ void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &
 					if (*it_vtx == *m_map_superVtx_vecVtx.at(uiSuperVtx).rbegin()) break;
 					uiEnd = uiStart + getTime(*it_vtx);
 					uiWait = uiEnd - getTime(*it_vtx) - uiStart;
-					assert(uiWait >= 0);
+					assert((int)uiEnd - (int)getTime(*it_vtx) - (int)uiStart >= 0);
 					vec_rob_sch[uiRobot].emplace_back(*it_vtx, uiStart, uiEnd, uiWait);
 					uiStart = uiEnd;
 				}
 				uiEnd = m_rob_hole_times[uiRobot].at(*it2).m_uiStartTime;
-				uiWait = uiEnd - getTime(*it1) - uiStart;
-				assert(uiWait >= 0);
+				uiWait = uiEnd - getTime(*m_map_superVtx_vecVtx.at(uiSuperVtx).rbegin()) - uiStart;
+				assert((int)uiEnd - (int)getTime(*m_map_superVtx_vecVtx.at(uiSuperVtx).rbegin()) - (int)uiStart >= 0);
 				vec_rob_sch[uiRobot].emplace_back(*m_map_superVtx_vecVtx.at(uiSuperVtx).rbegin(), uiStart, uiEnd, uiWait);
 				uiStart = uiEnd;
 			}
@@ -672,13 +679,14 @@ void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &
 			{
 				uiEnd = m_rob_hole_times[uiRobot].at(*it2).m_uiStartTime;
 				uiWait = uiEnd - getTime(*it1) - uiStart;
-				assert(uiWait >= 0);
+				assert((int)uiEnd - (int)getTime(*it1) - (int)uiStart >= 0);
 				vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiEnd, uiWait);
 				uiStart = uiEnd;
 			}
 #else
 			uiEnd = m_rob_hole_times[uiRobot].at(*it2).m_uiStartTime;
 			uiWait = uiEnd - getTime(*it1) - uiStart;
+			assert((int)uiEnd - (int)getTime(*it1) - (int)uiStart >= 0);
 			vec_rob_sch[uiRobot].emplace_back(*it1, uiStart , uiEnd, uiWait);
 			uiStart = uiEnd;
 #endif
