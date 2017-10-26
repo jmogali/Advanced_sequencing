@@ -69,7 +69,7 @@ class Alterative_arc
 
 class Alternative_Graph
 {
-	protected:
+	private:
 		std::unordered_map<size_t, std::unordered_map<size_t , size_t>> m_vec_adj_set_out;		// vtx , <adj vertex, cost>
 		std::unordered_map<size_t, std::unordered_map<size_t, size_t>> m_vec_adj_set_in;		// vtx , <adj vertex, cost>
 		std::unordered_map<size_t, std::pair<size_t , size_t> > m_map_vertex_robot_pos_map;			// vertex , <robot_owner, position>
@@ -85,6 +85,14 @@ class Alternative_Graph
 		void add_prec_arc(arc new_arc, size_t uiCost);
 		void remove_prec_arc(size_t uiVtx1, size_t uiVtx2, bool bAltGraphBackTrack = true);		
 		
+		void compress_prec_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time);
+		void add_compressed_alt_edges(const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::unordered_set<Coll_Pair, CollHasher> &set_coll);
+		void remove_buffer_redundant_vtx(size_t uiVert);
+		void reallocate_buffers_compressed_vertices(const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx);
+		void reassign_vertex_ownership_positions(std::vector<std::list<size_t>> &new_rob_seq);
+		void reassign_vertex_ownership_pos(size_t uiVtx, size_t uiRobot, size_t uiPos);
+		void sanity_check_compression(std::vector<std::list<size_t>> &new_rob_seq);
+
 	public:
 		Alternative_Graph();
 		void add_prec_arc(size_t uiVtx1, size_t uiVtx2, size_t uiCost);
@@ -112,6 +120,8 @@ class Alternative_Graph
 		std::pair<bool, size_t> get_next_vtx_same_job(size_t uiVtx);
 		std::pair<bool, size_t> get_prec_vtx_same_job(size_t uiVtx);
 		inline bool containsVertex(size_t uiVtx) { return m_vec_adj_set_out.find(uiVtx) != m_vec_adj_set_out.end() ? true : false; };
+
+		void compress_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::unordered_set<Coll_Pair, CollHasher> &set_coll, std::vector<std::list<size_t>> &new_rob_seq, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time);
 
 		friend class Sequence_Visualization;
 };

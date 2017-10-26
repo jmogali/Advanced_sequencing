@@ -1,9 +1,7 @@
-#include "Alternative_Graph_Compression.h"
+#include "Alternative_Graph.h"
 #include <assert.h>
 
-Alternative_Graph_Compression::Alternative_Graph_Compression() {}
-
-void Alternative_Graph_Compression::reallocate_buffers_compressed_vertices(const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx)
+void Alternative_Graph::reallocate_buffers_compressed_vertices(const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx)
 {
 	for (auto it_super = map_superVtx_vecVtx.begin(); it_super != map_superVtx_vecVtx.end(); it_super++)
 	{
@@ -14,7 +12,7 @@ void Alternative_Graph_Compression::reallocate_buffers_compressed_vertices(const
 	}
 }
 
-void Alternative_Graph_Compression::remove_buffer_redundant_vtx(size_t uiVert)
+void Alternative_Graph::remove_buffer_redundant_vtx(size_t uiVert)
 {
 	assert(m_vec_adj_set_out[uiVert].size() <= 1);
 	assert(m_vec_adj_set_in[uiVert].size() <= 1);
@@ -28,7 +26,7 @@ void Alternative_Graph_Compression::remove_buffer_redundant_vtx(size_t uiVert)
 	m_map_vertex_robot_pos_map.erase(uiVert);
 }
 
-void Alternative_Graph_Compression::reassign_vertex_ownership_pos(size_t uiVtx, size_t uiRobot, size_t uiPos)
+void Alternative_Graph::reassign_vertex_ownership_pos(size_t uiVtx, size_t uiRobot, size_t uiPos)
 {
 	if (m_map_vertex_robot_pos_map.end() == m_map_vertex_robot_pos_map.find(uiVtx))
 		m_map_vertex_robot_pos_map.emplace(uiVtx, std::make_pair(uiRobot, uiPos));
@@ -36,7 +34,7 @@ void Alternative_Graph_Compression::reassign_vertex_ownership_pos(size_t uiVtx, 
 		m_map_vertex_robot_pos_map[uiVtx] = std::make_pair(uiRobot, uiPos);
 }
 
-void Alternative_Graph_Compression::reassign_vertex_ownership_positions(std::vector<std::list<size_t>> &new_rob_seq)
+void Alternative_Graph::reassign_vertex_ownership_positions(std::vector<std::list<size_t>> &new_rob_seq)
 {
 	size_t uiNumRobots = new_rob_seq.size();
 
@@ -68,7 +66,7 @@ size_t get_total_num_verts(std::vector<std::list<size_t>> &new_rob_seq)
 	return uiVert;
 }
 
-void Alternative_Graph_Compression::sanity_check_compression(std::vector<std::list<size_t>> &new_rob_seq)
+void Alternative_Graph::sanity_check_compression(std::vector<std::list<size_t>> &new_rob_seq)
 {
 #ifdef WINDOWS
 	size_t uiVertNum = get_total_num_verts(new_rob_seq);
@@ -89,17 +87,17 @@ void Alternative_Graph_Compression::sanity_check_compression(std::vector<std::li
 		cout << "Graph compression, mismatch 2";
 		exit(1);
 	}
-	assert(uiVertNum == m_vec_vtx_alt_edge_ind_in.size())
+	if(uiVertNum != m_vec_vtx_alt_edge_ind_in.size())
 	{
 		cout << "Graph compression, mismatch 3";
 		exit(1);
 	}
-	assert(uiVertNum == m_vec_vtx_alt_edge_ind_out.size())
+	if(uiVertNum != m_vec_vtx_alt_edge_ind_out.size())
 	{
 		cout << "Graph compression, mismatch 4";
 		exit(1);
 	}
-	assert(uiVertNum == m_map_vertex_robot_pos_map.size())
+	if(uiVertNum != m_map_vertex_robot_pos_map.size())
 	{
 		cout << "Graph compression, mismatch 5";
 		exit(1);
@@ -107,18 +105,18 @@ void Alternative_Graph_Compression::sanity_check_compression(std::vector<std::li
 #endif
 }
 
-void Alternative_Graph_Compression::compress_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::vector<std::pair<arc, arc>> &alt_coll_edges, std::vector<std::list<size_t>> &new_rob_seq, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time)
+void Alternative_Graph::compress_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::unordered_set<Coll_Pair, CollHasher> &set_coll, std::vector<std::list<size_t>> &new_rob_seq, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time)
 {
 	assert(0 == m_alt_edges.size());
 	reallocate_buffers_compressed_vertices(map_superVtx_vecVtx);
 	compress_prec_graph(layout_graph, map_superVtx_vecVtx, map_super_vtx_proc_time);
-	add_compressed_alt_edges(map_vtx_super_vtx, alt_coll_edges);
 	reassign_vertex_ownership_positions(new_rob_seq);
+	add_compressed_alt_edges(map_vtx_super_vtx, set_coll);
 
 	sanity_check_compression(new_rob_seq);
 }
 
-void Alternative_Graph_Compression::compress_prec_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time)
+void Alternative_Graph::compress_prec_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time)
 {
 	size_t uiSuperVtx;
 	for (auto it_vtx_vec = map_superVtx_vecVtx.begin(); it_vtx_vec != map_superVtx_vecVtx.end(); it_vtx_vec++)
@@ -154,27 +152,23 @@ void Alternative_Graph_Compression::compress_prec_graph(const Layout_LS &layout_
 	}
 }
 
-void Alternative_Graph_Compression::add_compressed_alt_edges(const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::vector<std::pair<arc, arc>> &alt_coll_edges)
+void Alternative_Graph::add_compressed_alt_edges(const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::unordered_set<Coll_Pair, CollHasher> &set_coll)
 {
-	size_t uiVtx11, uiVtx12, uiVtx21, uiVtx22;
-	for (auto it = alt_coll_edges.begin(); it != alt_coll_edges.end(); it++)
+	size_t uiVtx1, uiVtx2, uiVtx1_nxt, uiVtx2_nxt;
+	for (auto it = set_coll.begin(); it != set_coll.end(); it++)
 	{
-		uiVtx11 = it->first.first;
-		auto it_find = map_vtx_super_vtx.find(uiVtx11);
-		if (map_vtx_super_vtx.end() != it_find) uiVtx11 = it_find->second;
+		uiVtx1 = it->getPair1().getInd1();
+		uiVtx2 = it->getPair2().getInd1();
+		
+		auto it_nxt1 = get_next_vtx_same_job(uiVtx1);
+		assert(true == it_nxt1.first);
+		uiVtx1_nxt = it_nxt1.second;
 
-		uiVtx12 = it->first.second;
-		it_find = map_vtx_super_vtx.find(uiVtx12);
-		if (map_vtx_super_vtx.end() != it_find) uiVtx12 = it_find->second;
+		auto it_nxt2 = get_next_vtx_same_job(uiVtx2);
+		assert(true == it_nxt2.first);
+		uiVtx2_nxt = it_nxt2.second;
 
-		uiVtx21 = it->second.first;
-		it_find = map_vtx_super_vtx.find(uiVtx21);
-		if (map_vtx_super_vtx.end() != it_find) uiVtx21 = it_find->second;
-
-		uiVtx22 = it->second.second;
-		it_find = map_vtx_super_vtx.find(uiVtx22);
-		if (map_vtx_super_vtx.end() != it_find) uiVtx22 = it_find->second;
-
-		add_alt_arc(uiVtx11, uiVtx12, uiVtx21, uiVtx22);
+		add_alt_arc(uiVtx2_nxt, uiVtx1, uiVtx1_nxt, uiVtx2);
 	}
 }
+

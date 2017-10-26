@@ -3,7 +3,7 @@
 #define LOCAL_SEARCH_H
 #include "Local_Search_Constants.h"
 #include "Node_Partitions.h"
-#include "Greedy_Heuristic_Compression.h"
+#include "Greedy_Heuristic.h"
 #include "Greedy_Heuristic_old.h"
 #include <random>
 
@@ -30,11 +30,7 @@ class Local_Search
 		bool swap_intra_sequence(size_t uiRobot , std::vector<std::list<size_t>> &rob_seq);
 		bool string_cross_intra_sequence(size_t uiRobot, std::vector<std::list<size_t>> &rob_seq, bool bDist);
 		void convert_hole_seq_to_full_seq(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &full_rob_seq);
-#ifdef COMPRESSION_ENABLE		
-		int perform_greedy_scheduling(Greedy_Heuristic_Compression &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolderPath);
-#else
 		int perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolderPath);
-#endif	
 		int perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
 
 		void remove_holes_that_are_not_assigned_to_robots_from_enabler_seq(size_t c_uiNumRobots, std::vector<std::vector<size_t>> &vec_com_hole_par, std::vector<std::list<size_t>> &vec_rob_enab_seq);
