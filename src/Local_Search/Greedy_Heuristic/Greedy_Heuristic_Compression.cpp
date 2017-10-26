@@ -21,9 +21,9 @@ size_t initialize_buffer_compr_verts(const Alternative_Graph &alt_graph, const s
 			
 			//checks if there is an incoming or outgoing precedence arc for the vertex
 			if ((out_graph.at(uiVert).size() > 1) || (in_graph.at(uiVert).size() > 1))
-				vec_compress_status[uiRobot].emplace_back(false);
+				vec_compress_status[uiRobot].push_back(false);
 			else 
-				vec_compress_status[uiRobot].emplace_back(true);
+				vec_compress_status[uiRobot].push_back(true);
 		}
 		vec_compress_status[uiRobot][0] = false; // starting vertex should not be compressed				
 		vec_compress_status[uiRobot][vec_compress_status[uiRobot].size()-1] = false;	// ending vertex should not be compressed
