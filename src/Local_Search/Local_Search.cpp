@@ -105,8 +105,17 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 	std::string strType;
 	size_t uiIter = 0, uiChoice, uiMakeSpan, uiMakeSpan_old, uiBestSol = std::numeric_limits<size_t>::max();
 	Power_Set power;
+
+#ifdef COMPRESSION_ENABLE
+	Greedy_Heuristic_Compression heur(m_node_data.m_uiNumRobots, m_graph, power);
+#else
 	Greedy_Heuristic heur(m_node_data.m_uiNumRobots, m_graph, power);
+#endif
+
+#ifdef ENABLE_LEGACY_CODE
 	Greedy_Heuristic_old heur_old(m_node_data.m_uiNumRobots, m_graph, power);
+#endif
+
 	std::vector<size_t> vec_late_accep(c_uiLate_Acceptace_Length, std::numeric_limits<size_t>::max());
 	
 	std::clock_t start_time;
@@ -176,9 +185,21 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 #ifdef ENABLE_LEGACY_CODE			
 			uiMakeSpan_old = (iRetVal_old == 1) ? getMakeSpan_From_Schedule(full_rob_sch_old) : std::numeric_limits<size_t>::max();
 #endif			
-			if (uiBestSol > uiMakeSpan) {
-				uiBestSol = uiMakeSpan;
-			}			
+			if (uiBestSol > uiMakeSpan)	uiBestSol = uiMakeSpan;	
+
+#ifdef ENABLE_LEGACY_CODE
+			if (uiMakeSpan != uiMakeSpan_old)
+			{
+				print_sequence(rob_seq);
+#ifdef WINDOWS
+				assert(uiMakeSpan == uiMakeSpan_old);
+#else
+
+				cout << "Makespans not equal";
+				exit(1);
+#endif		
+			}
+#endif
 			
 #ifdef ENABLE_LEGACY_CODE			
 			cout << " Iteration: " << uiIter << " , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") << " , Makespan: " << uiMakeSpan << " , Old Makespan: " << uiMakeSpan_old << endl;
@@ -237,21 +258,25 @@ void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size
 	}
 }
 
+#ifdef COMPRESSION_ENABLE
+int Local_Search::perform_greedy_scheduling(Greedy_Heuristic_Compression &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolderPath)
+#else
 int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolderPath)
+#endif
 {
 	std::vector<std::list<size_t>> full_rob_seq;
-	//convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
-	full_rob_seq.push_back({ 0,115,44,2322,46,2431,47,2482,43,2263,40,2099,38,1997,45,2353,22,1111,23,1167,25,1275,24,1205,8,338,5,182,12,562,14,670,13,620,18,889,16,771,6,266,42,2190,21,1042,7,319,41,2145,30,1577,57,3011,32,1662,34,1772,36,1880,35,1806,15,741,31,1603,28,1451,39,2044,37,1918,19,952,26,1337,33,1694,11,511,17,828,9,391,4,126,10,460,20,3107,1});
-	full_rob_seq.push_back({ 2,3175,81,6812,82,6858,62,5556,60,5435,70,6086,71,6129,48,4634,49,4701,51,4834,54,5033,58,5292,56,5133,27,3249,29,3438,88,7274,89,7341,91,7471,90,7375,59,5375,75,6419,79,6679,78,6615,80,6727,61,5514,84,7000,74,6329,53,4975,65,5757,67,5889,69,6019,68,5950,64,5697,72,6230,85,7046,55,5091,50,4801,86,7139,83,6927,66,5842,87,7173,52,4918,73,6286,76,6482,77,6534,63,7509,3});
+	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
+	//full_rob_seq.push_back({ 0,115,44,2322,46,2431,47,2482,43,2263,40,2099,38,1997,45,2353,22,1111,23,1167,25,1275,24,1205,8,338,5,182,12,562,14,670,13,620,18,889,16,771,6,266,42,2190,21,1042,7,319,41,2145,30,1577,57,3011,32,1662,34,1772,36,1880,35,1806,15,741,31,1603,28,1451,39,2044,37,1918,19,952,26,1337,33,1694,11,511,17,828,9,391,4,126,10,460,20,3107,1 });
+	//full_rob_seq.push_back({ 2,3175,81,6812,82,6858,62,5556,60,5435,70,6086,71,6129,48,4634,49,4701,51,4834,54,5033,58,5292,56,5133,27,3249,29,3438,88,7274,89,7341,91,7471,90,7375,59,5375,75,6419,79,6679,78,6615,80,6727,61,5514,84,7000,74,6329,53,4975,65,5757,67,5889,69,6019,68,5950,64,5697,72,6230,85,7046,55,5091,50,4801,86,7139,83,6927,66,5842,87,7173,52,4918,73,6286,76,6482,77,6534,63,7509,3 });
 	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch, strFolderPath);
 }
 
 int Local_Search::perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)
 {
 	std::vector<std::list<size_t>> full_rob_seq;
-	//convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
-	full_rob_seq.push_back({ 0,115,44,2322,46,2431,47,2482,43,2263,40,2099,38,1997,45,2353,22,1111,23,1167,25,1275,24,1205,8,338,5,182,12,562,14,670,13,620,18,889,16,771,6,266,42,2190,21,1042,7,319,41,2145,30,1577,57,3011,32,1662,34,1772,36,1880,35,1806,15,741,31,1603,28,1451,39,2044,37,1918,19,952,26,1337,33,1694,11,511,17,828,9,391,4,126,10,460,20,3107,1});
-	full_rob_seq.push_back({ 2,3175,81,6812,82,6858,62,5556,60,5435,70,6086,71,6129,48,4634,49,4701,51,4834,54,5033,58,5292,56,5133,27,3249,29,3438,88,7274,89,7341,91,7471,90,7375,59,5375,75,6419,79,6679,78,6615,80,6727,61,5514,84,7000,74,6329,53,4975,65,5757,67,5889,69,6019,68,5950,64,5697,72,6230,85,7046,55,5091,50,4801,86,7139,83,6927,66,5842,87,7173,52,4918,73,6286,76,6482,77,6534,63,7509,3});
+	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
+	//full_rob_seq.push_back({ 0,115,44,2322,46,2431,47,2482,43,2263,40,2099,38,1997,45,2353,22,1111,23,1167,25,1275,24,1205,8,338,5,182,12,562,14,670,13,620,18,889,16,771,6,266,42,2190,21,1042,7,319,41,2145,30,1577,57,3011,32,1662,34,1772,36,1880,35,1806,15,741,31,1603,28,1451,39,2044,37,1918,19,952,26,1337,33,1694,11,511,17,828,9,391,4,126,10,460,20,3107,1 });
+	//full_rob_seq.push_back({ 2,3175,81,6812,82,6858,62,5556,60,5435,70,6086,71,6129,48,4634,49,4701,51,4834,54,5033,58,5292,56,5133,27,3249,29,3438,88,7274,89,7341,91,7471,90,7375,59,5375,75,6419,79,6679,78,6615,80,6727,61,5514,84,7000,74,6329,53,4975,65,5757,67,5889,69,6019,68,5950,64,5697,72,6230,85,7046,55,5091,50,4801,86,7139,83,6927,66,5842,87,7173,52,4918,73,6286,76,6482,77,6534,63,7509,3 });
 	return heur_old.compute_greedy_sol(full_rob_seq, full_rob_sch);
 }
 

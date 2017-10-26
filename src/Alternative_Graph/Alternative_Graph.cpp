@@ -85,16 +85,17 @@ void Alternative_Graph::add_prec_arc(arc new_arc, size_t uiCost)
 	return add_prec_arc(new_arc.first, new_arc.second, uiCost);
 }
 
-void Alternative_Graph::remove_prec_arc(size_t uiVtx1, size_t uiVtx2)
+void Alternative_Graph::remove_prec_arc(size_t uiVtx1, size_t uiVtx2, bool bAltGraphBackTrack)
 {
-	assert(0 == m_vec_adj_set_out[uiVtx1].at(uiVtx2));
+	if(bAltGraphBackTrack) assert(0 == m_vec_adj_set_out[uiVtx1].at(uiVtx2));
+	
 	m_vec_adj_set_out[uiVtx1].erase(uiVtx2);
 	m_vec_adj_set_in[uiVtx2].erase(uiVtx1);
 }
 
-void Alternative_Graph::remove_prec_arc(arc new_arc)
+void Alternative_Graph::remove_prec_arc(arc new_arc, bool bAltGraphBackTrack)
 {
-	return remove_prec_arc(new_arc.first , new_arc.second);
+	return remove_prec_arc(new_arc.first , new_arc.second, bAltGraphBackTrack);
 }
 
 void Alternative_Graph::add_vertex_ownership_pos(size_t uiVtx, size_t uiRobot, size_t uiPos)

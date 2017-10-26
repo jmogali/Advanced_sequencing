@@ -62,6 +62,7 @@ std::string generate_data(const Boeing_Fuesalage &boeing, std::string strDataset
 	return strFilePath;
 }
 
+
 #ifdef WINDOWS
 int main()
 #else
@@ -113,6 +114,7 @@ int main(int argc, char** argv)
 
 	cout << "Tag: \n\n\n";
 }
+
 
 /*
 void swap_Intra_Sequence(size_t uiPos1, size_t uiLen1, size_t uiPos2, size_t uiLen2, std::list<size_t> &seq)
@@ -341,22 +343,3 @@ map_new_sel_arcs.clear();
 bool bFeas = graph.get_arcs_to_make_sel_positional(R, map_new_sel_arcs);
 };*/
 
-/*int main()
-{
-std::unordered_map<size_t, std::unordered_set<size_t>> graph;
-graph.emplace(0, std::unordered_set<size_t>());
-graph.emplace(1, std::unordered_set<size_t>());
-graph.emplace(2, std::unordered_set<size_t>());
-graph.emplace(3, std::unordered_set<size_t>());
-graph.emplace(4, std::unordered_set<size_t>());
-
-graph[0].emplace(1);
-graph[1].emplace(2);
-graph[2].emplace(0);
-graph[3].emplace(4);
-graph[4].emplace(3);
-
-Kosaraju_Algo obj;
-std::vector<std::unordered_set<size_t>> listComp;
-obj.compute_maximal_components(graph , listComp);
-}*/

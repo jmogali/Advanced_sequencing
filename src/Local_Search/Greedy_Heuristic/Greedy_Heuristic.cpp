@@ -32,13 +32,13 @@ Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &gra
 	m_vec_nc_eft.resize(uiRobotNum);
 }
 
-bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_t>> &rob_seq)
+bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq)
 {
-	bool bFeasible = construct_Alt_Graph_STN(rob_seq);
+	bool bFeasible = construct_Alt_Graph_STN(rob_seq, new_rob_seq);
 	if (false == bFeasible) return false;
-	allocate_buffers(rob_seq);		
-	initialize_to_do_verts(rob_seq);
-	compute_NC_makespan(rob_seq);
+	allocate_buffers(new_rob_seq);
+	initialize_to_do_verts(new_rob_seq);
+	compute_NC_makespan(new_rob_seq);
 	return true;
 }
 
@@ -59,6 +59,8 @@ void Greedy_Heuristic::clear_prev_info_buffers()
 	m_vec_map_new_sel_alt_arcs.clear();
 	assert(0 == m_set_to_do_verts.size());
 	m_set_to_do_verts.clear();	
+	m_uiSuperVtxThresh = std::numeric_limits<size_t>::min();
+	m_map_enabler_pos_vert.clear();
 }
 
 // populates buffers for storing timing information
@@ -86,6 +88,21 @@ void Greedy_Heuristic::initialize_to_do_verts(const std::vector<std::list<size_t
 	}
 }
 
+size_t Greedy_Heuristic::getTime(N_Ind Ind)
+{
+	return getTime(Ind.getInd());
+}
+
+size_t Greedy_Heuristic::getTime(size_t uiVert)
+{
+#ifdef COMPRESSION_ENABLE
+	if (uiVert > m_uiSuperVtxThresh) return m_map_super_vtx_proc_time.at(uiVert);
+	else return m_graph.getTime(uiVert);
+#else 
+	return m_graph.getTime(uiVert);
+#endif
+}
+
 // NC -: No - Collision
 void Greedy_Heuristic::compute_NC_makespan(const std::vector<std::list<size_t>> &rob_seq)
 {
@@ -94,7 +111,7 @@ void Greedy_Heuristic::compute_NC_makespan(const std::vector<std::list<size_t>> 
 		size_t uiMakespan = 0;
 		for (auto it  = rob_seq[uiRobot].begin() ; it != rob_seq[uiRobot].end() ; it++)
 		{
-			uiMakespan += m_graph.getTime(*it);
+			uiMakespan += getTime(*it);
 			m_vec_nc_eft[uiRobot].m_map_eft.emplace(*it, uiMakespan);
 		}
 		m_vec_nc_eft[uiRobot].m_uiNC_Makespan = uiMakespan;
@@ -111,14 +128,11 @@ void Greedy_Heuristic::populate_root_node_info(State &root, const std::vector<st
 
 int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strFolder)
 {
-#ifdef WINDOWS
 	//print_sequence(rob_seq);
-#endif
-
 	Sequence_Visualization obj_vis;
 	clear_prev_info_buffers();
-	
-	bool bFeasible = perform_initializations(rob_seq);
+	std::vector<std::list<size_t>> new_rob_seq;
+	bool bFeasible = perform_initializations(rob_seq, new_rob_seq);
 	if (false == bFeasible) 
 	{ 
 #ifdef PLOT_INFEASIBLE_CASES
@@ -129,10 +143,10 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 	}
 
 	State root(m_uiNumRobots);
-	populate_root_node_info(root , rob_seq);
+	populate_root_node_info(root , new_rob_seq);
 	int iRetVal = compute_DFS(root, 0, 0);
-	if (1 == iRetVal) { vectorize_schedule(rob_seq , vec_rob_sch); }
-	else { m_set_to_do_verts.clear(); }
+	if (1 == iRetVal) { vectorize_schedule(new_rob_seq, vec_rob_sch); }
+	else  m_set_to_do_verts.clear(); 
 
 	if (-1 == iRetVal)
 	{
@@ -243,9 +257,18 @@ int Greedy_Heuristic::check_if_coll_feasible(const State& state)
 	for (size_t uiRobot1 = 0; uiRobot1 < m_uiNumRobots; uiRobot1++)
 	{
 		N_Ind Ind1(*state.m_vec_rob_pos[uiRobot1]);
+
+#ifdef COMPRESSION_ENABLE
+		if (Ind1.getInd() > m_uiSuperVtxThresh) continue;
+#endif
 		for (size_t uiRobot2 = uiRobot1 + 1; uiRobot2 < m_uiNumRobots; uiRobot2++)
 		{
 			N_Ind Ind2(*state.m_vec_rob_pos[uiRobot2]);
+
+#ifdef COMPRESSION_ENABLE
+			if (Ind2.getInd() > m_uiSuperVtxThresh) continue;
+#endif
+
 			if (m_graph.areColliding(Coll_Pair(Ind1, uiRobot1, Ind2, uiRobot2)))
 				return -1;
 		}
@@ -253,6 +276,32 @@ int Greedy_Heuristic::check_if_coll_feasible(const State& state)
 	return 0;
 }
 
+int Greedy_Heuristic::check_if_enabling_feasible(const State& state)
+{
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		N_Ind Ind(*state.m_vec_rob_pos[uiRobot]);
+		if (m_map_enabler_pos_vert.end() == m_map_enabler_pos_vert.find(Ind.getInd())) continue;
+		else
+		{
+			bool bEnabled = false;
+			for (size_t uiOtherRobot = 0; uiOtherRobot < m_uiNumRobots; uiOtherRobot++)
+			{
+				if (uiRobot == uiOtherRobot) continue;
+				size_t uiPos = m_alt_graph.get_vertex_position(*state.m_vec_rob_pos[uiOtherRobot]);
+				if (uiPos >= m_map_enabler_pos_vert.at(Ind.getInd()).at(uiOtherRobot).first)
+				{
+					bEnabled = true;
+					break;
+				}
+			}
+			if (false == bEnabled) return -1;
+		}
+	}
+	return 0;
+}
+
+/*
 int Greedy_Heuristic::check_if_enabling_feasible(const State& state)
 {
 	bool bEnabled;
@@ -265,10 +314,16 @@ int Greedy_Heuristic::check_if_enabling_feasible(const State& state)
 	}
 	return 0;
 }
+*/
+
 
 bool Greedy_Heuristic::check_if_self_enabling(size_t uiRobot, const State& state)
 {
 	N_Ind Ind(*state.m_vec_rob_pos[uiRobot]);
+#ifdef COMPRESSION_ENABLE
+	// its location here is crucial because, super vertex dont have types
+	if (Ind.getInd() > m_uiSuperVtxThresh) return true;
+#endif
 
 	if ("H" != m_graph.getType(Ind)) return true;
 
@@ -283,15 +338,62 @@ bool Greedy_Heuristic::check_if_self_enabling(size_t uiRobot, const State& state
 	{
 		for (auto it = m_set_prev_HD_states[uiRobot].begin(); it != m_set_prev_HD_states[uiRobot].end(); it++)
 		{
+#ifdef COMPRESSION_ENABLE
+			if (it->first.getInd() > m_uiSuperVtxThresh)
+			{
+				size_t uiSuperVrt = it->first.getInd();
+				for (auto it_vtx = m_map_superVtx_vecVtx.at(uiSuperVrt).begin(); it_vtx != m_map_superVtx_vecVtx.at(uiSuperVrt).end(); it_vtx++)
+				{
+					if (vec_Enablers.at(Ind.getInd()).set.find(*it_vtx) != vec_Enablers.at(Ind.getInd()).set.end())
+					{
+						m_map_self_enabling.emplace(Ind, true);
+						return true;
+					}
+				}
+			}
+			else
+			{
+				if (vec_Enablers.at(Ind.getInd()).set.find(it->first) != vec_Enablers.at(Ind.getInd()).set.end())
+				{
+					m_map_self_enabling.emplace(Ind, true);
+					return true;
+				}
+			}
+#else
 			if (vec_Enablers.at(Ind.getInd()).set.find(it->first) != vec_Enablers.at(Ind.getInd()).set.end())
 			{
 				m_map_self_enabling.emplace(Ind, true);
 				return true;
 			}
+#endif
 		}
 	}
 	else
 	{
+#ifdef COMPRESSION_ENABLE
+		for (auto it = vec_Enablers.at(Ind.getInd()).set.begin(); it != vec_Enablers.at(Ind.getInd()).set.end(); it++)
+		{
+			size_t uiVert = it->getInd();
+			auto it_super_vtx = m_map_vtx_super_vtx.find(uiVert);
+			if (m_map_vtx_super_vtx.end() != it_super_vtx)
+			{
+				size_t uiSuperVtx = it_super_vtx->second;
+				if (m_set_prev_HD_states[uiRobot].find(uiSuperVtx) != m_set_prev_HD_states[uiRobot].end())
+				{
+					m_map_self_enabling.emplace(Ind, true);
+					return true;
+				}
+			}
+			else
+			{
+				if (m_set_prev_HD_states[uiRobot].find(*it) != m_set_prev_HD_states[uiRobot].end())
+				{
+					m_map_self_enabling.emplace(Ind, true);
+					return true;
+				}
+			}
+		}
+#else
 		for (auto it = vec_Enablers.at(Ind.getInd()).set.begin(); it != vec_Enablers.at(Ind.getInd()).set.end(); it++)
 		{
 			if (m_set_prev_HD_states[uiRobot].find(*it) != m_set_prev_HD_states[uiRobot].end())
@@ -300,6 +402,7 @@ bool Greedy_Heuristic::check_if_self_enabling(size_t uiRobot, const State& state
 				return true;
 			}
 		}
+#endif
 	}
 
 	m_map_self_enabling.emplace(Ind, false);
@@ -316,19 +419,61 @@ bool Greedy_Heuristic::check_if_other_enabling(size_t uiRobot, const State& stat
 		if (uiOtherRobot == uiRobot) continue;
 		if (vec_Enablers.size() < m_set_prev_HD_states[uiOtherRobot].size())
 		{
+#ifdef COMPRESSION_ENABLE
+			for (auto it = vec_Enablers.at(Ind.getInd()).set.begin(); it != vec_Enablers.at(Ind.getInd()).set.end(); it++)
+			{
+				size_t uiVert = it->getInd();
+				auto it_super_vtx = m_map_vtx_super_vtx.find(uiVert);
+				if (m_map_vtx_super_vtx.end() != it_super_vtx)
+				{
+					size_t uiSuperVtx = it_super_vtx->second;
+					if (m_set_prev_HD_states[uiOtherRobot].find(uiSuperVtx) != m_set_prev_HD_states[uiOtherRobot].end())
+						return true;
+				}
+				else
+				{
+					if (m_set_prev_HD_states[uiOtherRobot].find(*it) != m_set_prev_HD_states[uiOtherRobot].end())
+						return true;
+				}
+			}
+#else
 			for (auto it = vec_Enablers.at(Ind.getInd()).set.begin(); it != vec_Enablers.at(Ind.getInd()).set.end(); it++)
 			{
 				if (m_set_prev_HD_states[uiOtherRobot].find(*it) != m_set_prev_HD_states[uiOtherRobot].end())
 					return true;
 			}
+#endif
 		}
 		else
 		{
+#ifdef COMPRESSION_ENABLE
+			for (auto it = m_set_prev_HD_states[uiOtherRobot].begin(); it != m_set_prev_HD_states[uiOtherRobot].end(); it++)
+			{
+				if (it->first.getInd() > m_uiSuperVtxThresh)
+				{
+					size_t uiSuperVrt = it->first.getInd();
+					for (auto it_vtx = m_map_superVtx_vecVtx.at(uiSuperVrt).begin(); it_vtx != m_map_superVtx_vecVtx.at(uiSuperVrt).end(); it_vtx++)
+					{
+						if (vec_Enablers.at(Ind.getInd()).set.find(*it_vtx) != vec_Enablers.at(Ind.getInd()).set.end())
+						{
+							return true;
+						}
+					}
+				}
+				else
+				{
+					if (vec_Enablers.at(Ind.getInd()).set.find(it->first) != vec_Enablers.at(Ind.getInd()).set.end())
+						return true;
+				}
+			}
+
+#else
 			for (auto it = m_set_prev_HD_states[uiOtherRobot].begin(); it != m_set_prev_HD_states[uiOtherRobot].end(); it++)
 			{
 				if (vec_Enablers.at(Ind.getInd()).set.find(it->first) != vec_Enablers.at(Ind.getInd()).set.end())
 					return true;
 			}
+#endif
 		}
 	}
 	return false;
@@ -344,7 +489,7 @@ std::pair<size_t, size_t> Greedy_Heuristic::compute_exp_Mkspn_delay(const size_t
 	{
 		auto it = state.m_vec_rob_pos[uiRobot];
 		assert(m_rob_hole_times[uiRobot].at(*it).m_uiStartTime != ST_Time::UNSET);
-		ui_comp_Time = m_rob_hole_times[uiRobot].at(*it).m_uiStartTime + m_graph.getTime(*it);
+		ui_comp_Time = m_rob_hole_times[uiRobot].at(*it).m_uiStartTime + getTime(*it);
 		if (uiCurrTime >= ui_comp_Time)
 		{
 			uiDelay = uiCurrTime - m_vec_nc_eft[uiRobot].m_map_eft.at(*it);
@@ -491,23 +636,52 @@ void Greedy_Heuristic::safe_backtrack(size_t uiDepth, const State& state)
 	m_map_states_feas[state] = -1;     // need to do this way instead of emplace, because this state key is already inserted
 }
 
-void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
+void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &new_rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
 {
 	vec_rob_sch.resize(m_uiNumRobots);
 	size_t uiStart, uiEnd, uiWait;
 
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
-		auto it1 = rob_seq[uiRobot].begin();
+		auto it1 = new_rob_seq[uiRobot].begin();
 		auto it2 = it1;
 		it2++;
 		uiStart = m_rob_hole_times[uiRobot].at(*it1).m_uiStartTime;
-		for (; it2 != rob_seq[uiRobot].end(); it2++)
+		for (; it2 != new_rob_seq[uiRobot].end(); it2++)
 		{
+#ifdef COMPRESSION_ENABLE
+			if (*it1 > m_uiSuperVtxThresh)
+			{
+				size_t uiSuperVtx = *it1;
+				for (auto it_vtx = m_map_superVtx_vecVtx.at(uiSuperVtx).begin(); it_vtx != m_map_superVtx_vecVtx.at(uiSuperVtx).end(); it_vtx++)
+				{
+					if (*it_vtx == *m_map_superVtx_vecVtx.at(uiSuperVtx).rbegin()) break;
+					uiEnd = uiStart + getTime(*it_vtx);
+					uiWait = uiEnd - getTime(*it_vtx) - uiStart;
+					assert(uiWait >= 0);
+					vec_rob_sch[uiRobot].emplace_back(*it_vtx, uiStart, uiEnd, uiWait);
+					uiStart = uiEnd;
+				}
+				uiEnd = m_rob_hole_times[uiRobot].at(*it2).m_uiStartTime;
+				uiWait = uiEnd - getTime(*it1) - uiStart;
+				assert(uiWait >= 0);
+				vec_rob_sch[uiRobot].emplace_back(*m_map_superVtx_vecVtx.at(uiSuperVtx).rbegin(), uiStart, uiEnd, uiWait);
+				uiStart = uiEnd;
+			}
+			else
+			{
+				uiEnd = m_rob_hole_times[uiRobot].at(*it2).m_uiStartTime;
+				uiWait = uiEnd - getTime(*it1) - uiStart;
+				assert(uiWait >= 0);
+				vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiEnd, uiWait);
+				uiStart = uiEnd;
+			}
+#else
 			uiEnd = m_rob_hole_times[uiRobot].at(*it2).m_uiStartTime;
-			uiWait = uiEnd - m_graph.getTime(*it1) - uiStart;
+			uiWait = uiEnd - getTime(*it1) - uiStart;
 			vec_rob_sch[uiRobot].emplace_back(*it1, uiStart , uiEnd, uiWait);
 			uiStart = uiEnd;
+#endif
 			it1++;
 		}
 		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart, 0 );
@@ -548,7 +722,7 @@ void Greedy_Heuristic::compute_succ_nodes(const size_t uiCurrTime, const State& 
 			child.m_vec_rob_pos[uiRobot]++;
 			N_Ind Ind(*state.m_vec_rob_pos[uiRobot]);
 			assert(m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime != ST_Time::UNSET);
-			uiTime = std::max(m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime + m_graph.getTime(Ind), uiTime);
+			uiTime = std::max(m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime + getTime(Ind), uiTime);
 		}
 		auto pr = compute_exp_Mkspn_delay(uiTime, state);
 		vec_children.emplace_back(Comparison_Object(uiTime, it1->size(), pr.first, pr.second), child);
@@ -572,7 +746,7 @@ void Greedy_Heuristic::compute_succ_nodes(const size_t uiCurrTime, const State& 
 			child.m_vec_rob_pos[uiRobot]++;
 			N_Ind Ind(*state.m_vec_rob_pos[uiRobot]);
 			assert(m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime != ST_Time::UNSET);
-			uiTime = std::max(m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime + m_graph.getTime(Ind), uiTime);
+			uiTime = std::max(m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime + getTime(Ind), uiTime);
 		}
 		auto pr = compute_exp_Mkspn_delay(uiTime, state);
 		vec_children.emplace_back(std::make_tuple(pr.first, pr.second, (int)vec_robot_incr[uiCount1].size(), uiTime, child)); //need to change this
