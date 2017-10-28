@@ -245,7 +245,7 @@ int main()
 	std::vector<std::vector<size_t>> vec_rand_seq;
 	
 	/*Random_LS_Oper ls_obj;
-	ls_obj.generate_rand_allocation_of_nodes_to_robots(partition, vec_rand_seq);
+	ls_obj.allocate_randomly_nodes_to_robots(partition, vec_rand_seq);
 }*/
 
 

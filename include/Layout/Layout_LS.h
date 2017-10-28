@@ -16,7 +16,7 @@ class Layout_LS : public Layout_Graph
 		Coordinates getLoc(N_Ind Ind) const;
 		size_t getEdgeDist(R_Ind uiRobot, N_Ind Ind1 , N_Ind Ind2) const;
 		bool doesEdgeExist(R_Ind uiRobot, N_Ind Ind1, N_Ind Ind2) const;
-		void get_nearest_robots_for_hole(N_Ind Ind, std::unordered_set<size_t> &set_near_robots) const; 
+		void get_nearest_robots_for_hole(N_Ind Ind, std::unordered_set<size_t> &set_near_robots) const; 		
 };	
 
 #endif

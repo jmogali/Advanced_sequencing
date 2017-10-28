@@ -1,47 +1,48 @@
 #include "Enabling_Graph.h"
 #include "Init_Sequence_Generator.h"
 
-Enabling_Node::Enabling_Node(size_t uiInd) : m_uiInd(uiInd)
+Enabling_Node::Enabling_Node()
 {}
 
-bool Enabling_Node::isNodeReachable(size_t uiRobot) const
+/*bool Enabling_Node::isNodeReachable(size_t uiRobot) const
 {
 	return m_map_reachable_robots.find(uiRobot) != m_map_reachable_robots.end() ? true : false;
-}
+}*/
 
 Enabling_Graph::Enabling_Graph(const Layout_Graph &graph)
 {
 	const auto &vec_enabler = graph.get_Enablers();
-	for (size_t uiCount = 0; uiCount < vec_enabler.size(); uiCount++)
+	for (size_t uiNodeInd = 0; uiNodeInd < vec_enabler.size(); uiNodeInd++)
 	{
-		m_vec_nodes.push_back(Enabling_Node(uiCount));
+		m_set_nodes.emplace(uiNodeInd, Enabling_Node());
 	}
 
-	for (size_t uiCount = 0; uiCount < vec_enabler.size(); uiCount++)
+	for (size_t uiNodeInd = 0; uiNodeInd < vec_enabler.size(); uiNodeInd++)
 	{
-		const auto &map_enabled = vec_enabler[uiCount].set;
+		const auto &map_enabled = vec_enabler[uiNodeInd].set;
 		for (auto it = map_enabled.begin(); it != map_enabled.end(); it++)
 		{
-			add_neigh(it->getInd(), uiCount);
+			add_neigh(it->getInd(), uiNodeInd);
 		}
 	}
 
-	const auto &vec_rob_iv = graph.get_IV_Vec();
+	/*const auto &vec_rob_iv = graph.get_IV_Vec();
 	for (size_t uiRobot = 0; uiRobot < graph.get_num_robots(); uiRobot++)
 	{
 		for (auto it1 = vec_rob_iv[uiRobot].map.begin(); it1 != vec_rob_iv[uiRobot].map.end(); it1++)
 		{
 			add_robot(it1->first.getInd(), uiRobot);
 		}
-	}
+	}*/
 	//End depots are not added on purpose
 }
 
+/*
 void Enabling_Graph::compute_rand_biased_enabled_seq_from_start_vtx(size_t uiStart, std::list<size_t> &seq_enab, const Layout_LS &graph, std::mt19937 &rng)
 {
 	std::vector<std::string> vec_visit_status(m_vec_nodes.size(), "WHITE");
 	return traverse_graph(uiStart, seq_enab, vec_visit_status, graph, rng);		
-}
+}*/
 
 bool comparePairs(const std::pair<double, size_t>& lhs, const std::pair<double, size_t>& rhs)
 {
@@ -51,6 +52,7 @@ bool comparePairs(const std::pair<double, size_t>& lhs, const std::pair<double, 
 	else return false;
 }
 
+/*
 void Enabling_Graph::traverse_graph(size_t uiStart, std::list<size_t> &seq_enab, std::vector<std::string> &vec_visit_status, const Layout_LS &graph, std::mt19937 &rng)
 {
 	vec_visit_status[uiStart] = "GRAY";
@@ -78,7 +80,7 @@ void Enabling_Graph::traverse_graph(size_t uiStart, std::list<size_t> &seq_enab,
 	vec_visit_status[uiStart] = "BLACK";
 }
 
-/*
+
 void Enabling_Graph::traverse_graph(size_t uiStart, std::list<size_t> &seq_enab, std::vector<std::string> &vec_visit_status, const Layout_LS &graph)
 {
 	vec_visit_status[uiStart] = "GRAY";

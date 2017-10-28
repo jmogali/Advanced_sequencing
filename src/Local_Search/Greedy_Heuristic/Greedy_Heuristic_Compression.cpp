@@ -117,23 +117,6 @@ bool Greedy_Heuristic::gather_coll_cons_update_compr_verts(const std::vector<std
 	return true;
 }
 
-/*
-bool Greedy_Heuristic::gather_coll_cons_update_compr_verts(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<bool>> &vec_compress_status)
-{
-	assert(std::numeric_limits<size_t>::min() != m_uiSuperVtxThresh);
-	bool bFeasible;
-	for (size_t uiRobot1 = 0; uiRobot1 < rob_seq.size(); uiRobot1++)
-	{
-		for (size_t uiRobot2 = uiRobot1 + 1; uiRobot2 < rob_seq.size(); uiRobot2++)
-		{
-			bFeasible = gather_coll_cons_compr_verts_rob_pair(uiRobot1, uiRobot2, rob_seq, vec_compress_status);
-			if (false == bFeasible) return false;
-		}
-	}
-	return true;
-}
-*/
-
 //At this stage, m_alt_graph is in uncompressed form
 void Greedy_Heuristic::update_compr_verts_by_unself_enabled_and_deps(std::vector<std::vector<bool>> &vec_compress_status)
 {

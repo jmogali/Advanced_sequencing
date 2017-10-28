@@ -64,3 +64,5 @@ void Layout_LS::get_nearest_robots_for_hole(N_Ind Ind, std::unordered_set<size_t
 		}
 	}	
 }
+
+
