@@ -98,12 +98,14 @@ std::pair<bool, size_t> Local_Search::intra_rand_oper(std::vector<std::list<size
 void Local_Search::perform_local_search(std::string strFolderPath)
 {
 	std::vector<std::list<size_t>> rob_seq;
+	std::vector<std::list<size_t>> old_rob_seq;
+
 	generate_constructive_sequence_VBSS(rob_seq);
-	bool bValid = check_validity_of_sequence(rob_seq), bChange, bSuccess = true;
+	bool bValid = check_validity_of_sequence(rob_seq), bSuccess = true;
 	if (false == bValid) { cout << "Initial seq generated is invalid\n"; }
 	
 	std::string strType;
-	size_t uiIter = 0, uiChoice, uiMakeSpan, uiMakeSpan_old, uiBestSol = std::numeric_limits<size_t>::max();
+	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_old, uiBestSol = std::numeric_limits<size_t>::max();
 	Power_Set power;
 
 	Greedy_Heuristic heur(m_node_data.m_uiNumRobots, m_graph, power);
@@ -119,109 +121,83 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 
 	while (uiIter < 5000000)
 	{
-		std::vector<std::list<size_t>> new_rob_seq = rob_seq;
-		std::vector<std::list<size_t>> old_rob_seq = rob_seq;
-
 		uiMakeSpan = std::numeric_limits<size_t>::max();
-		uiMakeSpan_old = std::numeric_limits<size_t>::max();
-		bChange = uiIter== 0 ? true : false;
-		uiChoice = rand() % 2;
+		uiMakeSpan_old = std::numeric_limits<size_t>::max();		
 		
-		if (uiIter > 0)
-		{
-			if (0 == uiChoice)
-			{
-				strType = rand() % 2 ? "STRING_EXCHANGE" : "STRING_RELOCATION";
-				auto res = inter_rand_oper(new_rob_seq, strType);
+		bValid = check_validity_of_sequence(rob_seq);
+		assert(true == bValid);
 
-				if (true == std::get<0>(res))
-				{
-					rob_seq[std::get<1>(res)] = new_rob_seq[std::get<1>(res)];
-					rob_seq[std::get<2>(res)] = new_rob_seq[std::get<2>(res)];
-					bChange = true;
-				}
-			}
-			else
-			{
-				strType = rand() % 2 ? "SWAP_INTRA_SEQUENCE" : "STRING_CROSS_INTRA_SEQUENCE";
-				auto res = intra_rand_oper(rob_seq, strType);
-				if (true == std::get<0>(res))
-				{
-					rob_seq[std::get<1>(res)] = new_rob_seq[std::get<1>(res)];
-					bChange = true;
-				}
-			}
-		}
+		std::vector<std::vector<Vertex_Schedule>> full_rob_sch;
+		std::vector<std::vector<Vertex_Schedule>> full_rob_sch_old;
 
-		if (bChange)
-		{
-			check_validity_of_sequence(rob_seq);
-			std::vector<std::vector<Vertex_Schedule>> full_rob_sch;
-			std::vector<std::vector<Vertex_Schedule>> full_rob_sch_old;
-
-			int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strFolderPath);
+		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strFolderPath);
 #ifdef ENABLE_LEGACY_CODE			
-			int iRetVal_old = perform_greedy_scheduling_old(heur_old, rob_seq, full_rob_sch_old);
+		int iRetVal_old = perform_greedy_scheduling_old(heur_old, rob_seq, full_rob_sch_old);
 #endif
 
 #ifdef ENABLE_LEGACY_CODE
-			if (iRetVal != iRetVal_old)
-			{
-				print_sequence(rob_seq);
+		if (iRetVal != iRetVal_old)
+		{
+			print_sequence(rob_seq);
 #ifdef WINDOWS	
-				assert(iRetVal == iRetVal_old);
+			assert(iRetVal == iRetVal_old);
 #else 
-				cout << "assert(iRetVal == iRetVal_old)";
-				exit(-1);				
+			cout << "assert(iRetVal == iRetVal_old)";
+			exit(-1);				
 #endif		
-			}
+		}
 #endif
 
-			uiMakeSpan = (iRetVal == 1) ? getMakeSpan_From_Schedule(full_rob_sch) : std::numeric_limits<size_t>::max();
+		uiMakeSpan = (iRetVal == 1) ? getMakeSpan_From_Schedule(full_rob_sch) : std::numeric_limits<size_t>::max();
 #ifdef ENABLE_LEGACY_CODE			
-			uiMakeSpan_old = (iRetVal_old == 1) ? getMakeSpan_From_Schedule(full_rob_sch_old) : std::numeric_limits<size_t>::max();
+		uiMakeSpan_old = (iRetVal_old == 1) ? getMakeSpan_From_Schedule(full_rob_sch_old) : std::numeric_limits<size_t>::max();
 #endif			
-			if (uiBestSol > uiMakeSpan)	uiBestSol = uiMakeSpan;	
+		if (uiBestSol > uiMakeSpan)	uiBestSol = uiMakeSpan;	
 
 #ifdef ENABLE_LEGACY_CODE
-			if (uiMakeSpan != uiMakeSpan_old)
-			{
-				print_sequence(rob_seq);
+		if (uiMakeSpan != uiMakeSpan_old)
+		{
+			print_sequence(rob_seq);
 #ifdef WINDOWS
-				assert(uiMakeSpan == uiMakeSpan_old);
+			assert(uiMakeSpan == uiMakeSpan_old);
 #else
 
-				cout << "Makespans not equal";
-				exit(1);
+			cout << "Makespans not equal";
+			exit(1);
 #endif		
-			}
+		}
 #endif
 			
 #ifdef ENABLE_LEGACY_CODE			
-			cout << " Iteration: " << uiIter << " , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") << " , Makespan: " << uiMakeSpan << " , Old Makespan: " << uiMakeSpan_old << endl;
+		cout << " Iteration: " << uiIter << " , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") << " , Makespan: " << uiMakeSpan << " , Old Makespan: " << uiMakeSpan_old << endl;
 #else			
-			cout << " Iteration: " << uiIter <<" , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") <<" , Makespan: " << uiMakeSpan <<" , Best Sol: "<< uiBestSol<< endl;
+		cout << " Iteration: " << uiIter <<" , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") <<" , Makespan: " << uiMakeSpan <<" , Best Sol: "<< uiBestSol<< endl;
 #endif			
 			
-			bSuccess = iRetVal == 1 ? true : false;			
+		bSuccess = iRetVal == 1 ? true : false;			
 
-			if (uiIter == 0)
+		if (uiIter == 0)
+		{
+			cout << "Tag: Initial Makespan: " << uiMakeSpan << endl;
+			std::fill(vec_late_accep.begin(), vec_late_accep.end(), uiMakeSpan);
+			old_rob_seq = rob_seq;
+		}
+		else
+		{
+			if (true == bSuccess)
 			{
-				cout << "Tag: Initial Makespan: " << uiMakeSpan << endl;
-				if (true == bSuccess)
-					std::fill(vec_late_accep.begin(), vec_late_accep.end(), uiMakeSpan);
-			}
-			else
-			{
-				if (true == bSuccess)
+				if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length]) rob_seq = old_rob_seq;
+				else
 				{
-					if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length]) rob_seq = old_rob_seq;
-					else vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
+					vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
+					old_rob_seq = rob_seq;
 				}
-				else if (false == bSuccess) rob_seq = old_rob_seq;
 			}
-		}			
-		uiIter++;
+			else if (false == bSuccess) rob_seq = old_rob_seq;
+		}
+		
+		generate_new_sequence(full_rob_sch, heur, rob_seq);
+		uiIter++;	
 
 		if (((std::clock() - start_time) / (double)CLOCKS_PER_SEC) > LS_SEARCH_TIME) break;
 	}
@@ -252,6 +228,42 @@ void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size
 			it1 = it2;
 		}
 	}
+}
+
+void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, const Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq)
+{
+	size_t uiChoice;
+	std::string strType;
+	bool bChange = false;
+	
+	do
+	{
+		std::vector<std::list<size_t>> new_rob_seq = rob_seq;
+		uiChoice = rand() % 2;
+
+		if (0 == uiChoice)
+		{
+			strType = rand() % 2 ? "STRING_EXCHANGE" : "STRING_RELOCATION";
+			auto res = inter_rand_oper(new_rob_seq, strType);
+
+			if (true == std::get<0>(res))
+			{
+				rob_seq[std::get<1>(res)] = new_rob_seq[std::get<1>(res)];
+				rob_seq[std::get<2>(res)] = new_rob_seq[std::get<2>(res)];
+				bChange = true;
+			}
+		}
+		else
+		{
+			strType = rand() % 2 ? "SWAP_INTRA_SEQUENCE" : "STRING_CROSS_INTRA_SEQUENCE";
+			auto res = intra_rand_oper(rob_seq, strType);
+			if (true == std::get<0>(res))
+			{
+				rob_seq[std::get<1>(res)] = new_rob_seq[std::get<1>(res)];
+				bChange = true;
+			}
+		}
+	} while (false == bChange);
 }
 
 int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolderPath)

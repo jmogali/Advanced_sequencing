@@ -25,6 +25,9 @@ class Local_Search
 		bool check_validity_of_sequence(const std::vector<std::list<size_t>> &rob_seq);
 		bool check_validity_of_schedule(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
 				
+		//local search section
+		void generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, const Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq);
+
 		//local search operators section
 		//random operators section
 		std::tuple<bool, size_t, size_t> inter_rand_oper(std::vector<std::list<size_t>> &rob_seq, std::string strType);
