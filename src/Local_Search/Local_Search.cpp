@@ -203,30 +203,28 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 			{
 				rob_seq.clear();
 				generate_constructive_sequence_VBSS(rob_seq);
+				uiIter++;
 				continue;
 			}
-			else bFirst_Feasible_Sequence = true;
+			else
+			{
+				bFirst_Feasible_Sequence = true;
+				cout << "Tag: Initial Makespan: " << uiMakeSpan << endl;
+				std::fill(vec_late_accep.begin(), vec_late_accep.end(), uiMakeSpan);
+				//old_rob_seq = rob_seq; // this is not required because copy is anyway happening below
+			}
 		}
 
-		if (uiIter == 0)
+		if (true == bSuccess)
 		{
-			cout << "Tag: Initial Makespan: " << uiMakeSpan << endl;
-			std::fill(vec_late_accep.begin(), vec_late_accep.end(), uiMakeSpan);
-			old_rob_seq = rob_seq;
-		}
-		else
-		{
-			if (true == bSuccess)
+			if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length]) rob_seq = old_rob_seq;
+			else
 			{
-				if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length]) rob_seq = old_rob_seq;
-				else
-				{
-					vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
-					old_rob_seq = rob_seq;
-				}
+				vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
+				old_rob_seq = rob_seq;
 			}
-			else if (false == bSuccess) rob_seq = old_rob_seq;
 		}
+		else if (false == bSuccess) rob_seq = old_rob_seq;		
 		
 		generate_new_sequence(full_rob_sch, heur, rob_seq, bSuccess);
 		uiIter++;	
