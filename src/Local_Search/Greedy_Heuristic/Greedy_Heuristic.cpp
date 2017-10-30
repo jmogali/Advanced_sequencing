@@ -30,6 +30,8 @@ Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &gra
 	m_set_prev_HD_states.resize(uiRobotNum);
 	m_set_prev_all_states.resize(uiRobotNum);
 	m_vec_nc_eft.resize(uiRobotNum);
+	m_bWait = false;
+	m_bVectorizeSchedule = false;
 }
 
 bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq)
@@ -39,6 +41,8 @@ bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_
 	allocate_buffers(new_rob_seq);
 	initialize_to_do_verts(new_rob_seq);
 	compute_NC_makespan(new_rob_seq);
+	m_bWait = false;
+	m_bVectorizeSchedule = false;
 	return true;
 }
 
@@ -647,7 +651,8 @@ void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &
 {
 	vec_rob_sch.resize(m_uiNumRobots);
 	size_t uiStart, uiEnd, uiWait;
-
+	m_bVectorizeSchedule = true;
+	
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
 		auto it1 = new_rob_seq[uiRobot].begin();
@@ -666,12 +671,14 @@ void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &
 					uiEnd = uiStart + getTime(*it_vtx);
 					uiWait = uiEnd - getTime(*it_vtx) - uiStart;
 					assert((int)uiEnd - (int)getTime(*it_vtx) - (int)uiStart >= 0);
+					if (uiWait > 0) m_bWait = true;
 					vec_rob_sch[uiRobot].emplace_back(*it_vtx, uiStart, uiEnd, uiWait);
 					uiStart = uiEnd;
 				}
 				uiEnd = m_rob_hole_times[uiRobot].at(*it2).m_uiStartTime;
 				uiWait = uiEnd - getTime(*m_map_superVtx_vecVtx.at(uiSuperVtx).rbegin()) - uiStart;
 				assert((int)uiEnd - (int)getTime(*m_map_superVtx_vecVtx.at(uiSuperVtx).rbegin()) - (int)uiStart >= 0);
+				if (uiWait > 0) m_bWait = true;
 				vec_rob_sch[uiRobot].emplace_back(*m_map_superVtx_vecVtx.at(uiSuperVtx).rbegin(), uiStart, uiEnd, uiWait);
 				uiStart = uiEnd;
 			}
@@ -680,6 +687,7 @@ void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &
 				uiEnd = m_rob_hole_times[uiRobot].at(*it2).m_uiStartTime;
 				uiWait = uiEnd - getTime(*it1) - uiStart;
 				assert((int)uiEnd - (int)getTime(*it1) - (int)uiStart >= 0);
+				if (uiWait > 0) m_bWait = true;
 				vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiEnd, uiWait);
 				uiStart = uiEnd;
 			}
@@ -692,7 +700,7 @@ void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &
 #endif
 			it1++;
 		}
-		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart, 0 );
+		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart, 0 );		
 	}
 }
 

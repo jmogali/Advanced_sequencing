@@ -59,7 +59,7 @@ std::tuple<bool, size_t, size_t> Local_Search::inter_rand_oper(std::vector<std::
 			if (true == bChange) return std::make_tuple(true, uiRobot1 , uiRobot2);
 		}		
 	}
-	return std::make_tuple(false , -1, -1);
+	return std::make_tuple(false , std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
 }
 
 std::pair<bool, size_t> Local_Search::intra_rand_oper(std::vector<std::list<size_t>> &rob_seq, std::string strType)
@@ -91,8 +91,28 @@ std::pair<bool, size_t> Local_Search::intra_rand_oper(std::vector<std::list<size
 			return std::make_pair(true, uiRobot);
 		}
 	}
+	return std::make_pair(false , std::numeric_limits<size_t>::max());
+}
 
-	return std::make_pair(false , -1);
+std::tuple<bool, size_t, size_t> Local_Search::wait_based_oper(std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strType)
+{
+	//<R_Ind, makespan>
+	std::vector<std::pair<size_t, size_t>> vec_rob_ind_mkspan;
+
+	for (size_t uiRobot = 0; uiRobot < m_node_data.m_uiNumRobots; uiRobot++)
+	{
+		vec_rob_ind_mkspan.emplace_back(std::make_pair(uiRobot, full_rob_sch[uiRobot].rbegin()->m_uiEnd));
+	}
+
+	std::sort(vec_rob_ind_mkspan.begin(), vec_rob_ind_mkspan.end(), sort_by_max_second_val());
+
+	//iterate over all robots
+	for(size_t uiCount = 0; uiCount < vec_rob_ind_mkspan.size(); uiCount++)
+	{
+		auto res = wait_based_swap_for_robot(full_rob_sch, rob_seq, vec_rob_ind_mkspan[uiCount].first, strType);
+		if (true == std::get<0>(res)) return res;
+	}
+	return std::make_tuple(false, std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
 }
 
 void Local_Search::perform_local_search(std::string strFolderPath)
@@ -196,7 +216,7 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 			else if (false == bSuccess) rob_seq = old_rob_seq;
 		}
 		
-		generate_new_sequence(full_rob_sch, heur, rob_seq);
+		generate_new_sequence(full_rob_sch, heur, rob_seq, bSuccess);
 		uiIter++;	
 
 		if (((std::clock() - start_time) / (double)CLOCKS_PER_SEC) > LS_SEARCH_TIME) break;
@@ -230,16 +250,49 @@ void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size
 	}
 }
 
-void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, const Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq)
+size_t Local_Search::get_bottleneck_robot(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)
+{
+	size_t uiMaxMakeSpan = std::numeric_limits<size_t>::min();
+	size_t uiBottle_Neck_Robot = 0;
+	for (size_t uiRobot = 0; uiRobot < m_node_data.m_uiNumRobots; uiRobot++)
+	{
+		if (full_rob_sch[uiRobot].rbegin()->m_uiEnd >= uiMaxMakeSpan)
+		{
+			uiMaxMakeSpan = full_rob_sch[uiRobot].rbegin()->m_uiEnd;
+			uiBottle_Neck_Robot = uiRobot;
+		}
+	}
+	return uiBottle_Neck_Robot;
+}
+
+void Local_Search::get_Wait_Holes_For_Robot(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, size_t uiRobot, std::vector<std::pair<size_t, size_t>> &vec_wait_ind_pos)
+{
+	size_t uiPos = 0;
+	assert(0 == vec_wait_ind_pos.size());
+
+	for (size_t uiInd = 0; uiInd < full_rob_sch[uiRobot].size(); )
+	{
+		if("IV" == m_graph.getType(full_rob_sch[uiRobot][uiInd].m_uiInd)) continue;
+		if (0 < full_rob_sch[uiRobot][uiInd].m_uiWait) vec_wait_ind_pos.emplace_back(std::make_pair(full_rob_sch[uiRobot][uiInd].m_uiInd, uiPos));
+		uiPos++;
+	}	
+}
+
+void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, const Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq, bool bSuccess)
 {
 	size_t uiChoice;
 	std::string strType;
-	bool bChange = false;
+	bool bChange = false, bWait = false;
 	
+	if (true == bSuccess) bWait = heur.doRobotsWait();
+
 	do
 	{
 		std::vector<std::list<size_t>> new_rob_seq = rob_seq;
-		uiChoice = rand() % 2;
+		
+		// if the sequence was feasible and waits were detected, then try to resolve via wait operations, else do random
+		if( (true == bSuccess) && (true == bWait)) uiChoice = rand() % 5;
+		else uiChoice = rand() % 2;
 
 		if (0 == uiChoice)
 		{
@@ -253,13 +306,28 @@ void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Sc
 				bChange = true;
 			}
 		}
-		else
+		else if(1 == uiChoice)
 		{
 			strType = rand() % 2 ? "SWAP_INTRA_SEQUENCE" : "STRING_CROSS_INTRA_SEQUENCE";
-			auto res = intra_rand_oper(rob_seq, strType);
+			auto res = intra_rand_oper(new_rob_seq, strType);
 			if (true == std::get<0>(res))
 			{
 				rob_seq[std::get<1>(res)] = new_rob_seq[std::get<1>(res)];
+				bChange = true;
+			}
+		}
+		else
+		{
+			strType = rand() % 2 ? "INTER_SEQUENCE" : "INTRA_SEQUENCE";
+			auto res = wait_based_oper(new_rob_seq, full_rob_sch, strType);
+
+			if (true == std::get<0>(res))
+			{
+				rob_seq[std::get<1>(res)] = new_rob_seq[std::get<1>(res)];
+				if (std::numeric_limits<size_t>::max() != std::get<2>(res))
+				{
+					rob_seq[std::get<2>(res)] = new_rob_seq[std::get<2>(res)];
+				}
 				bChange = true;
 			}
 		}
@@ -270,8 +338,8 @@ int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, const std::v
 {
 	std::vector<std::list<size_t>> full_rob_seq;
 	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
-	//full_rob_seq.push_back({ 0,111,37,1936,38,1992,40,2103,43,2269,47,2484,45,2381,51,2708,54,2838,21,1059,25,1274,23,1166,24,1205,8,338,5,182,12,561,13,616,14,668,11,533,39,2033,26,1331,27,1387,29,1498,32,1664,36,1879,34,1771,35,1819,28,1435,22,1107,18,889,16,774,9,417,31,1615,41,2125,10,455,15,729,19,933,6,241,17,848,30,1562,42,2202,33,1690,7,283,4,136,20,1024,44,3131,1 });
-	//full_rob_seq.push_back({ 2,3156,48,4634,49,4697,46,4511,56,5163,58,5293,57,5247,77,6550,80,6745,79,6679,78,6616,81,6812,82,6880,85,7079,89,7341,91,7471,90,7404,88,7260,74,6347,71,6134,53,4972,62,5556,60,5452,87,7173,52,4920,75,6404,63,5627,67,5888,68,5954,69,6010,59,5383,83,6911,50,4787,72,6216,70,6099,84,6990,64,5681,55,5126,86,7129,73,6272,61,5496,66,5821,65,5766,76,7522,3});
+	//full_rob_seq.push_back({ 0,109,31,1626,52,2724,15,747,37,1942,44,2331,55,2889,18,917,45,2353,22,1112,24,1242,46,2391,6,232,8,353,21,1088,54,2827,10,473,33,1699,16,770,5,182,12,558,9,405,19,941,14,679,23,1167,25,1277,27,1376,17,830,11,520,26,1309,4,129,13,610,7,298,20,1008,28,1452,40,3127,1});
+	//full_rob_seq.push_back({ 2,3179,86,7140,84,6998,72,6232,87,7171,50,4757,41,4196,66,5829,74,6343,67,5889,69,6015,64,5703,78,6624,89,7340,90,7354,38,4020,85,7039,48,4634,49,4694,43,4336,76,6468,62,5557,61,5482,51,4861,81,6813,83,6934,73,6287,77,6561,91,7463,82,6866,70,6079,63,5603,42,4248,53,4969,59,5340,39,4047,47,4551,30,3494,79,6676,75,6412,71,6146,65,5758,68,5973,88,7243,57,5228,58,5292,56,5165,60,5445,80,6695,29,3382,32,3579,34,3710,35,3776,36,7482,3});
 	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch, strFolderPath);
 }
 
@@ -279,8 +347,8 @@ int Local_Search::perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, 
 {
 	std::vector<std::list<size_t>> full_rob_seq;
 	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
-	//full_rob_seq.push_back({ 0,111,37,1936,38,1992,40,2103,43,2269,47,2484,45,2381,51,2708,54,2838,21,1059,25,1274,23,1166,24,1205,8,338,5,182,12,561,13,616,14,668,11,533,39,2033,26,1331,27,1387,29,1498,32,1664,36,1879,34,1771,35,1819,28,1435,22,1107,18,889,16,774,9,417,31,1615,41,2125,10,455,15,729,19,933,6,241,17,848,30,1562,42,2202,33,1690,7,283,4,136,20,1024,44,3131,1 });
-	//full_rob_seq.push_back({ 2,3156,48,4634,49,4697,46,4511,56,5163,58,5293,57,5247,77,6550,80,6745,79,6679,78,6616,81,6812,82,6880,85,7079,89,7341,91,7471,90,7404,88,7260,74,6347,71,6134,53,4972,62,5556,60,5452,87,7173,52,4920,75,6404,63,5627,67,5888,68,5954,69,6010,59,5383,83,6911,50,4787,72,6216,70,6099,84,6990,64,5681,55,5126,86,7129,73,6272,61,5496,66,5821,65,5766,76,7522,3 });
+	//full_rob_seq.push_back({ 0,109,31,1626,52,2724,15,747,37,1942,44,2331,55,2889,18,917,45,2353,22,1112,24,1242,46,2391,6,232,8,353,21,1088,54,2827,10,473,33,1699,16,770,5,182,12,558,9,405,19,941,14,679,23,1167,25,1277,27,1376,17,830,11,520,26,1309,4,129,13,610,7,298,20,1008,28,1452,40,3127,1 });
+	//full_rob_seq.push_back({ 2,3179,86,7140,84,6998,72,6232,87,7171,50,4757,41,4196,66,5829,74,6343,67,5889,69,6015,64,5703,78,6624,89,7340,90,7354,38,4020,85,7039,48,4634,49,4694,43,4336,76,6468,62,5557,61,5482,51,4861,81,6813,83,6934,73,6287,77,6561,91,7463,82,6866,70,6079,63,5603,42,4248,53,4969,59,5340,39,4047,47,4551,30,3494,79,6676,75,6412,71,6146,65,5758,68,5973,88,7243,57,5228,58,5292,56,5165,60,5445,80,6695,29,3382,32,3579,34,3710,35,3776,36,7482,3 });
 	return heur_old.compute_greedy_sol(full_rob_seq, full_rob_sch);
 }
 

@@ -48,7 +48,10 @@ void Node_Partitions::populate_containers(const Layout_LS &graph)
 	}
 }
 
-
-
+bool Node_Partitions::isLocalVertex(size_t uiInd) const
+{
+	if (m_map_common_nodes.end() == m_map_common_nodes.find(uiInd)) return true;
+	else return false;
+}
 
 
