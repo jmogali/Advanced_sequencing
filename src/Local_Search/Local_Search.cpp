@@ -127,6 +127,7 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 	std::string strType;
 	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_old, uiBestSol = std::numeric_limits<size_t>::max();
 	Power_Set power;
+	bool bFirst_Feasible_Sequence = false;
 
 	Greedy_Heuristic heur(m_node_data.m_uiNumRobots, m_graph, power);
 
@@ -195,6 +196,17 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 #endif			
 			
 		bSuccess = iRetVal == 1 ? true : false;			
+
+		if (false == bFirst_Feasible_Sequence)
+		{
+			if (false == bSuccess)
+			{
+				rob_seq.clear();
+				generate_constructive_sequence_VBSS(rob_seq);
+				continue;
+			}
+			else bFirst_Feasible_Sequence = true;
+		}
 
 		if (uiIter == 0)
 		{
