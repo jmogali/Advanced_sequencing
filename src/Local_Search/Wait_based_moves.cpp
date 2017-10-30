@@ -86,6 +86,7 @@ std::tuple<bool, size_t, size_t> Local_Search::wait_based_swap_for_robot(const s
 			if ("SUCCESS" == res.first) return std::make_tuple(true , uiRobot, res.second);
 			else if ("NOT_COMMON_NODE" == res.first)
 			{
+				// do intra sequence
 				bValid = wait_based_move_intra_sequence(full_rob_sch, rob_seq, uiRobot, full_rob_sch[uiRobot][uiSchInd].m_uiInd, uiPos, strMoveType);
 				if (true == bValid) return std::make_tuple(true, uiRobot, std::numeric_limits<size_t>::max());
 			}
