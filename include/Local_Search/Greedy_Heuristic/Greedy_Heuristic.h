@@ -26,6 +26,7 @@ class Greedy_Heuristic
 		Collision_Filtering m_coll_filter;
 		std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> m_map_enabler_pos_vert; // uiRobot, <position, vertex>
 		std::unordered_set<Coll_Pair, CollHasher> m_set_coll;
+		bool m_bWait , m_bVectorizeSchedule;
 
 #ifdef COMPRESSION_ENABLE
 		std::unordered_map<size_t, std::vector<size_t>> m_map_superVtx_vecVtx;
@@ -81,7 +82,6 @@ class Greedy_Heuristic
 #ifdef COMPRESSION_ENABLE
 		bool add_colls_compress_graph(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq);
 		bool gather_coll_cons_update_compr_verts(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<bool>> &vec_compress_status);
-		bool gather_coll_cons_compr_verts_rob_pair(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<bool>> &vec_compress_status);
 		void construct_new_rob_sequence(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<bool>> &vec_compress_status, std::vector<std::list<size_t>> &new_rob_seq);
 		void update_compr_verts_by_unself_enabled_and_deps(std::vector<std::vector<bool>> &vec_compress_status);
 		void reassign_enablers();
@@ -92,6 +92,7 @@ class Greedy_Heuristic
 	public:
 		Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power);
 		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strFolder);
+		inline bool doRobotsWait() const { assert(true == m_bVectorizeSchedule); return m_bWait; };
 };
 
 #endif
