@@ -317,12 +317,17 @@ void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Sc
 		if( (true == bSuccess) && (true == bWait)) uiChoice = rand() % 5;
 		else uiChoice = rand() % 2;
 		
+#ifdef PRINT_LOCAL_OPERATOR_MESSAGES
 		cout << "Local Search Choice: " << uiChoice << endl;
+#endif
 		
 		if (0 == uiChoice)
 		{
 			strType = rand() % 2 ? "STRING_EXCHANGE" : "STRING_RELOCATION";
+
+#ifdef PRINT_LOCAL_OPERATOR_MESSAGES			
 			cout << "String Type: " << strType << endl;
+#endif
 			
 			auto res = inter_rand_oper(new_rob_seq, strType);
 
@@ -336,7 +341,10 @@ void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Sc
 		else if(1 == uiChoice)
 		{
 			strType = rand() % 2 ? "SWAP_INTRA_SEQUENCE" : "STRING_CROSS_INTRA_SEQUENCE";
+
+#ifdef PRINT_LOCAL_OPERATOR_MESSAGES
 			cout << "String Type: " << strType << endl;
+#endif
 			
 			auto res = intra_rand_oper(new_rob_seq, strType);
 			if (true == std::get<0>(res))
@@ -348,7 +356,10 @@ void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Sc
 		else
 		{
 			strType = rand() % 2 ? "INTER_SEQUENCE" : "INTRA_SEQUENCE";
+			
+#ifdef PRINT_LOCAL_OPERATOR_MESSAGES			
 			cout << "String Type: " << strType << endl;
+#endif
 			
 			auto res = wait_based_oper(new_rob_seq, full_rob_sch, strType);
 			

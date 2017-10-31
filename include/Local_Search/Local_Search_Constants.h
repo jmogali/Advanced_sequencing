@@ -11,6 +11,7 @@ const double c_dWeight_Factor = 10;
 const int c_iWaitSwapRange = 5;
 const size_t c_uiMaxWaitEventsPerRobot = 3;
 
+//#define PRINT_LOCAL_OPERATOR_MESSAGES
 //#define ENABLE_LEGACY_CODE
 
 #endif
