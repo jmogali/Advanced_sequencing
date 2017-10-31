@@ -66,14 +66,15 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 		const auto& vtx_vec_enablers = map_enablers.at(uiVtx).get_neighs();
 		for (auto it = vtx_vec_enablers.begin(); it != vtx_vec_enablers.end(); it++)
 		{
-			if (*it == m_node_data.m_rob_depo[uiRobot].second) continue;
-			auto it_holes = set_holes.find(*it);
+			size_t uiNeigh = *it;
+			if (uiNeigh == m_node_data.m_rob_depo[uiRobot].second) continue;
+			auto it_holes = set_holes.find(uiNeigh);
 			if (set_holes.end() != it_holes)
 			{
-				if (set_seen_verts.end() == set_seen_verts.find(*it))
+				if (set_seen_verts.end() == set_seen_verts.find(uiNeigh))
 				{
-					set_curr_enabled_holes.emplace(*it);
-					set_seen_verts.emplace(*it);
+					set_curr_enabled_holes.emplace(uiNeigh);
+					set_seen_verts.emplace(uiNeigh);
 					set_holes.erase(it_holes);					
 				}
 			}
@@ -96,8 +97,43 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 
 	assert(0 == set_curr_enabled_holes.size());
 	
-	//adds holes that could not reached by the enabling march but still needs to be convered by the robot
-	if (uiInpSize - 1 != set_seen_verts.size())
+	//add depot, add unenabled holes in between
+	hole_seq.push_back(m_node_data.m_rob_depo[uiRobot].second);
+	set_seen_verts.emplace(m_node_data.m_rob_depo[uiRobot].second);
+	set_holes.erase(m_node_data.m_rob_depo[uiRobot].second);
+
+	//adds holes that could not reached by the enabling march but still needs to be covered by the robot through shortest diatnce insertion
+	for (auto it_unenabled = set_holes.begin(); it_unenabled != set_holes.end(); )
+	{
+		auto it_insert = hole_seq.begin();
+		double dist = std::numeric_limits<double>::max(), dInsertionDist;
+		size_t uiUnEnabledHole = *it_unenabled;
+
+		for (auto it = hole_seq.begin(); it != hole_seq.end(); it++)
+		{
+			auto it_next = it;
+			it_next++;
+			if (it_next == hole_seq.end()) break;
+
+			if(false == m_graph.doesEdgeExist(uiRobot, *it, uiUnEnabledHole)) continue;
+			if (false == m_graph.doesEdgeExist(uiRobot, uiUnEnabledHole, *it_next)) continue;
+
+			dInsertionDist = m_graph.getLoc(*it).getDist_XY(m_graph.getLoc(uiUnEnabledHole));
+			dInsertionDist += m_graph.getLoc(uiUnEnabledHole).getDist_XY(m_graph.getLoc(*it_next));
+
+			if (dist < dInsertionDist) continue;		
+			
+			dist = dInsertionDist;
+			it_insert = it_next;
+		}
+
+		assert(dist != std::numeric_limits<double>::max());
+		hole_seq.insert(it_insert, uiUnEnabledHole);
+		set_seen_verts.emplace(uiUnEnabledHole);
+		it_unenabled = set_holes.erase(it_unenabled);
+	}
+
+	/*if (uiInpSize - 1 != set_seen_verts.size())
 	{
 		for (auto it_unenabled = set_holes.begin(); it_unenabled != set_holes.end(); )
 		{
@@ -111,11 +147,10 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 			set_seen_verts.emplace(*it_unenabled);
 			it_unenabled = set_holes.erase(it_unenabled);
 		}
-	}
-	assert(uiInpSize - 1 == set_seen_verts.size());
-	assert(1 == set_holes.size());
+	}*/
+	assert(uiInpSize == set_seen_verts.size());
+	assert(0 == set_holes.size());
 
-	hole_seq.push_back(m_node_data.m_rob_depo[uiRobot].second);	// add the end depot vertex
 	size_t uiOutSize = hole_seq.size();
 	assert(uiInpSize == uiOutSize);
 }
