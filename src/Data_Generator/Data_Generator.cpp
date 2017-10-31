@@ -1,4 +1,5 @@
 #include "Data_Generator.h"
+#include <iostream>
 
 bool isProximalEnabling_Neigh_Strategy(const Coordinates &loc1, const Coordinates &loc2, double dNormX, double dNormY)
 {
@@ -144,7 +145,7 @@ void Data_Generator::add_edge_iv_info(size_t uiRobot , const Coordinates &loc1, 
 	{
 		dTime = m_vec_robots[uiRobot].compute_time(loc1, loc2);
 	}
-
+	
 	size_t uiScaledTime = SCALE_TIME(dTime);
 	m_handle.add_edge(uiRobot, uiGraphInd1, uiGraphInd2, uiScaledTime);
 	m_handle.add_iv(uiRobot, uiGraphInd1, uiGraphInd2, uiIndex, uiScaledTime);	

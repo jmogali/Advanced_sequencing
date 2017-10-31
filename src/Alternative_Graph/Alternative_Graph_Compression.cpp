@@ -113,7 +113,7 @@ void Alternative_Graph::compress_graph(const Layout_LS &layout_graph, const std:
 	reassign_vertex_ownership_positions(new_rob_seq);
 	add_compressed_alt_edges(map_vtx_super_vtx, set_coll);
 
-	sanity_check_compression(new_rob_seq);
+	//sanity_check_compression(new_rob_seq);
 }
 
 void Alternative_Graph::compress_prec_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time)

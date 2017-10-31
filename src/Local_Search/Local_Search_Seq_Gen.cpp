@@ -32,8 +32,8 @@ void Local_Search::allocate_holes_to_robots_common_with_bias(std::vector<std::un
 				auto loc2 = m_graph.getLoc(it->first);
 				vec_robot_dist.push_back(std::make_pair(*it_robot, loc2.getDist_XY(loc1)));
 			}
-			uiRobot = rand_select_list_pair_with_bias(m_rng, vec_robot_dist, "LOW_DIST", c_dWeight_Factor);
-			vec_com_hole_par[uiRobot].emplace(it->first);			
+			uiRobot = rand_select_list_pair_with_bias(m_rng, vec_robot_dist, "LOW_DIST", 5);
+			vec_com_hole_par[uiRobot].emplace(it->first);
 		}
 		else if("RANDOM" == strBias)
 		{
@@ -89,7 +89,7 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 			list_dist.push_back(std::make_pair(*it_cand, loc1.getDist_XY(loc2)));
 		}
 
-		uiVtx = rand_select_list_pair_with_bias(m_rng, list_dist, "LOW_DIST", c_dWeight_Factor);
+		uiVtx = rand_select_list_pair_with_bias(m_rng, list_dist, "LOW_DIST", 0.05);
 		hole_seq.emplace_back(uiVtx); // add the vertex that was chosen
 		uiErase = set_curr_enabled_holes.erase(uiVtx);
 		assert(1 == uiErase);
@@ -135,6 +135,7 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 
 	/*if (uiInpSize - 1 != set_seen_verts.size())
 	{
+		//cout << "Robot: "<< uiRobot <<" , Unenabled hole size: "<< set_holes.size() <<endl;
 		for (auto it_unenabled = set_holes.begin(); it_unenabled != set_holes.end(); )
 		{
 			if (*it_unenabled == m_node_data.m_rob_depo[uiRobot].second)
@@ -148,18 +149,18 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 			it_unenabled = set_holes.erase(it_unenabled);
 		}
 	}*/
-
-	size_t uiOutSize = hole_seq.size();
+	
+	size_t uiOutSize = hole_seq.size();	
 #ifdef WINDOWS	
 	assert(uiInpSize == set_seen_verts.size());
 	assert(0 == set_holes.size());
 	assert(uiInpSize == uiOutSize);
 #else
-	if ((uiInpSize != set_seen_verts.size()) || (0 != set_holes.size()) || (uiInpSize != uiOutSize))
+	if( (uiInpSize != set_seen_verts.size()) || (0 != set_holes.size()) || (uiInpSize != uiOutSize))
 	{
 		cout << "Sequence generation error \n";
 		exit(1);
-	}
+	}	
 #endif	
 }
 
