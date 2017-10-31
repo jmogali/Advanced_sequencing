@@ -33,7 +33,7 @@ void Local_Search::allocate_holes_to_robots_common_with_bias(std::vector<std::un
 				vec_robot_dist.push_back(std::make_pair(*it_robot, loc2.getDist_XY(loc1)));
 			}
 			uiRobot = rand_select_list_pair_with_bias(m_rng, vec_robot_dist, "LOW_DIST", c_dWeight_Factor);
-			vec_com_hole_par[uiRobot].emplace(it->first);
+			vec_com_hole_par[uiRobot].emplace(it->first);			
 		}
 		else if("RANDOM" == strBias)
 		{
@@ -148,11 +148,19 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 			it_unenabled = set_holes.erase(it_unenabled);
 		}
 	}*/
-	assert(uiInpSize == set_seen_verts.size());
-	assert(0 == set_holes.size());
 
 	size_t uiOutSize = hole_seq.size();
+#ifdef WINDOWS	
+	assert(uiInpSize == set_seen_verts.size());
+	assert(0 == set_holes.size());
 	assert(uiInpSize == uiOutSize);
+#else
+	if ((uiInpSize != set_seen_verts.size()) || (0 != set_holes.size()) || (uiInpSize != uiOutSize))
+	{
+		cout << "Sequence generation error \n";
+		exit(1);
+	}
+#endif	
 }
 
 

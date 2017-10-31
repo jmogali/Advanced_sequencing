@@ -178,7 +178,10 @@ bool Local_Search::wait_based_move_intra_sequence(const std::vector<std::vector<
 
 	size_t uiLowerBound = (size_t)std::max((int)uiSwapHolePos - c_iWaitSwapRange, 1);
 	size_t uiUpperBound = (size_t)std::min((int)uiSwapHolePos + c_iWaitSwapRange, (int)rob_seq[uiRobot].size() - 2);
+	
 	if (uiLowerBound > uiUpperBound) return false;
+	if (uiLowerBound == uiUpperBound == uiSwapHolePos) return false;
+
 	std::uniform_int_distribution<size_t> unif_len(uiLowerBound, uiUpperBound);
 	size_t uiNewPos;
 	
