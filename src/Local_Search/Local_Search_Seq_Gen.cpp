@@ -149,18 +149,18 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 			it_unenabled = set_holes.erase(it_unenabled);
 		}
 	}*/
-	
-	size_t uiOutSize = hole_seq.size();	
+
+	size_t uiOutSize = hole_seq.size();
 #ifdef WINDOWS	
 	assert(uiInpSize == set_seen_verts.size());
 	assert(0 == set_holes.size());
 	assert(uiInpSize == uiOutSize);
 #else
-	if( (uiInpSize != set_seen_verts.size()) || (0 != set_holes.size()) || (uiInpSize != uiOutSize))
+	if ((uiInpSize != set_seen_verts.size()) || (0 != set_holes.size()) || (uiInpSize != uiOutSize))
 	{
 		cout << "Sequence generation error \n";
 		exit(1);
-	}	
+	}
 #endif	
 }
 

@@ -19,10 +19,10 @@ struct ST_Time
 
 struct Vertex_Schedule
 {
-	const size_t m_uiInd;
-	const size_t m_uiStart, m_uiEnd, m_uiWait;
-	Vertex_Schedule(size_t uiInd, size_t uiStart, size_t uiEnd, size_t uiWait) : m_uiInd(uiInd), m_uiStart(uiStart), m_uiEnd(uiEnd), m_uiWait(uiWait) {};
-	void print_schedule() const;
+	size_t m_uiInd;
+	size_t m_uiStart, m_uiEnd, m_uiWait;
+	Vertex_Schedule(size_t uiInd, size_t uiStart, size_t uiEnd, size_t uiWait) : m_uiInd(uiInd), m_uiStart(uiStart), m_uiEnd(uiEnd), m_uiWait(uiWait) {}
+	void print_schedule() const;	
 };
 
 //no constraint earliest finish time

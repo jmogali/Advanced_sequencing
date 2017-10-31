@@ -14,6 +14,7 @@
 #endif
 
 #include <iostream>
+//#define ENABLE_FULL_CHECKING
 
 #endif // !WINDOWS_LINUX_H
 

@@ -55,19 +55,32 @@ bool string_Exchange(std::list<size_t> &r1, const std::pair<size_t, size_t> &pr1
 	return true;
 }
 
+// vertex denoted by it1 will be added, vertex denoted by it1_end will not be added, code will add vertices into r2, before uiPos2, vertex denoted 
 bool string_relocate(std::list<size_t> &r1, const std::pair<size_t, size_t> &pr1, size_t uiRobot1, std::list<size_t> &r2, size_t uiPos2, size_t uiRobot2, const Layout_LS& graph)
 {
 	size_t uiPos1 = pr1.first, uiLen1 = pr1.second;
 	
 	if (uiPos1 + uiLen1 >= r1.size()) return false;
 	
+	//denotes first vertex to be moved from r1
 	auto it1 = r1.begin();
 	std::advance(it1, uiPos1);
-	auto it1_end = it1;
-	std::advance(it1_end, uiLen1);
 
-	auto it2 = r2.begin();
-	std::advance(it2, uiPos2);
+	//*it1_last denotes last vertext to be removed
+	auto it1_last = it1;
+	std::advance(it1_last, uiLen1 - 1);
+	
+	//*it1_end denotes end iterator
+	auto it1_end = it1_last;
+	std::advance(it1_end, 1);
+
+	//*it2_start is the vertex after which the the sequence is added
+	auto it2_start = r2.begin();
+	std::advance(it2_start, uiPos2-1);
+
+	//*it2 is the vertex before which it should be added
+	auto it2 = it2_start;
+	std::advance(it2, 1);
 
 	if (1 == uiPos1)
 	{
@@ -79,6 +92,9 @@ bool string_relocate(std::list<size_t> &r1, const std::pair<size_t, size_t> &pr1
 		if (false == graph.doesEdgeExist(uiRobot2, graph.getDepotMap().at(uiRobot2).getFromInd(), *it1)) 
 			return false;
 	}	
+
+	if(false == graph.doesEdgeExist(uiRobot2, *it2_start, *it1)) return false;
+	if (false == graph.doesEdgeExist(uiRobot2, *it1_last, *it2)) return false;
 
 	r2.splice(it2 , r1, it1, it1_end);
 	return true;

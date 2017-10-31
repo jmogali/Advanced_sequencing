@@ -156,7 +156,7 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 	State root(m_uiNumRobots);
 	populate_root_node_info(root , new_rob_seq);
 	int iRetVal = compute_DFS(root, 0, 0);
-	if (1 == iRetVal) { vectorize_schedule(new_rob_seq, vec_rob_sch); }
+	if (1 == iRetVal) { vectorize_schedule(new_rob_seq, vec_rob_sch, rob_seq); }
 	else  m_set_to_do_verts.clear(); 
 
 	if (-1 == iRetVal)
@@ -647,7 +647,7 @@ void Greedy_Heuristic::safe_backtrack(size_t uiDepth, const State& state)
 	m_map_states_feas[state] = -1;     // need to do this way instead of emplace, because this state key is already inserted
 }
 
-void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &new_rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
+void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &new_rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, const std::vector<std::list<size_t>> &rob_seq)
 {
 	vec_rob_sch.resize(m_uiNumRobots);
 	size_t uiStart, uiEnd, uiWait;
@@ -700,8 +700,13 @@ void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &
 #endif
 			it1++;
 		}
-		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart, 0 );		
+		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart, 0 );				
 	}
+
+#ifdef ENABLE_FULL_CHECKING
+	bool bValid = sanity_check_schedule(rob_seq, vec_rob_sch);
+	assert(true == bValid);
+#endif
 }
 
 void Greedy_Heuristic::compute_B_Q(const State& state, std::unordered_set<size_t> &B_Q)
@@ -780,3 +785,38 @@ void Greedy_Heuristic::print_state(size_t uiDepth, size_t uiTime, const State &s
 	cout << " , Time: " << uiTime << endl;
 }
 
+bool Greedy_Heuristic::sanity_check_schedule(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
+{
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		size_t uiCount = 0;
+
+		if (vec_rob_sch[uiRobot].size() != rob_seq[uiRobot].size())
+		{
+			print_sequence(rob_seq);
+#ifdef WINDOWS		
+			assert(vec_rob_sch[uiRobot].size() == rob_seq[uiRobot].size());
+#else
+			cout << "Size mismatch between vectorized schedule and true sequence \n";
+			exit(1);
+#endif
+		}
+
+		for (auto it = rob_seq[uiRobot].begin(); it != rob_seq[uiRobot].end(); it++ , uiCount++)
+		{
+			if (*it != vec_rob_sch[uiRobot][uiCount].m_uiInd)
+			{
+				cout << "Failed sequence: \n";
+				print_sequence(rob_seq);
+#ifdef WINDOWS
+				assert(false);
+#else
+				cout << "Vectorization failed \n";
+				exit(1);
+#endif				
+			}
+		}
+	}
+
+	return true;
+}

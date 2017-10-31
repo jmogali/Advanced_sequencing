@@ -75,7 +75,7 @@ class Greedy_Heuristic
 		//void remove_visited_HD_states(size_t uiRobot, size_t uiDepth, const State& state);
 		
 		std::pair<size_t, size_t> compute_exp_Mkspn_delay(const size_t uiCurrTime, const State& state);
-		void vectorize_schedule(const std::vector<std::list<size_t>> &new_rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
+		void vectorize_schedule(const std::vector<std::list<size_t>> &new_rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, const std::vector<std::list<size_t>> &rob_seq);
 
 		void print_state(size_t uiDepth, size_t uiTime, const State &state);	
 
@@ -86,6 +86,7 @@ class Greedy_Heuristic
 		void update_compr_verts_by_unself_enabled_and_deps(std::vector<std::vector<bool>> &vec_compress_status);
 		void reassign_enablers();
 #endif
+		bool sanity_check_schedule(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
 
 		size_t getTime(size_t uiVert);
 		size_t getTime(N_Ind Ind);

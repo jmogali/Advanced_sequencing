@@ -27,7 +27,16 @@ size_t get_Robot_to_Swap_Hole_With(const Node_Partitions &m_node_data, size_t ui
 {
 	size_t uiSwapRobot;
 	const auto &comm_robots = m_node_data.get_common_robots_for_Ind(uiHoleIndToMove);
+	
+#ifdef WINDOWS	
 	assert(comm_robots.set.size() > 1);
+#else
+	if (comm_robots.set.size() == 1)
+	{
+		cout << "Not exchangeable vertex \n";
+		exit(1);
+	}
+#endif
 
 	const size_t c_uiRandInd = rand() % (comm_robots.set.size() - 1);
 	size_t uiCount = 0;
@@ -44,21 +53,37 @@ size_t get_Robot_to_Swap_Hole_With(const Node_Partitions &m_node_data, size_t ui
 	return uiSwapRobot;
 }
 
-void get_wait_indices_wait_vals_for_robot(const std::vector<Vertex_Schedule> &rob_sch, std::vector<std::pair<size_t, size_t>> &vec_wait_pos_ind_wait_val, const Layout_LS &graph)
+void get_wait_indices_wait_vals_for_robot(const std::vector<Vertex_Schedule> &rob_sch, std::vector<std::pair<size_t, size_t>> &vec_wait_pos_ind_wait_val, const std::list<size_t> &r_seq, const Layout_LS &graph)
 {
-	size_t uiPos = 0;
-	for (size_t uiCount = 0; uiCount < rob_sch.size(); uiCount++)
+	size_t uiPos = 1, uiWait;
+	auto it = r_seq.begin();
+	it++;
+
+	for (size_t uiCount = 2; uiCount < rob_sch.size()-1;)
 	{
-		if ("IV" == graph.getType(rob_sch[uiCount].m_uiInd)) continue;
-		if (rob_sch[uiCount].m_uiWait > 0) vec_wait_pos_ind_wait_val.push_back(std::make_pair(uiPos, rob_sch[uiCount].m_uiWait));
+#ifdef ENABLE_FULL_CHECKING
+#ifdef WINDOWS
+		assert(*it == rob_sch[uiCount].m_uiInd);
+		assert("H" == graph.getType(rob_sch[uiCount].m_uiInd));
+		assert("IV" == graph.getType(rob_sch[uiCount+1].m_uiInd));
+#else
+		if (*it != rob_sch[uiCount].m_uiInd) { cout << "mismatch in schedule and robot sequence\n"; exit(1); }
+		if ("H" != graph.getType(rob_sch[uiCount].m_uiInd)) { cout << "Not reading a hole vertex\n"; exit(1); }
+		if ("IV" != graph.getType(rob_sch[uiCount + 1].m_uiInd)) { cout << "Not an intermediate vertex\n";  exit(1);}
+#endif
+#endif
+		uiWait = rob_sch[uiCount].m_uiWait + rob_sch[uiCount + 1].m_uiWait;
+		if (uiWait > 0) vec_wait_pos_ind_wait_val.push_back(std::make_pair(uiPos,uiWait));
+		uiCount = uiCount + 2;
 		uiPos++;
+		it++;
 	}
 }
 
 //more wait means earlier in the list
-void get_sorted_wait_indices_for_robot(const std::vector<Vertex_Schedule> &rob_sch, std::vector<std::pair<size_t, size_t>> &vec_wait_pos_ind_wait_val, const Layout_LS &graph)
+void get_sorted_wait_indices_for_robot(const std::vector<Vertex_Schedule> &rob_sch, std::vector<std::pair<size_t, size_t>> &vec_wait_pos_ind_wait_val, const std::list<size_t> &r_seq, const Layout_LS &graph)
 {
-	get_wait_indices_wait_vals_for_robot(rob_sch, vec_wait_pos_ind_wait_val, graph);
+	get_wait_indices_wait_vals_for_robot(rob_sch, vec_wait_pos_ind_wait_val, r_seq, graph);
 	std::sort(vec_wait_pos_ind_wait_val.begin(), vec_wait_pos_ind_wait_val.end(), sort_by_max_second_val());
 }
 
@@ -66,7 +91,7 @@ std::tuple<bool, size_t, size_t> Local_Search::wait_based_swap_for_robot(const s
 {
 	//uiPos in rob_seq[uiRobot], uiInd in full_rob_sch[uiRobot], delay value
 	std::vector<std::pair<size_t, size_t>> vec_wait_pos_ind_wait_val;
-	get_sorted_wait_indices_for_robot(full_rob_sch[uiRobot], vec_wait_pos_ind_wait_val, m_graph);
+	get_sorted_wait_indices_for_robot(full_rob_sch[uiRobot], vec_wait_pos_ind_wait_val, rob_seq[uiRobot], m_graph);
 	size_t uiPos, uiSchInd;
 	bool bValid = false;
 	size_t uiMaxMoves = std::min(c_uiMaxWaitEventsPerRobot, vec_wait_pos_ind_wait_val.size());
@@ -113,7 +138,18 @@ std::pair<std::string, size_t> Local_Search::wait_based_move_inter_sequence(cons
 		uiSwapHolePos = uiWaitHolePos + 1;
 		std::advance(it, uiSwapHolePos);
 		uiSwapHoleInd  = *it;
+
+#ifdef ENABLE_FULL_CHECKING
+#ifdef WINDOWS
 		assert("IV" != m_graph.getType(uiSwapHoleInd));
+#else
+		if ("IV" == m_graph.getType(uiSwapHoleInd))
+		{
+			cout << "Swapping an intermediate vertex \n";
+			exit(1);
+		}
+#endif
+#endif
 	}
 	else if ("SAME_HOLE" == strWaitMove)
 	{
@@ -143,7 +179,6 @@ std::pair<std::string, size_t> Local_Search::wait_based_move_inter_sequence(cons
 	std::uniform_int_distribution<size_t> unif_len(uiLowerBound, uiUpperBound);
 	size_t uiNewPos = unif_len(m_rng);
 
-	//it has to be uiWaitHolePos +1 , because we would like to swap the hole following the one with a lot of wait
 	bool bValid = string_relocate(rob_seq[uiRobot], std::make_pair(uiSwapHolePos, 1), uiRobot, rob_seq[uiOtherRobot], uiNewPos, uiOtherRobot, m_graph);
 	if (false == bValid) return std::make_pair("RELOCATION_FAILED", std::numeric_limits<size_t>::max());
 
@@ -154,6 +189,8 @@ bool Local_Search::wait_based_move_intra_sequence(const std::vector<std::vector<
 {
 	size_t uiSwapHolePos;
 	size_t uiSwapHoleInd;
+	bool bValid;
+
 	if ("NEXT_HOLE" == strWaitMove)
 	{
 		auto it = rob_seq[uiRobot].begin();
@@ -166,6 +203,21 @@ bool Local_Search::wait_based_move_intra_sequence(const std::vector<std::vector<
 	{
 		uiSwapHolePos = uiWaitHolePos;
 		uiSwapHoleInd = uiWaitHoleInd;
+
+#ifdef ENABLE_FULL_CHECKING
+		auto it_check = rob_seq[uiRobot].begin();
+		std::advance(it_check, uiWaitHolePos);
+#ifdef WINDOWS
+		assert(uiWaitHoleInd == *it_check);
+#else
+		if (uiWaitHoleInd != *it_check) 
+		{
+			cout << "Mismatch in schedule and sequence in wait_based_move_intra_sequence \n";
+			exit(1);
+		}
+#endif
+#endif
+
 	}
 	else return false;
 
@@ -182,9 +234,8 @@ bool Local_Search::wait_based_move_intra_sequence(const std::vector<std::vector<
 	size_t uiLowerBound = (size_t)std::max((int)uiSwapHolePos - c_iWaitSwapRange, 1);
 	size_t uiUpperBound = (size_t)std::min((int)uiSwapHolePos + c_iWaitSwapRange, (int)rob_seq[uiRobot].size() - 2);
 	
-	if (uiLowerBound > uiUpperBound) return false;
-	if (uiLowerBound == uiUpperBound == uiSwapHolePos) return false;
-
+	if (uiLowerBound >= uiUpperBound) return false;
+	
 	std::uniform_int_distribution<size_t> unif_len(uiLowerBound, uiUpperBound);
 	size_t uiNewPos;
 	
@@ -194,11 +245,8 @@ bool Local_Search::wait_based_move_intra_sequence(const std::vector<std::vector<
 		if (uiNewPos != uiSwapHolePos) break;
 	}
 
-	bool bValid;
-	
 	if (uiSwapHolePos < uiNewPos) bValid = swap_Intra_sequence(uiSwapHolePos, 1, uiNewPos, 1, rob_seq[uiRobot], uiRobot, m_graph);
 	else bValid = swap_Intra_sequence(uiNewPos, 1, uiSwapHolePos, 1, rob_seq[uiRobot], uiRobot, m_graph);
-	if (false == bValid) return false;
-
-	return true;
+	
+	return bValid;
 }
