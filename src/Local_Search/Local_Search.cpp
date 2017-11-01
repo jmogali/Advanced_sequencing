@@ -71,7 +71,7 @@ std::pair<bool, size_t> Local_Search::intra_rand_oper(std::vector<std::list<size
 	std::iota(vec_robots.begin(), vec_robots.end(), 0);
 	std::shuffle(vec_robots.begin(), vec_robots.end(), m_rng);
 
-	for (size_t uiCount = 0; uiCount < vec_robots.size(); uiRobot++)
+	for (size_t uiCount = 0; uiCount < vec_robots.size(); uiCount++)
 	{
 		uiRobot = vec_robots[uiCount];
 
@@ -81,7 +81,7 @@ std::pair<bool, size_t> Local_Search::intra_rand_oper(std::vector<std::list<size
 		}
 		else if ("STRING_CROSS_INTRA_SEQUENCE" == strType)
 		{
-			bChange = string_cross_intra_sequence(uiRobot, rob_seq , true);
+			bChange = string_cross_intra_sequence(uiRobot, rob_seq , true);			
 		}
 		
 		if (true == bChange) return std::make_pair(true, uiRobot);
