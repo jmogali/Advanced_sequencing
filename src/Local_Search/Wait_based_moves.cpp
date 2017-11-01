@@ -54,10 +54,10 @@ size_t get_Robot_to_Swap_Hole_With(const Node_Partitions &m_node_data, size_t ui
 	return uiSwapRobot;
 }
 
-void get_wait_indices_wait_vals_for_robot(const std::vector<Vertex_Schedule> &rob_sch, std::vector<std::pair<size_t, size_t>> &vec_wait_pos_ind_wait_val, const std::list<size_t> &r_seq, const Layout_LS &graph)
+void get_wait_indices_wait_vals_for_robot(const std::vector<Vertex_Schedule> &rob_sch, std::vector<std::pair<size_t, size_t>> &vec_wait_pos_ind_wait_val, const std::list<size_t> &seq, const Layout_LS &graph)
 {
 	size_t uiPos = 1, uiWait;
-	auto it = r_seq.begin();
+	auto it = seq.begin();
 	it++;
 
 	for (size_t uiCount = 2; uiCount < rob_sch.size()-1;)
@@ -134,6 +134,82 @@ std::tuple<bool, size_t, size_t> Local_Search::wait_based_swap_for_robot(const s
 	return std::make_tuple(false, std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
 }
 
+size_t get_best_position_to_insert_in_other_robot(size_t uiLower, size_t uiUpper, size_t uiHoleInd, size_t uiInsertionRobot, const std::list<size_t> &seq, const Layout_LS &graph)
+{
+	size_t uiDist = std::numeric_limits<size_t>::max(), uiInsertion;
+	size_t uiNewPos = uiLower;
+
+	auto it_s = seq.begin();
+	std::advance(it_s, uiLower - 1);
+
+	auto it_next = it_s;
+	it_next++;
+
+	for (size_t uiCount = uiLower; uiCount <= uiUpper; uiCount++)
+	{
+//#ifdef ENABLE_FULL_CHECKING
+#ifdef WINDOWS
+		assert(true == graph.doesEdgeExist(uiInsertionRobot, *it_s, uiHoleInd));
+		assert(true == graph.doesEdgeExist(uiInsertionRobot, uiHoleInd, *it_next));
+#else
+		if ((false == graph.doesEdgeExist(uiInsertionRobot, *it_s, uiHoleInd)) || (false == graph.doesEdgeExist(uiInsertionRobot, uiHoleInd, *it_next)))
+		{
+			cout << "Edge does not exist for swap";
+			exit(1);
+		}
+#endif
+//#endif
+		uiInsertion = graph.getEdgeDist(uiInsertionRobot, *it_s, uiHoleInd);
+		uiInsertion += graph.getEdgeDist(uiInsertionRobot, uiHoleInd, *it_next);
+		if (uiDist > uiInsertion)
+		{
+			uiNewPos = uiCount;
+			uiDist = uiInsertion;
+		}
+		it_s++;
+		it_next++;
+	}
+	return uiNewPos;
+}
+
+size_t get_best_position_to_insert_in_same_robot(size_t uiLower, size_t uiUpper, size_t uiHoleInd, size_t uiCurrHolePos, size_t uiRobot, const std::list<size_t> &seq, const Layout_LS &graph)
+{
+	size_t uiDist = std::numeric_limits<size_t>::max(), uiInsertion;
+	size_t uiNewPos = uiLower;
+
+	auto it_s = seq.begin();
+	std::advance(it_s, uiLower - 1);
+
+	auto it_next = it_s;
+	it_next++;
+
+	for (size_t uiCount = uiLower; uiCount <= uiUpper; uiCount++, it_s++ , it_next++)
+	{
+		if ((uiCount == uiCurrHolePos) || (uiCount == uiCurrHolePos + 1)) continue;
+		
+		//#ifdef ENABLE_FULL_CHECKING
+#ifdef WINDOWS
+		assert(true == graph.doesEdgeExist(uiRobot, *it_s, uiHoleInd));
+		assert(true == graph.doesEdgeExist(uiRobot, uiHoleInd, *it_next));
+#else
+		if ((false == graph.doesEdgeExist(uiRobot, *it_s, uiHoleInd)) || (false == graph.doesEdgeExist(uiRobot, uiHoleInd, *it_next)))
+		{
+			cout << "Edge does not exist for swap";
+			exit(1);
+		}
+#endif
+		//#endif
+		uiInsertion = graph.getEdgeDist(uiRobot, *it_s, uiHoleInd);
+		uiInsertion += graph.getEdgeDist(uiRobot, uiHoleInd, *it_next);
+		if (uiDist > uiInsertion)
+		{
+			uiNewPos = uiCount;
+			uiDist = uiInsertion;
+		}		
+	}
+	return uiNewPos;
+}
+
 std::pair<std::string, size_t> Local_Search::wait_based_move_inter_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::vector<std::list<size_t>> &rob_seq, size_t uiRobot, size_t uiWaitHoleInd, size_t uiWaitHolePos, size_t uiTime, std::string strWaitMove)
 {	
 	size_t uiSwapHolePos;
@@ -180,10 +256,19 @@ std::pair<std::string, size_t> Local_Search::wait_based_move_inter_sequence(cons
 	auto pr = get_hole_based_on_time(full_rob_sch, m_graph, uiTime, uiOtherRobot);
 	
 	size_t uiLowerBound = (size_t)std::max((int)pr.second - c_iWaitSwapRange, 1);
-	size_t uiUpperBound = (size_t)std::min((int)pr.second + c_iWaitSwapRange, (int)rob_seq[uiOtherRobot].size()-2);
-	if (uiLowerBound > uiUpperBound) return std::make_pair("BOUND_FAILED", std::numeric_limits<size_t>::max());
-	std::uniform_int_distribution<size_t> unif_len(uiLowerBound, uiUpperBound);
-	size_t uiNewPos = unif_len(m_rng);
+	if (1 == uiLowerBound)
+	{
+		if (false == m_graph.doesEdgeExist(uiOtherRobot, m_node_data.m_rob_depo[uiOtherRobot].first, uiSwapHoleInd)) uiLowerBound = 2;
+	}
+
+	size_t uiUpperBound = (size_t)std::min((int)pr.second + c_iWaitSwapRange, (int)rob_seq[uiOtherRobot].size()-1);
+	
+	if (std::abs( (int)uiUpperBound - (int)uiLowerBound ) <= 2) return std::make_pair("BOUND_FAILED", std::numeric_limits<size_t>::max());
+	
+	//std::uniform_int_distribution<size_t> unif_len(uiLowerBound, uiUpperBound);
+	//size_t uiNewPos = unif_len(m_rng);
+
+	size_t uiNewPos = get_best_position_to_insert_in_other_robot(uiLowerBound, uiUpperBound, uiSwapHoleInd, uiOtherRobot, rob_seq[uiOtherRobot], m_graph);
 
 	bool bValid = string_relocate(rob_seq[uiRobot], std::make_pair(uiSwapHolePos, 1), uiRobot, rob_seq[uiOtherRobot], uiNewPos, uiOtherRobot, m_graph);
 	if (false == bValid) return std::make_pair("RELOCATION_FAILED", std::numeric_limits<size_t>::max());
@@ -238,18 +323,24 @@ bool Local_Search::wait_based_move_intra_sequence(const std::vector<std::vector<
 #endif
 
 	size_t uiLowerBound = (size_t)std::max((int)uiSwapHolePos - c_iWaitSwapRange, 1);
-	size_t uiUpperBound = (size_t)std::min((int)uiSwapHolePos + c_iWaitSwapRange, (int)rob_seq[uiRobot].size() - 2);
+	if (1 == uiLowerBound)
+	{
+		if (false == m_graph.doesEdgeExist(uiRobot, m_node_data.m_rob_depo[uiRobot].first, uiSwapHoleInd)) uiLowerBound = 2;
+	}
+
+	size_t uiUpperBound = (size_t)std::min((int)uiSwapHolePos + c_iWaitSwapRange, (int)rob_seq[uiRobot].size() - 1);
 	
 	if (uiLowerBound >= uiUpperBound) return false;
 	
-	std::uniform_int_distribution<size_t> unif_len(uiLowerBound, uiUpperBound);
+	//std::uniform_int_distribution<size_t> unif_len(uiLowerBound, uiUpperBound);
 	size_t uiNewPos;
-	
-	while (1)
+	uiNewPos = get_best_position_to_insert_in_same_robot(uiLowerBound, uiUpperBound, uiSwapHoleInd, uiSwapHolePos, uiRobot, rob_seq[uiRobot], m_graph);
+
+	/*while (1)
 	{
 		uiNewPos = unif_len(m_rng);
 		if (uiNewPos != uiSwapHolePos) break;
-	}
+	}*/
 
 	if (uiSwapHolePos < uiNewPos) bValid = swap_Intra_sequence(uiSwapHolePos, 1, uiNewPos, 1, rob_seq[uiRobot], uiRobot, m_graph);
 	else bValid = swap_Intra_sequence(uiNewPos, 1, uiSwapHolePos, 1, rob_seq[uiRobot], uiRobot, m_graph);
