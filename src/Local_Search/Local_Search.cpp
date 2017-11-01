@@ -133,10 +133,11 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 #endif
 
 	std::vector<size_t> vec_late_accep(c_uiLate_Acceptace_Length, std::numeric_limits<size_t>::max());
+	size_t uiSuccesFullIter = 0;
 	
 	std::clock_t start_time;
 	start_time = std::clock();
-
+	
 	while (uiIter < 5000000)
 	{
 		uiMakeSpan = std::numeric_limits<size_t>::max();
@@ -224,7 +225,7 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 			if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 			{
 				rob_seq = old_rob_seq;
-				full_rob_sch = full_rob_sch_prev;
+				full_rob_sch = full_rob_sch_prev;				
 			}
 			else
 			{
@@ -232,6 +233,7 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 				old_rob_seq = rob_seq;
 				full_rob_sch_prev = full_rob_sch;
 			}
+			uiSuccesFullIter++;
 		}
 		else if (false == bSuccess)
 		{
@@ -239,9 +241,7 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 			full_rob_sch = full_rob_sch_prev;
 		}
 		
-		cout << "Entered local search operator \n";
 		generate_new_sequence(full_rob_sch, heur, rob_seq, bSuccess);
-		cout << "Exited local search operator \n";
 		
 		uiIter++;	
 
@@ -249,6 +249,8 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 	}
 	cout << "Tag: Best Makespan: " << uiBestSol << endl;
 	cout<< "Tag: Total Iterations: " << uiIter << endl;
+	cout << "Tag: Successfull iterations: " << uiSuccesFullIter << endl;
+	cout<< "Tag: Success %: " << (double)(100.0 * uiSuccesFullIter)/((double)(uiIter * 1.0)) << endl; 
 }
 
 void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &full_rob_seq)
@@ -309,8 +311,6 @@ void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Sc
 	size_t uiChoice;
 	std::string strType;
 	bool bChange = false, bWait = false;
-	
-	print_sequence(rob_seq);
 	
 	if (true == bSuccess) bWait = heur.doRobotsWait();
 

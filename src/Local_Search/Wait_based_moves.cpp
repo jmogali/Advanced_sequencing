@@ -1,4 +1,5 @@
 #include "Local_Search.h"
+#include "Local_Search_Constants.h"
 
 // < hole index, position >
 std::pair<size_t, size_t> get_hole_based_on_time(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, const Layout_LS &graph, size_t uiTime, size_t uiRobot)

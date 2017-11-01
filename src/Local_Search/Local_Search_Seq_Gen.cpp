@@ -32,7 +32,7 @@ void Local_Search::allocate_holes_to_robots_common_with_bias(std::vector<std::un
 				auto loc2 = m_graph.getLoc(it->first);
 				vec_robot_dist.push_back(std::make_pair(*it_robot, loc2.getDist_XY(loc1)));
 			}
-			uiRobot = rand_select_list_pair_with_bias(m_rng, vec_robot_dist, "LOW_DIST", 5);
+			uiRobot = rand_select_list_pair_with_bias(m_rng, vec_robot_dist, "LOW_DIST", 2.5);
 			vec_com_hole_par[uiRobot].emplace(it->first);
 		}
 		else if("RANDOM" == strBias)
