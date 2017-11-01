@@ -21,7 +21,15 @@ bool Local_Search::check_validity_of_sequence(const std::vector<std::list<size_t
 		it2++;
 		for (auto it1 = rob_seq[uiRobot].begin(); it1 != rob_seq[uiRobot].end(); it1++)
 		{
+#ifdef WINDOWS			
 			assert(set_seen_verts.end() == set_seen_verts.find(*it1));
+#else
+			if (set_seen_verts.end() != set_seen_verts.find(*it1))
+			{
+				cout << "Duplicate vertices \n";
+				return false;
+			}
+#endif
 			set_seen_verts.emplace(*it1);
 			if (it2 == rob_seq[uiRobot].end())
 			{
