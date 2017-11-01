@@ -150,6 +150,7 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 		if (false == bValid)
 		{
 			cout << "Sequence generated is invalid \n";
+			print_sequence(rob_seq);
 			exit(1);
 		}
 #endif

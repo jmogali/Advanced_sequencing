@@ -103,7 +103,7 @@ std::tuple<bool, size_t, size_t> Local_Search::wait_based_swap_for_robot(const s
 		uiSchInd = 2 * uiPos;
 
 		std::string strMoveType;
-		if (uiPos == 0) strMoveType = "NEXT_HOLE";
+		if ( (uiPos == 0) || (uiPos == 1)) strMoveType = "NEXT_HOLE";
 		else strMoveType = ((rand() % 2) == 0) ? "NEXT_HOLE" : "SAME_HOLE";
 		
 #ifdef PRINT_LOCAL_OPERATOR_MESSAGES
@@ -258,7 +258,10 @@ std::pair<std::string, size_t> Local_Search::wait_based_move_inter_sequence(cons
 	size_t uiLowerBound = (size_t)std::max((int)pr.second - c_iWaitSwapRange, 1);
 	if (1 == uiLowerBound)
 	{
-		if (false == m_graph.doesEdgeExist(uiOtherRobot, m_node_data.m_rob_depo[uiOtherRobot].first, uiSwapHoleInd)) uiLowerBound = 2;
+		if (false == m_graph.doesEdgeExist(uiOtherRobot, m_node_data.m_rob_depo[uiOtherRobot].first, uiSwapHoleInd)) 
+		{
+			uiLowerBound = 2;
+		}
 	}
 
 	size_t uiUpperBound = (size_t)std::min((int)pr.second + c_iWaitSwapRange, (int)rob_seq[uiOtherRobot].size()-1);
@@ -267,7 +270,9 @@ std::pair<std::string, size_t> Local_Search::wait_based_move_inter_sequence(cons
 	
 	//std::uniform_int_distribution<size_t> unif_len(uiLowerBound, uiUpperBound);
 	//size_t uiNewPos = unif_len(m_rng);
-
+	
+	//cout << "Lower: " << uiLowerBound << " , Upper: " << uiUpperBound << endl;
+	
 	size_t uiNewPos = get_best_position_to_insert_in_other_robot(uiLowerBound, uiUpperBound, uiSwapHoleInd, uiOtherRobot, rob_seq[uiOtherRobot], m_graph);
 
 	bool bValid = string_relocate(rob_seq[uiRobot], std::make_pair(uiSwapHolePos, 1), uiRobot, rob_seq[uiOtherRobot], uiNewPos, uiOtherRobot, m_graph);
@@ -324,7 +329,7 @@ bool Local_Search::wait_based_move_intra_sequence(const std::vector<std::vector<
 	size_t uiLowerBound = (size_t)std::max((int)uiSwapHolePos - c_iWaitSwapRange, 1);
 	if (1 == uiLowerBound)
 	{
-		if (false == m_graph.doesEdgeExist(uiRobot, m_node_data.m_rob_depo[uiRobot].first, uiSwapHoleInd)) uiLowerBound = 2;
+		if (false == m_graph.doesEdgeExist(uiRobot, m_node_data.m_rob_depo[uiRobot].first, uiSwapHoleInd)) uiLowerBound = 2;		
 	}
 
 	size_t uiUpperBound = (size_t)std::min((int)uiSwapHolePos + c_iWaitSwapRange, (int)rob_seq[uiRobot].size() - 1);
