@@ -341,7 +341,7 @@ void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Sc
 		else if(1 == uiChoice)
 		{
 			strType = rand() % 2 ? "SWAP_INTRA_SEQUENCE" : "STRING_CROSS_INTRA_SEQUENCE";
-
+			
 #ifdef PRINT_LOCAL_OPERATOR_MESSAGES
 			cout << "String Type: " << strType << endl;
 #endif
