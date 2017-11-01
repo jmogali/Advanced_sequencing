@@ -126,28 +126,28 @@ bool Local_Search::string_cross_intra_sequence(size_t uiRobot, std::vector<std::
 		auto it_next_1 = it1;
 		it_next_1++;		
 		if (*it_next_1 == m_node_data.m_rob_depo[uiRobot].second) { break; }
-
+		
 		auto it2 = it_next_1;
 		it2++;                 // we increment this so that the common point of connecting the line segments *it1, *it_next_1 = *it2 , *it_next_2 does not show up as intersection
-
+		
 		for (; it2 != seq.end(); it2++)
 		{
 			if (*it2 == m_node_data.m_rob_depo[uiRobot].second) { break; }
 			auto it_next_2 = it2;
 			it_next_2++;
-						
-			if (bDist)
-			{
-				if (false == m_graph.doesEdgeExist(uiRobot, *it1, *it2)) continue;
-				if (false == m_graph.doesEdgeExist(uiRobot, *it_next_1, *it_next_2)) continue;
+			
+			if (false == m_graph.doesEdgeExist(uiRobot, *it1, *it2)) continue;
+			if (false == m_graph.doesEdgeExist(uiRobot, *it_next_1, *it_next_2)) continue;
 				
+			if (bDist)
+			{				
 				iDist = (int)(m_graph.getEdgeDist(uiRobot, *it1, *it_next_1) + m_graph.getEdgeDist(uiRobot, *it2, *it_next_2));
 				iDist = iDist - (int)(m_graph.getEdgeDist(uiRobot, *it1, *it2) + m_graph.getEdgeDist(uiRobot, *it_next_1, *it_next_2));
 				if (iDist > 0) continue;
 			}
-
+			
 			bIntersect = doIntersect(m_graph, it1, it_next_1, it2, it_next_2);
-						
+			
 			if (bIntersect)
 			{
 				std::reverse(it_next_1 , it_next_2);
