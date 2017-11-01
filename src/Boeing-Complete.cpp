@@ -109,6 +109,7 @@ int main(int argc, char** argv)
 	parser.populate_info(iOffset, graph);
 	graph.finish_construction();
 	cout << "Tag: Hole Count: " << graph.get_num_holes() << endl;
+	cout << "Tag: Weight Factor: " << dWeightFactor << endl;
 
 	Node_Partitions partition(graph);
 	Local_Search obj_ls(partition, graph, dWeightFactor);
