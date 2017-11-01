@@ -280,8 +280,7 @@ bool Local_Search::wait_based_move_intra_sequence(const std::vector<std::vector<
 {
 	size_t uiSwapHolePos;
 	size_t uiSwapHoleInd;
-	bool bValid;
-
+	
 	if ("NEXT_HOLE" == strWaitMove)
 	{
 		auto it = rob_seq[uiRobot].begin();
@@ -342,8 +341,15 @@ bool Local_Search::wait_based_move_intra_sequence(const std::vector<std::vector<
 		if (uiNewPos != uiSwapHolePos) break;
 	}*/
 
-	if (uiSwapHolePos < uiNewPos) bValid = swap_Intra_sequence(uiSwapHolePos, 1, uiNewPos, 1, rob_seq[uiRobot], uiRobot, m_graph);
-	else bValid = swap_Intra_sequence(uiNewPos, 1, uiSwapHolePos, 1, rob_seq[uiRobot], uiRobot, m_graph);
-	
-	return bValid;
+	auto it_remove = rob_seq[uiRobot].begin();
+	std::advance(it_remove, uiSwapHolePos);
+
+	auto it_remove_next = it_remove;
+	it_remove_next++;
+
+	auto it_insert = rob_seq[uiRobot].begin();
+	std::advance(it_insert, uiNewPos);
+
+	rob_seq[uiRobot].splice(it_insert, rob_seq[uiRobot], it_remove, it_remove_next);
+	return true;
 }
