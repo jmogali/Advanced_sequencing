@@ -15,6 +15,7 @@ class Local_Search
 		std::mt19937 m_rng;
 		const Node_Partitions &m_node_data;
 		const Layout_LS &m_graph;
+		const double m_dWeight_Factor;
 
 		// Sequence generation section
 		void allocate_holes_to_robots_common_with_bias(std::vector<std::unordered_set<size_t>> &vec_com_hole_par, std::string strBias);
@@ -53,7 +54,7 @@ class Local_Search
 		int perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
 
 	public:
-		Local_Search(const Node_Partitions &node_data, const Layout_LS &graph);
+		Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor);
 		void perform_local_search(std::string strFolderPath);
 		void perform_VBSS_search(std::string strFolderPath);
 };

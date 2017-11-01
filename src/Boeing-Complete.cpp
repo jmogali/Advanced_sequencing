@@ -68,7 +68,7 @@ int main()
 #else
 int main(int argc, char** argv)
 #endif
-{
+{	
 #ifdef WINDOWS
 	size_t uiFrames = 8;
 	size_t uiRobots = 2;
@@ -76,6 +76,7 @@ int main(int argc, char** argv)
 	double dHeight = 4;
 	double dHorSpace = 0.1;
 	double dVertSpace = 1.0;
+	double dWeightFactor = 1;
 #else
 	size_t uiFrames = (size_t) atoi(argv[1]);
 	size_t uiRobots = (size_t)atoi(argv[2]);
@@ -83,6 +84,7 @@ int main(int argc, char** argv)
 	double dHeight = atof(argv[4]);
 	double dHorSpace = atof(argv[5]);
 	double dVertSpace = atof(argv[6]);
+	double dWeightFactor = atof(argv[7]);
 #endif
 
 	Boeing_Fuesalage obj(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace, "DEFAULT");
@@ -109,7 +111,7 @@ int main(int argc, char** argv)
 	cout << "Tag: Hole Count: " << graph.get_num_holes() << endl;
 
 	Node_Partitions partition(graph);
-	Local_Search obj_ls(partition, graph);
+	Local_Search obj_ls(partition, graph, dWeightFactor);
 	obj_ls.perform_local_search(strPlotFolder);
 	//obj_ls.perform_VBSS_search(strPlotFolder);
 
