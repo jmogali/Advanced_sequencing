@@ -239,7 +239,10 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 			full_rob_sch = full_rob_sch_prev;
 		}
 		
+		cout << "Entered local search operator \n";
 		generate_new_sequence(full_rob_sch, heur, rob_seq, bSuccess);
+		cout << "Exited local search operator \n";
+		
 		uiIter++;	
 
 		if (((std::clock() - start_time) / (double)CLOCKS_PER_SEC) > LS_SEARCH_TIME) break;
@@ -306,6 +309,8 @@ void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Sc
 	size_t uiChoice;
 	std::string strType;
 	bool bChange = false, bWait = false;
+	
+	print_sequence(rob_seq);
 	
 	if (true == bSuccess) bWait = heur.doRobotsWait();
 
