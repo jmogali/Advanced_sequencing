@@ -33,7 +33,11 @@ bool Local_Search::check_validity_of_sequence(const std::vector<std::list<size_t
 				break;
 			}
 			if (false == m_graph.doesEdgeExist(uiRobot, *it1, *it2))
+			{
+				cout << "Wrong edge: " << *it1 << " - "<< *it2 << endl;
+				cout << "Edge created that does not exist \n";
 				return false;
+			}	
 			it2++;
 		}
 		uiNumHoles += rob_seq[uiRobot].size();
