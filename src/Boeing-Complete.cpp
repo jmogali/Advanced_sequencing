@@ -111,6 +111,7 @@ int main(int argc, char** argv)
 	Node_Partitions partition(graph);
 	Local_Search obj_ls(partition, graph);
 	obj_ls.perform_local_search(strPlotFolder);
+	//obj_ls.perform_VBSS_search(strPlotFolder);
 
 	cout << "Tag: \n\n\n";
 }

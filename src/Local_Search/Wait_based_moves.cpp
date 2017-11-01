@@ -187,7 +187,7 @@ size_t get_best_position_to_insert_in_same_robot(size_t uiLower, size_t uiUpper,
 	{
 		if ((uiCount == uiCurrHolePos) || (uiCount == uiCurrHolePos + 1)) continue;
 		
-		//#ifdef ENABLE_FULL_CHECKING
+#ifdef ENABLE_FULL_CHECKING
 #ifdef WINDOWS
 		assert(true == graph.doesEdgeExist(uiRobot, *it_s, uiHoleInd));
 		assert(true == graph.doesEdgeExist(uiRobot, uiHoleInd, *it_next));
@@ -198,7 +198,7 @@ size_t get_best_position_to_insert_in_same_robot(size_t uiLower, size_t uiUpper,
 			exit(1);
 		}
 #endif
-		//#endif
+#endif
 		uiInsertion = graph.getEdgeDist(uiRobot, *it_s, uiHoleInd);
 		uiInsertion += graph.getEdgeDist(uiRobot, uiHoleInd, *it_next);
 		if (uiDist > uiInsertion)
@@ -258,10 +258,7 @@ std::pair<std::string, size_t> Local_Search::wait_based_move_inter_sequence(cons
 	size_t uiLowerBound = (size_t)std::max((int)pr.second - c_iWaitSwapRange, 1);
 	if (1 == uiLowerBound)
 	{
-		if (false == m_graph.doesEdgeExist(uiOtherRobot, m_node_data.m_rob_depo[uiOtherRobot].first, uiSwapHoleInd)) 
-		{
-			uiLowerBound = 2;
-		}
+		if (false == m_graph.doesEdgeExist(uiOtherRobot, m_node_data.m_rob_depo[uiOtherRobot].first, uiSwapHoleInd)) uiLowerBound = 2;
 	}
 
 	size_t uiUpperBound = (size_t)std::min((int)pr.second + c_iWaitSwapRange, (int)rob_seq[uiOtherRobot].size()-1);
@@ -329,7 +326,7 @@ bool Local_Search::wait_based_move_intra_sequence(const std::vector<std::vector<
 	size_t uiLowerBound = (size_t)std::max((int)uiSwapHolePos - c_iWaitSwapRange, 1);
 	if (1 == uiLowerBound)
 	{
-		if (false == m_graph.doesEdgeExist(uiRobot, m_node_data.m_rob_depo[uiRobot].first, uiSwapHoleInd)) uiLowerBound = 2;		
+		if (false == m_graph.doesEdgeExist(uiRobot, m_node_data.m_rob_depo[uiRobot].first, uiSwapHoleInd)) uiLowerBound = 2;
 	}
 
 	size_t uiUpperBound = (size_t)std::min((int)uiSwapHolePos + c_iWaitSwapRange, (int)rob_seq[uiRobot].size() - 1);

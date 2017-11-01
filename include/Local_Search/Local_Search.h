@@ -55,6 +55,7 @@ class Local_Search
 	public:
 		Local_Search(const Node_Partitions &node_data, const Layout_LS &graph);
 		void perform_local_search(std::string strFolderPath);
+		void perform_VBSS_search(std::string strFolderPath);
 };
 
 bool string_Exchange(std::list<size_t> &r1, const std::pair<size_t, size_t> &pr1, size_t uiRobot1, std::list<size_t> &r2, const std::pair<size_t, size_t> &pr2, size_t uiRobot2, const Layout_LS& graph);

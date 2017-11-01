@@ -110,6 +110,48 @@ std::tuple<bool, size_t, size_t> Local_Search::wait_based_oper(std::vector<std::
 	return std::make_tuple(false, std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
 }
 
+void Local_Search::perform_VBSS_search(std::string strFolderPath)
+{
+	std::clock_t start_time;
+	start_time = std::clock();
+	size_t uiIter = 0, uiMakeSpan,uiBestSol = std::numeric_limits<size_t>::max(), uiSuccesFullIter = 0;
+	Power_Set power;
+	Greedy_Heuristic heur(m_node_data.m_uiNumRobots, m_graph, power);
+
+	while (uiIter < 5000000)
+	{
+		std::vector<std::list<size_t>> rob_seq;
+		std::vector<std::vector<Vertex_Schedule>> full_rob_sch;
+
+		generate_constructive_sequence_VBSS(rob_seq);
+		bool bValid = check_validity_of_sequence(rob_seq), bSuccess = true;
+		if (false == bValid) 
+		{ 
+			cout << "Initial seq generated is invalid\n"; 
+			uiIter++;
+			continue;
+		}
+
+		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strFolderPath);
+		uiMakeSpan = (iRetVal == 1) ? getMakeSpan_From_Schedule(full_rob_sch) : std::numeric_limits<size_t>::max();
+
+		cout << " Iteration: " << uiIter << " , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") << " , Makespan: " << uiMakeSpan << " , Best Sol: " << uiBestSol << endl;
+
+		if (uiBestSol > uiMakeSpan)	uiBestSol = uiMakeSpan;
+		
+		bSuccess = iRetVal == 1 ? true : false;
+		if (true == bSuccess) uiSuccesFullIter++;
+
+		uiIter++;
+		if (((std::clock() - start_time) / (double)CLOCKS_PER_SEC) > LS_SEARCH_TIME) break;
+	}
+
+	cout << "Tag: Best Makespan: " << uiBestSol << endl;
+	cout << "Tag: Total Iterations: " << uiIter << endl;
+	cout << "Tag: Successfull iterations: " << uiSuccesFullIter << endl;
+	cout << "Tag: Success %: " << (double)(100.0 * uiSuccesFullIter) / ((double)(uiIter * 1.0)) << endl;
+}
+
 void Local_Search::perform_local_search(std::string strFolderPath)
 {
 	std::vector<std::list<size_t>> rob_seq;
