@@ -139,6 +139,7 @@ bool Local_Search::string_cross_intra_sequence(size_t uiRobot, std::vector<std::
 			if (bDist)
 			{
 				if (false == m_graph.doesEdgeExist(uiRobot, *it1, *it2)) continue;
+				if (false == m_graph.doesEdgeExist(uiRobot, *it_next_1, *it_next_2)) continue;
 				
 				iDist = (int)(m_graph.getEdgeDist(uiRobot, *it1, *it_next_1) + m_graph.getEdgeDist(uiRobot, *it2, *it_next_2));
 				iDist = iDist - (int)(m_graph.getEdgeDist(uiRobot, *it1, *it2) + m_graph.getEdgeDist(uiRobot, *it_next_1, *it_next_2));
@@ -146,7 +147,7 @@ bool Local_Search::string_cross_intra_sequence(size_t uiRobot, std::vector<std::
 			}
 
 			bIntersect = doIntersect(m_graph, it1, it_next_1, it2, it_next_2);
-
+						
 			if (bIntersect)
 			{
 				std::reverse(it_next_1 , it_next_2);
