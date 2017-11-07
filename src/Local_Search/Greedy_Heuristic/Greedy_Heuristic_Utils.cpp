@@ -61,3 +61,55 @@ void print_sequence(const std::vector<std::list<size_t>> &rob_seq)
 
 	cout << "\n\n";
 }
+
+void print_schedule(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)
+{
+	for (size_t uiRobot = 0; uiRobot < full_rob_sch.size(); uiRobot++)
+	{
+		cout << "Robot: " << uiRobot << endl;
+		for (auto it = full_rob_sch[uiRobot].begin(); it != full_rob_sch[uiRobot].end(); it++)
+		{
+			it->print_schedule();
+			cout << "\n";
+		}
+		cout << "\n\n";
+	}
+}
+
+void dump_data_to_file(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolder, std::string strFileName, bool bFeasible)
+{
+	ofstream myFile;
+	std::string strFile = strFolder + "/" + strFileName;
+	myFile.open(strFile.c_str());
+
+	myFile << "SEQUENCE_INFO:" << endl;
+	for (size_t uiRobot = 0; uiRobot < rob_seq.size(); uiRobot++)
+	{
+		myFile << "ROBOT: " << uiRobot<<endl;
+		for (auto it = rob_seq[uiRobot].begin(); it != rob_seq[uiRobot].end(); it++)
+		{
+			myFile << *it << ",";
+		}	
+		myFile << endl;
+	}
+	
+	if (false == bFeasible)
+	{
+		myFile.close();
+		return;
+	}
+
+	myFile << endl;
+	myFile << "SCHEDULE: " << endl;
+
+	for (size_t uiRobot = 0; uiRobot < full_rob_sch.size(); uiRobot++)
+	{
+		myFile << "ROBOT: " << uiRobot << endl;
+		for (auto it = full_rob_sch[uiRobot].begin(); it != full_rob_sch[uiRobot].end(); it++)
+		{
+			myFile << it->m_uiInd << "-(" << it->m_uiStart << "-" << it->m_uiEnd << ")," << it->m_uiWait << endl;			
+		}		
+		myFile << endl;
+	}
+	myFile.close();
+}

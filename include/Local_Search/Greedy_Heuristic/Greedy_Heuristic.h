@@ -92,7 +92,7 @@ class Greedy_Heuristic
 		size_t getTime(N_Ind Ind);
 	public:
 		Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power);
-		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strFolder);
+		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strPlotFolder);
 		inline bool doRobotsWait() const { assert(true == m_bVectorizeSchedule); return m_bWait; };
 };
 

@@ -91,14 +91,17 @@ int main(int argc, char** argv)
 #ifdef WINDOWS
 	std::string strDatasetFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Dataset/";
 	std::string strPlotFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Graphical_Plots/";
+	std::string strDataDumpFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Sequence_Info/";
 #else
 	std::string strDatasetFolder = "Dataset/";
 	std::string strPlotFolder = "Graphical_Plots/";
+	std::string strDataDumpFolder = "Sequence_Info/";
 #endif	
 	
 	std::string strFolder = getFolderName(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace);
 	std::string strFilePath = generate_data(obj, strDatasetFolder, strFolder);
 	strPlotFolder += strFolder+"/";
+	strDataDumpFolder += strFolder + "/";
 
 	cout << "Tag: File: " << strFolder << endl;
 
@@ -113,8 +116,9 @@ int main(int argc, char** argv)
 
 	Node_Partitions partition(graph);
 	Local_Search obj_ls(partition, graph, dWeightFactor);
-	obj_ls.perform_local_search(strPlotFolder);
+	obj_ls.perform_local_search(strPlotFolder, strDataDumpFolder);
 	//obj_ls.perform_VBSS_search(strPlotFolder);
+
 	cout << "Tag: \n\n\n";
 }
 

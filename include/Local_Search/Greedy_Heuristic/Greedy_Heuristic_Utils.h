@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "Layout_LS.h"
+#include <fstream>
 
 #define COMPRESSION_ENABLE
 
@@ -66,5 +67,7 @@ struct Comparison_Object
 };
 
 void print_sequence(const std::vector<std::list<size_t>> &rob_seq);
+void print_schedule(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
+void dump_data_to_file(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolder, std::string strFileName, bool bFeasible);
 
 #endif

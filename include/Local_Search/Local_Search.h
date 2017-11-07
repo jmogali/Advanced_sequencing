@@ -50,12 +50,12 @@ class Local_Search
 		void get_Wait_Holes_For_Robot(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, size_t uiRobot, std::vector<std::pair<size_t, size_t>> &vec_wait_ind_pos);
 
 		// scheduling section
-		int perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolderPath);
+		int perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder);
 		int perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
 
 	public:
 		Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor);
-		void perform_local_search(std::string strFolderPath);
+		void perform_local_search(std::string strFolderPath, std::string strDataDumpFolder);
 		void perform_VBSS_search(std::string strFolderPath);
 };
 
