@@ -165,7 +165,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	_mkdir(strDataDump_Feasible.c_str());
 	_mkdir(strDataDump_Infeasible.c_str());
 #else
-	_mkdir(strDataDumpFolder.c_str(), S_IRWXU);
+	mkdir(strDataDumpFolder.c_str(), S_IRWXU);
 	mkdir(strDataDump_Feasible.c_str(), S_IRWXU);
 	mkdir(strDataDump_Infeasible.c_str(), S_IRWXU);
 #endif
