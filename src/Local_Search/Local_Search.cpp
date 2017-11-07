@@ -28,7 +28,7 @@ size_t getMakeSpan_From_Schedule(const std::vector<std::vector<Vertex_Schedule>>
 	return uiMakeSpan;
 }
 
-Local_Search::Local_Search(const Node_Partitions &node_data, const Layout_LS &graph) :m_rng(m_rd()) , m_node_data(node_data) , m_graph(graph)
+Local_Search::Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor) :m_rng(m_rd()) , m_node_data(node_data) , m_graph(graph), m_dWeight_Factor(dWeightFactor)
 {
 	srand(time(0));
 }
@@ -149,7 +149,9 @@ void Local_Search::perform_VBSS_search(std::string strFolderPath)
 	cout << "Tag: Best Makespan: " << uiBestSol << endl;
 	cout << "Tag: Total Iterations: " << uiIter << endl;
 	cout << "Tag: Successfull iterations: " << uiSuccesFullIter << endl;
-	cout << "Tag: Success %: " << (double)(100.0 * uiSuccesFullIter) / ((double)(uiIter * 1.0)) << endl;
+	double dSuccPercent = (double)(100.0 * uiSuccesFullIter) / ((double)(uiIter * 1.0));
+	cout << "Tag: Success %: " << dSuccPercent << endl; 
+	cout << "Tag: Accumulated Results: " << uiBestSol << ","<< uiSuccesFullIter << ","<< dSuccPercent <<endl;
 }
 
 void Local_Search::perform_local_search(std::string strFolderPath)
@@ -164,7 +166,7 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 	if (false == bValid) { cout << "Initial seq generated is invalid\n"; }
 	
 	std::string strType;
-	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max();
+	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan;
 	Power_Set power;
 	bool bFirst_Feasible_Sequence = false;
 
@@ -259,6 +261,7 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 			{
 				bFirst_Feasible_Sequence = true;
 				cout << "Tag: Initial Makespan: " << uiMakeSpan << endl;
+				uiConstructiveMakespan = uiMakeSpan;
 				std::fill(vec_late_accep.begin(), vec_late_accep.end(), uiMakeSpan);				
 			}
 		}
@@ -293,7 +296,9 @@ void Local_Search::perform_local_search(std::string strFolderPath)
 	cout << "Tag: Best Makespan: " << uiBestSol << endl;
 	cout<< "Tag: Total Iterations: " << uiIter << endl;
 	cout << "Tag: Successfull iterations: " << uiSuccesFullIter << endl;
-	cout<< "Tag: Success %: " << (double)(100.0 * uiSuccesFullIter)/((double)(uiIter * 1.0)) << endl; 
+	double dSuccPercent = (double)(100.0 * uiSuccesFullIter)/((double)(uiIter * 1.0));
+	cout<< "Tag: Success %: " << dSuccPercent << endl; 
+	cout<< "Tag: Accumulated Result: "<< uiConstructiveMakespan << "," << uiBestSol<< "," << uiSuccesFullIter<< "," << dSuccPercent <<endl;
 }
 
 void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &full_rob_seq)

@@ -32,7 +32,7 @@ void Local_Search::allocate_holes_to_robots_common_with_bias(std::vector<std::un
 				auto loc2 = m_graph.getLoc(it->first);
 				vec_robot_dist.push_back(std::make_pair(*it_robot, loc2.getDist_XY(loc1)));
 			}
-			uiRobot = rand_select_list_pair_with_bias(m_rng, vec_robot_dist, "LOW_DIST", 2.5);
+			uiRobot = rand_select_list_pair_with_bias(m_rng, vec_robot_dist, "LOW_DIST", m_dWeight_Factor * 2.5);
 			vec_com_hole_par[uiRobot].emplace(it->first);
 		}
 		else if("RANDOM" == strBias)
@@ -89,7 +89,7 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 			list_dist.push_back(std::make_pair(*it_cand, loc1.getDist_XY(loc2)));
 		}
 
-		uiVtx = rand_select_list_pair_with_bias(m_rng, list_dist, "LOW_DIST", 0.05);
+		uiVtx = rand_select_list_pair_with_bias(m_rng, list_dist, "LOW_DIST", m_dWeight_Factor * 0.05);
 		hole_seq.emplace_back(uiVtx); // add the vertex that was chosen
 		uiErase = set_curr_enabled_holes.erase(uiVtx);
 		assert(1 == uiErase);
