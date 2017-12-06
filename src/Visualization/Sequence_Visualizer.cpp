@@ -98,3 +98,32 @@ void Sequence_Visualization::plot_visted_states(std::string strFilePath, const A
 	visStateFile.close();
 }
 
+void Sequence_Visualization::plot_robot_hole_sequence(std::string strFolderPath, size_t uiRobot, std::vector<std::pair<double, double>> vec_coord, size_t uiSampling)
+{
+#ifdef WINDOWS
+	_mkdir(strFolderPath.c_str());
+#else
+	mkdir(strFolderPath.c_str(), S_IRWXU);
+#endif
+	stringstream stream_R;
+	stream_R << uiRobot;
+	std::string strFilePath = strFolderPath + "Hole_Sequence_"+ stream_R .str()+".dat";
+
+	std::ofstream visHoleSeqFile;
+	visHoleSeqFile.open(strFilePath.c_str());
+
+	double dPrev_X = vec_coord[0].first, dPrev_Y = vec_coord[0].second;
+	double dCurr_X, dCurr_Y;
+
+	for (size_t uiCount = 1; uiCount < vec_coord.size(); uiCount = uiCount + uiSampling)
+	{
+		dCurr_X = vec_coord[uiCount].first;
+		dCurr_Y = vec_coord[uiCount].second;
+
+		visHoleSeqFile << dPrev_X << " " << dPrev_Y << " " << dCurr_X - dPrev_X << " " << dCurr_Y - dPrev_Y << "\n";
+		
+		dPrev_X = dCurr_X;
+		dPrev_Y = dCurr_Y;
+	}
+	visHoleSeqFile.close();
+}

@@ -17,6 +17,7 @@ class Sequence_Visualization
 
 	public:
 		void plot_alternative_graph(std::string strFolderPath, const Alternative_Graph &alt_graph, const std::unordered_map<State, int, StateHasher>& map_visited_states);
+		void plot_robot_hole_sequence(std::string strFolderPath, size_t uiRobot, std::vector<std::pair<double, double>> vec_coord, size_t sampling);
 		Sequence_Visualization();
 };
 
