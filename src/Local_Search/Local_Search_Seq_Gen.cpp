@@ -60,7 +60,9 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 	assert(1 == uiErase);
 	
 	hole_seq.emplace_back(uiVtx);	// add the start depot vertex
-
+	size_t uiIter = 0, uiStartVtx;
+	double dMaxDist = std::numeric_limits<double>::min();	
+		
 	do
 	{
 		const auto& vtx_vec_enablers = map_enablers.at(uiVtx).get_neighs();
@@ -87,12 +89,29 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 			auto loc2 = m_graph.getLoc(uiVtx);
 			assert(true == m_graph.doesEdgeExist(uiRobot, uiVtx, *it_cand));
 			list_dist.push_back(std::make_pair(*it_cand, loc1.getDist_XY(loc2)));
+			
+			if( (0 == uiRobot) && (0 == uiIter) )
+			{
+				if(dMaxDist < loc1.getDist_XY(loc2))
+				{
+					dMaxDist = loc1.getDist_XY(loc2);
+					uiStartVtx = *it_cand;
+				}
+			}
 		}
 
 		uiVtx = rand_select_list_pair_with_bias(m_rng, list_dist, "LOW_DIST", m_dWeight_Factor * 0.05);
+		
+		if( (0 == uiRobot) && (0 == uiIter) )
+		{
+			uiVtx = uiStartVtx;
+		}
+		
 		hole_seq.emplace_back(uiVtx); // add the vertex that was chosen
 		uiErase = set_curr_enabled_holes.erase(uiVtx);
 		assert(1 == uiErase);
+		
+		uiIter++;
 	} while (false == set_curr_enabled_holes.empty());
 
 	assert(0 == set_curr_enabled_holes.size());

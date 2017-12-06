@@ -12,6 +12,6 @@ const size_t c_uiMaxWaitEventsPerRobot = 3;
 
 //#define PRINT_LOCAL_OPERATOR_MESSAGES
 //#define ENABLE_LEGACY_CODE
-#define DATA_DUMP_ENABLE
+//#define DATA_DUMP_ENABLE
 
 #endif

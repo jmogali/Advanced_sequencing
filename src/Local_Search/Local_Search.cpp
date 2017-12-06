@@ -183,7 +183,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	std::clock_t start_time;
 	start_time = std::clock();
 	
-	while (uiIter < 5000000)
+	while (uiIter < 1)
 	{
 		uiMakeSpan = std::numeric_limits<size_t>::max();
 		uiMakeSpan_legacy = std::numeric_limits<size_t>::max();
@@ -462,5 +462,7 @@ int Local_Search::perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, 
 	//full_rob_seq.push_back({ 2,3179,86,7140,84,6998,72,6232,87,7171,50,4757,41,4196,66,5829,74,6343,67,5889,69,6015,64,5703,78,6624,89,7340,90,7354,38,4020,85,7039,48,4634,49,4694,43,4336,76,6468,62,5557,61,5482,51,4861,81,6813,83,6934,73,6287,77,6561,91,7463,82,6866,70,6079,63,5603,42,4248,53,4969,59,5340,39,4047,47,4551,30,3494,79,6676,75,6412,71,6146,65,5758,68,5973,88,7243,57,5228,58,5292,56,5165,60,5445,80,6695,29,3382,32,3579,34,3710,35,3776,36,7482,3 });
 	return heur_old.compute_greedy_sol(full_rob_seq, full_rob_sch);
 }
+
+
 
 

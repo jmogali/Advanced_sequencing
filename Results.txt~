@@ -1,0 +1,487 @@
+
+
+ File: 6_4_2_8_0.10_2.00
+ Hole Count: 40
+ Weight Factor: 10
+ Initial Makespan: 98604
+ Best Makespan: 98604
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 98604,98604,1,100
+ 
+ File: 6_4_2_8_0.10_1.50
+ Hole Count: 56
+ Weight Factor: 10
+ Initial Makespan: 137042
+ Best Makespan: 137042
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 137042,137042,1,100
+ 
+ File: 6_4_2_8_0.10_1.00
+ Hole Count: 88
+ Weight Factor: 10
+ Initial Makespan: 216788
+ Best Makespan: 216788
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 216788,216788,1,100
+ 
+ File: 6_4_2_8_0.10_0.75
+ Hole Count: 120
+ Weight Factor: 10
+ Initial Makespan: 292127
+ Best Makespan: 292127
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 292127,292127,1,100
+ 
+ File: 6_4_2_8_0.10_0.50
+ Hole Count: 184
+ Weight Factor: 10
+ Initial Makespan: 450539
+ Best Makespan: 450539
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 450539,450539,1,100
+ 
+ File: 6_4_2_8_0.10_0.25
+ Hole Count: 376
+ Weight Factor: 10
+ Initial Makespan: 905334
+ Best Makespan: 905334
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 905334,905334,1,100
+ 
+ File: 6_4_2_8_0.10_0.22
+ Hole Count: 440
+ Weight Factor: 10
+ Initial Makespan: 1041963
+ Best Makespan: 1041963
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1041963,1041963,1,100
+ 
+ File: 6_4_2_8_0.10_0.17
+ Hole Count: 552
+ Weight Factor: 10
+ Initial Makespan: 1296318
+ Best Makespan: 1296318
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1296318,1296318,1,100
+ 
+ File: 6_4_2_8_0.10_0.15
+ Hole Count: 632
+ Weight Factor: 10
+ Initial Makespan: 1492912
+ Best Makespan: 1492912
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1492912,1492912,1,100
+ 
+ File: 6_4_2_8_0.10_0.12
+ Hole Count: 760
+ Weight Factor: 10
+ Initial Makespan: 1781444
+ Best Makespan: 1781444
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1781444,1781444,1,100
+ 
+ File: 6_4_2_8_0.10_2.00
+ Hole Count: 40
+ Weight Factor: 10
+ Initial Makespan: 101299
+ Best Makespan: 101299
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 101299,101299,1,100
+ 
+ File: 6_4_2_8_0.10_1.50
+ Hole Count: 56
+ Weight Factor: 10
+ Initial Makespan: 143992
+ Best Makespan: 143992
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 143992,143992,1,100
+ 
+ File: 6_4_2_8_0.10_1.00
+ Hole Count: 88
+ Weight Factor: 10
+ Initial Makespan: 218560
+ Best Makespan: 218560
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 218560,218560,1,100
+ 
+ File: 6_4_2_8_0.10_0.75
+ Hole Count: 120
+ Weight Factor: 10
+ Initial Makespan: 292519
+ Best Makespan: 292519
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 292519,292519,1,100
+ 
+ File: 6_4_2_8_0.10_0.50
+ Hole Count: 184
+ Weight Factor: 10
+ Initial Makespan: 443890
+ Best Makespan: 443890
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 443890,443890,1,100
+ 
+ File: 6_4_2_8_0.10_0.25
+ Hole Count: 376
+ Weight Factor: 10
+ Initial Makespan: 882176
+ Best Makespan: 882176
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 882176,882176,1,100
+ 
+ File: 6_4_2_8_0.10_0.22
+ Hole Count: 440
+ Weight Factor: 10
+ Initial Makespan: 1015056
+ Best Makespan: 1015056
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1015056,1015056,1,100
+ 
+ File: 6_4_2_8_0.10_0.17
+ Hole Count: 552
+ Weight Factor: 10
+ Initial Makespan: 1288483
+ Best Makespan: 1288483
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1288483,1288483,1,100
+ 
+ File: 6_4_2_8_0.10_0.15
+ Hole Count: 632
+ Weight Factor: 10
+ Initial Makespan: 1464292
+ Best Makespan: 1464292
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1464292,1464292,1,100
+ 
+ File: 6_4_2_8_0.10_0.12
+ Hole Count: 0
+ Weight Factor: 10
+ Initial Makespan: 0
+ File: 6_4_2_8_0.10_2.00
+ Hole Count: 40
+ Weight Factor: 10
+ Initial Makespan: 99759
+ Best Makespan: 99759
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 99759,99759,1,100
+ 
+ File: 6_4_2_8_0.10_1.50
+ Hole Count: 56
+ Weight Factor: 10
+ Initial Makespan: 135068
+ Best Makespan: 135068
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 135068,135068,1,100
+ 
+ File: 6_4_2_8_0.10_1.00
+ Hole Count: 88
+ Weight Factor: 10
+ Initial Makespan: 230901
+ Best Makespan: 230901
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 230901,230901,1,100
+ 
+ File: 6_4_2_8_0.10_0.75
+ Hole Count: 120
+ Weight Factor: 10
+ Initial Makespan: 294477
+ Best Makespan: 294477
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 294477,294477,1,100
+ 
+ File: 6_4_2_8_0.10_0.50
+ Hole Count: 184
+ Weight Factor: 10
+ Initial Makespan: 447014
+ Best Makespan: 447014
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 447014,447014,1,100
+ 
+ File: 6_4_2_8_0.10_0.25
+ Hole Count: 376
+ Weight Factor: 10
+ Initial Makespan: 919584
+ Best Makespan: 919584
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 919584,919584,1,100
+ 
+ File: 6_4_2_8_0.10_0.22
+ Hole Count: 440
+ Weight Factor: 10
+ Initial Makespan: 1012889
+ Best Makespan: 1012889
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1012889,1012889,1,100
+ 
+ File: 6_4_2_8_0.10_0.17
+ Hole Count: 552
+ Weight Factor: 10
+ Initial Makespan: 1297739
+ Best Makespan: 1297739
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1297739,1297739,1,100
+ 
+ File: 6_4_2_8_0.10_0.15
+ Hole Count: 632
+ Weight Factor: 10
+ Initial Makespan: 1492926
+ Best Makespan: 1492926
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1492926,1492926,1,100
+ 
+ File: 6_4_2_8_0.10_0.12
+ File: 6_4_2_8_0.10_2.00
+ Hole Count: 40
+ Weight Factor: 10
+ Initial Makespan: 103851
+ Best Makespan: 103851
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 103851,103851,1,100
+ 
+ File: 6_4_2_8_0.10_1.50
+ Hole Count: 56
+ Weight Factor: 10
+ Initial Makespan: 133725
+ Best Makespan: 133725
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 133725,133725,1,100
+ 
+ File: 6_4_2_8_0.10_1.00
+ Hole Count: 88
+ Weight Factor: 10
+ Initial Makespan: 212861
+ Best Makespan: 212861
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 212861,212861,1,100
+ 
+ File: 6_4_2_8_0.10_0.75
+ Hole Count: 120
+ Weight Factor: 10
+ Initial Makespan: 286723
+ Best Makespan: 286723
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 286723,286723,1,100
+ 
+ File: 6_4_2_8_0.10_0.50
+ Hole Count: 184
+ Weight Factor: 10
+ Initial Makespan: 459065
+ Best Makespan: 459065
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 459065,459065,1,100
+ 
+ File: 6_4_2_8_0.10_0.25
+ Hole Count: 376
+ Weight Factor: 10
+ Initial Makespan: 891199
+ Best Makespan: 891199
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 891199,891199,1,100
+ 
+ File: 6_4_2_8_0.10_0.22
+ Hole Count: 440
+ Weight Factor: 10
+ Initial Makespan: 1029993
+ Best Makespan: 1029993
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1029993,1029993,1,100
+ 
+ File: 6_4_2_8_0.10_0.17
+ Hole Count: 552
+ Weight Factor: 10
+ Initial Makespan: 1283187
+ Best Makespan: 1283187
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1283187,1283187,1,100
+ 
+ File: 6_4_2_8_0.10_0.15
+ Hole Count: 632
+ Weight Factor: 10
+ Initial Makespan: 1487558
+ Best Makespan: 1487558
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1487558,1487558,1,100
+ 
+ File: 6_4_2_8_0.10_0.12
+ Hole Count: 760
+ Weight Factor: 10
+ Initial Makespan: 1770780
+ Best Makespan: 1770780
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1770780,1770780,1,100
+ 
+ File: 6_4_2_8_0.10_2.00
+ Hole Count: 40
+ Weight Factor: 10
+ Initial Makespan: 97300
+ Best Makespan: 97300
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 97300,97300,1,100
+ 
+ File: 6_4_2_8_0.10_1.50
+ Hole Count: 56
+ Weight Factor: 10
+ Initial Makespan: 145512
+ Best Makespan: 145512
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 145512,145512,1,100
+ 
+ File: 6_4_2_8_0.10_1.00
+ Hole Count: 88
+ Weight Factor: 10
+ Initial Makespan: 216219
+ Best Makespan: 216219
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 216219,216219,1,100
+ 
+ File: 6_4_2_8_0.10_0.75
+ Hole Count: 120
+ Weight Factor: 10
+ Initial Makespan: 294703
+ Best Makespan: 294703
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 294703,294703,1,100
+ 
+ File: 6_4_2_8_0.10_0.50
+ Hole Count: 184
+ Weight Factor: 10
+ Initial Makespan: 441269
+ Best Makespan: 441269
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 441269,441269,1,100
+ 
+ File: 6_4_2_8_0.10_0.25
+ Hole Count: 376
+ Weight Factor: 10
+ Initial Makespan: 907674
+ Best Makespan: 907674
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 907674,907674,1,100
+ 
+ File: 6_4_2_8_0.10_0.22
+ Hole Count: 440
+ Weight Factor: 10
+ Initial Makespan: 1035234
+ Best Makespan: 1035234
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1035234,1035234,1,100
+ 
+ File: 6_4_2_8_0.10_0.17
+ Hole Count: 552
+ Weight Factor: 10
+ Initial Makespan: 1304837
+ Best Makespan: 1304837
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1304837,1304837,1,100
+ 
+ File: 6_4_2_8_0.10_0.15
+ Hole Count: 632
+ Weight Factor: 10
+ Initial Makespan: 1480251
+ Best Makespan: 1480251
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1480251,1480251,1,100
+ 
+ File: 6_4_2_8_0.10_0.12
+ Hole Count: 760
+ Weight Factor: 10
+ Initial Makespan: 1788850
+ Best Makespan: 1788850
+ Total Iterations: 1
+ Successfull iterations: 1
+ Success %: 100
+ Accumulated Result: 1788850,1788850,1,100
+ 
