@@ -210,7 +210,7 @@ int Greedy_Heuristic::compute_DFS(const State& state , size_t uiDepth, size_t ui
 		uiInFeasChildCount++;
 	}
 
-	//if (true == check_if_backwards_coll_state(state)) return -2; // implements premature backtracking
+	if (true == check_if_backwards_coll_state(state)) return -2; // implements premature backtracking
 
 	assert(vec_children.size() == uiInFeasChildCount);
 	safe_backtrack(uiDepth, state);
