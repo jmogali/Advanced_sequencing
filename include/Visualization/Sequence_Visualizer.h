@@ -1,3 +1,4 @@
+#pragma once
 #ifndef SEQUENCE_VISUALIZATION_H
 #define SEQUENCE_VISUALIZATION_H
 

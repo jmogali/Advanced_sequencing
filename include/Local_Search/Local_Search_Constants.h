@@ -11,7 +11,7 @@ const int c_iWaitSwapRange = 5;
 const size_t c_uiMaxWaitEventsPerRobot = 3;
 
 //#define PRINT_LOCAL_OPERATOR_MESSAGES
-//#define ENABLE_LEGACY_CODE
-#define DATA_DUMP_ENABLE
+#define ENABLE_LEGACY_CODE
+//#define DATA_DUMP_ENABLE
 
 #endif

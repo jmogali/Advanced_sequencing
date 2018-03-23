@@ -77,6 +77,9 @@ class Greedy_Heuristic
 		std::pair<size_t, size_t> compute_exp_Mkspn_delay(const size_t uiCurrTime, const State& state);
 		void vectorize_schedule(const std::vector<std::list<size_t>> &new_rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, const std::vector<std::list<size_t>> &rob_seq);
 
+		bool check_if_backwards_coll_state(const State& state);
+		bool check_if_coll_backwards_vtx(size_t uiVtx, size_t uiGivenRobot, const std::vector<size_t>& vec_rob_vertpos);
+
 		void print_state(size_t uiDepth, size_t uiTime, const State &state);	
 
 #ifdef COMPRESSION_ENABLE

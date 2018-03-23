@@ -159,8 +159,10 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 	if (1 == iRetVal) { vectorize_schedule(new_rob_seq, vec_rob_sch, rob_seq); }
 	else  m_set_to_do_verts.clear(); 
 
-	if (-1 == iRetVal)
+	if (iRetVal < 0)
 	{
+		iRetVal = -1;   // readjusting to 1, so local search will not get affected
+
 #ifdef PLOT_INFEASIBLE_CASES
 		obj_vis.plot_alternative_graph(strPlotFolder, m_alt_graph, m_map_states_feas);
 		print_sequence(rob_seq);
@@ -202,13 +204,40 @@ int Greedy_Heuristic::compute_DFS(const State& state , size_t uiDepth, size_t ui
 	{
 		iRetVal = compute_DFS(vec_children[uiCount].second, uiDepth + 1, vec_children[uiCount].first.uiDispatchTime);
 		if (1 == iRetVal) return iRetVal;
+		else if (-2 == iRetVal) return iRetVal; 
+
 		assert(-1 == iRetVal);
 		uiInFeasChildCount++;
 	}
 
+	//if (true == check_if_backwards_coll_state(state)) return -2; // implements premature backtracking
+
 	assert(vec_children.size() == uiInFeasChildCount);
 	safe_backtrack(uiDepth, state);
 	return -1;
+}
+
+//checks if all collisions are inward, then backtracking implies infeasible 
+bool Greedy_Heuristic::check_if_backwards_coll_state(const State& state)
+{
+	std::vector<size_t> vec_rob_vertpos;
+	
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		vec_rob_vertpos.emplace_back(m_alt_graph.get_vertex_position(*state.m_vec_rob_pos[uiRobot]));
+	}
+
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		if (false == check_if_coll_backwards_vtx(*state.m_vec_rob_pos[uiRobot], uiRobot, vec_rob_vertpos)) return false;
+	}
+	return true;
+}
+
+bool Greedy_Heuristic::check_if_coll_backwards_vtx(size_t uiVtx, size_t uiGivenRobot, const std::vector<size_t>& vec_rob_vertpos)
+{
+	if (false == m_alt_graph.check_if_all_collisions_backwards(uiVtx, uiGivenRobot, vec_rob_vertpos)) return false;
+	else return true;
 }
 
 bool Greedy_Heuristic::wasStatePreviouslySeen(const State &state)

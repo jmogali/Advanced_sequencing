@@ -121,6 +121,8 @@ class Alternative_Graph
 		std::pair<bool, size_t> get_prec_vtx_same_job(size_t uiVtx);
 		inline bool containsVertex(size_t uiVtx) { return m_vec_adj_set_out.find(uiVtx) != m_vec_adj_set_out.end() ? true : false; };
 
+		bool check_if_all_collisions_backwards(size_t uiVtx1, size_t uiRobot1, const std::vector<size_t>& vec_rob_vertpos);  //vertex_position
+
 		void compress_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::unordered_set<Coll_Pair, CollHasher> &set_coll, std::vector<std::list<size_t>> &new_rob_seq, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time);
 
 		friend class Sequence_Visualization;
