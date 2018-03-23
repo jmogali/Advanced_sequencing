@@ -316,16 +316,37 @@ std::pair<bool, size_t> Alternative_Graph::get_next_vtx_same_job(size_t uiVtx)
 std::pair<bool, size_t> Alternative_Graph::get_prec_vtx_same_job(size_t uiVtx)
 {
 	size_t uiRobot = get_vertex_ownership(uiVtx);
-	size_t uiNext = std::numeric_limits<size_t>::max();
+	size_t uiPrev = std::numeric_limits<size_t>::max();
 
 	for (auto it = m_vec_adj_set_in[uiVtx].begin(); it != m_vec_adj_set_in[uiVtx].end(); it++)
 	{
 		if (uiRobot == get_vertex_ownership(it->first))
 		{
-			uiNext = it->first;
+			uiPrev = it->first;
 			break;
 		}
 	}
-	if (std::numeric_limits<size_t>::max() == uiNext) return std::make_pair(false, uiNext);
-	else return std::make_pair(true, uiNext);
+	if (std::numeric_limits<size_t>::max() == uiPrev) return std::make_pair(false, uiPrev);
+	else return std::make_pair(true, uiPrev);
+}
+
+bool Alternative_Graph::check_if_all_collisions_backwards(size_t uiVtx1, size_t uiRobot1, const std::vector<size_t>& vec_rob_vertpos)
+{
+#ifdef WINDOWS
+	assert(uiRobot1 == get_vertex_ownership(uiVtx1));	
+#else
+	if (uiRobot1 != get_vertex_ownership(uiVtx1)) exit(-1);	
+#endif
+
+	size_t uiRobot, uiVtx, uiPos;
+	for (auto it = m_vec_vtx_alt_edge_ind_in[uiVtx1].begin(); it != m_vec_vtx_alt_edge_ind_in[uiVtx1].end(); it++)
+	{
+		uiVtx = it->first;
+		uiRobot = get_vertex_ownership(uiVtx);
+		uiPos = get_vertex_position(uiVtx) - 1; // -1 is because this is an incoming alternating edge, the true collision vertex is 1 behind
+		
+		if (vec_rob_vertpos[uiRobot] < uiPos) return false; //false implies forward edge
+	}
+	
+	return true;
 }

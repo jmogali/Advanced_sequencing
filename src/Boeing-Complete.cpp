@@ -18,6 +18,8 @@
 #include "Local_Search.h"
 #include "Kosaraju_Algo.h"
 #include "Alternative_Graph.h"
+#include "Joris_Sequence_File_Parser.h"
+#include "Schedule_Validity_Check.h"
 
 using namespace boost;
 using namespace std;

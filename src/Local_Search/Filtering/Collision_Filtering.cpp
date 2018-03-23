@@ -1,6 +1,7 @@
 #include "Collision_Filtering.h"
 #include <assert.h>
 #include <algorithm>
+#include <vector>
 #include "Windows_Linux.h"
 
 
@@ -11,6 +12,23 @@ void Collision_Filtering::clear_prev_info()
 	m_list_order.clear();
 	m_list_Comp.clear();	
 	m_map_bounds.clear();	
+	m_map_lower_bounds.clear();
+}
+
+void Collision_Filtering::Initialize_lower_bounds_map(const std::vector<std::list<size_t>> &rob_seq)
+{
+	for (size_t uiRobot1 = 0; uiRobot1 < rob_seq.size(); uiRobot1++)
+	{
+		for (auto it = rob_seq[uiRobot1].begin(); it != rob_seq[uiRobot1].end(); it++)
+		{
+			m_map_lower_bounds.emplace(*it, std::vector<size_t>());
+		}
+
+		for (size_t uiRobot2 = 0; uiRobot2 < rob_seq.size(); uiRobot2++)
+		{
+			m_map_lower_bounds[*rob_seq[uiRobot1].begin()].push_back(0);
+		}
+	}
 }
 
 //m_out_graph(m_in_graph) graphs are different from those in alt_graph in the sense that some vertices correspond to strongly connected components
@@ -29,7 +47,7 @@ void Collision_Filtering::construct_out_graph(const Alternative_Graph &alt_graph
 	const auto& in_alt_graph = alt_graph.getReverseGraph();
 	std::unordered_map<size_t, int> str_comp_vtx_map;	// size_t, int
 
-	// at this point, m_list_Comp contains only compoents with 2 or more vertices
+	// at this point, m_list_Comp contains only components with 2 or more vertices
 	//number the SCC
 	for (auto it_list = m_list_Comp.begin(); it_list != m_list_Comp.end(); it_list++)
 	{
@@ -99,7 +117,7 @@ bool Collision_Filtering::Check_Feasibility_Compute_Bounds_For_Each_Vertex(const
 
 	Kosaraju_Algo obj;
 	obj.compute_maximal_components(alt_graph.getGraph(), alt_graph.getReverseGraph(), m_list_Comp);
-	bool bFeasible = !(Check_Pos_Loop_Remove_1comp(alt_graph));
+	bool bFeasible = !(Check_Pos_Loop_Remove_1comp(alt_graph , rob_seq.size()));
 	if (false == bFeasible) return false;
 	
 	construct_in_out_graphs(alt_graph);
@@ -112,7 +130,7 @@ bool Collision_Filtering::Check_Feasibility_Compute_Bounds_For_Each_Vertex(const
 	return true;
 }
 
-bool Collision_Filtering::Check_Pos_Loop_Remove_1comp(const Alternative_Graph &alt_graph)
+bool Collision_Filtering::Check_Pos_Loop_Remove_1comp(const Alternative_Graph &alt_graph, const size_t c_uiNumRobots)
 {
 	size_t uiVtx1, uiVtx2, uiRobot;
 	const auto& out_alt_graph = alt_graph.getGraph();
@@ -124,6 +142,7 @@ bool Collision_Filtering::Check_Pos_Loop_Remove_1comp(const Alternative_Graph &a
 			it_list = m_list_Comp.erase(it_list);
 			continue;
 		}
+		else if (it_list->size() > c_uiNumRobots) return true;  // assumes that all jobs have > 0 durations
 
 		for (auto it_vtx1 = it_list->begin(); it_vtx1 != it_list->end(); it_vtx1++)
 		{
@@ -176,6 +195,105 @@ void Collision_Filtering::Topological_Dfs(int iVtx, std::unordered_map<int, std:
 	m_list_order.push_front(iVtx);
 }
 
+void Collision_Filtering::Compute_lower_bounds(const Alternative_Graph &alt_graph, const std::vector<std::list<size_t>> &rob_seq)
+{
+	const size_t c_uiNumRobots = rob_seq.size();
+	Initialize_lower_bounds_map(rob_seq);
+	int iVtx;
+
+	for (auto it = m_list_order.begin(); it != m_list_order.end(); it++)
+	{
+		iVtx = *it;
+		compute_lower_bound_for_component(alt_graph, iVtx, rob_seq.size());
+	}
+}
+
+void Collision_Filtering::compute_lower_bound_for_component(const Alternative_Graph &alt_graph, int iVtx, const size_t c_uiNumRobots)
+{
+	std::vector<size_t> vec_comp_vtx;  // contains all the vertices that are (potentially) super vertex in the DAG
+	std::vector<size_t> vec_comp_robots; // contains the corresponding robots that own the vertex in each (potentially) super vertex
+	std::vector<size_t> vec_vtx_pos; // positions that need to be computed
+
+	if (iVtx >= 0)
+	{
+		vec_comp_vtx.emplace_back(iVtx);
+		vec_comp_robots.emplace_back(alt_graph.get_vertex_ownership(iVtx));
+	}
+	else
+	{
+		auto it_comp = m_list_Comp.begin();
+		size_t uiComp = (size_t)(-1 * iVtx) - 1;
+		std::advance(it_comp, uiComp);
+
+		for (auto it_vtx = it_comp->begin(); it_vtx != it_comp->end(); it_vtx++)
+		{
+			vec_comp_vtx.emplace_back(*it_vtx);
+			vec_comp_robots.emplace_back(alt_graph.get_vertex_ownership(*it_vtx));
+		}
+	}
+
+	size_t uiPredVtx;
+	
+	for (size_t uiRobot = 0; uiRobot < c_uiNumRobots; uiRobot++)
+	{
+		vec_vtx_pos.push_back(std::numeric_limits<size_t>::min());
+	}
+
+	for (auto it_tail = m_in_graph.at(iVtx).begin(); it_tail != m_in_graph.at(iVtx).end(); it_tail++)
+	{
+		if (*it_tail < 0)
+		{
+			auto it_comp = m_list_Comp.begin();
+			size_t uiComp = (size_t)(-1 * *it_tail) - 1;
+			std::advance(it_comp, uiComp);
+			uiPredVtx = *(it_comp->begin()); // this is sufficient because pretty much all the bounds will be the same for all synch vertices
+		}
+		else uiPredVtx = *it_tail;
+
+		for (size_t uiRobot = 0; uiRobot < c_uiNumRobots; uiRobot++)
+		{
+			vec_vtx_pos[uiRobot] = std::max(vec_vtx_pos[uiRobot], m_map_lower_bounds.at(uiPredVtx)[uiRobot]);
+		}
+	}	
+
+	// populate the values for the (potentially) super vertex 
+
+	size_t uiCount = 0;
+	for (auto it_vtx = vec_comp_vtx.begin(); it_vtx != vec_comp_vtx.end(); it_vtx++, uiCount++)
+	{
+		for (size_t uiRobot = 0; uiRobot < c_uiNumRobots; uiRobot++)
+		{
+			if(vec_comp_robots[uiCount] == uiRobot) m_map_lower_bounds.at(*it_vtx).push_back(alt_graph.get_vertex_position(*it_vtx));
+			else m_map_lower_bounds.at(*it_vtx).push_back(vec_vtx_pos[uiRobot]);
+		}
+	}
+	
+	if (vec_comp_vtx.size() > 1)
+	{
+		size_t uiCount1 = 0;
+		for (auto it_vtx1 = vec_comp_vtx.begin(); it_vtx1 != vec_comp_vtx.end(); it_vtx1++, uiCount1++)
+		{
+			auto it_vtx2 = it_vtx1;
+			it_vtx2++;
+			
+			size_t uiCount2 = uiCount1 + 1;
+
+			for ( ; it_vtx2 != vec_comp_vtx.end(); it_vtx2++ , uiCount2++)
+			{
+				m_map_lower_bounds.at(*it_vtx1)[vec_comp_robots[uiCount2]] = m_map_lower_bounds.at(*it_vtx2)[vec_comp_robots[uiCount2]];
+				m_map_lower_bounds.at(*it_vtx2)[vec_comp_robots[uiCount1]] = m_map_lower_bounds.at(*it_vtx1)[vec_comp_robots[uiCount1]];
+			}
+		}
+	}
+}
+
+size_t Collision_Filtering::get_lower_bound_pos(size_t uiVtx, size_t uiOtherRobot)
+{
+	auto it_find = m_map_lower_bounds.find(uiVtx);
+	assert(m_map_lower_bounds.end() != it_find);
+	return it_find->second[uiOtherRobot];
+}
+
 void Collision_Filtering::Initialize_bounds_map(std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &m_map_bounds, const std::vector<std::list<size_t>> &rob_seq)
 {
 	// initialize bounds map
@@ -183,7 +301,7 @@ void Collision_Filtering::Initialize_bounds_map(std::unordered_map<size_t, std::
 	{
 		for (auto it = rob_seq[uiRobot].begin(); it != rob_seq[uiRobot].end(); it++)
 		{
-			m_map_bounds.emplace(*it, std::unordered_map<size_t, std::pair<size_t, size_t>>());
+			m_map_bounds.emplace(*it, std::unordered_map<size_t, std::pair<size_t, size_t>>());			
 		}
 	}
 }

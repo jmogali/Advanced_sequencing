@@ -8,22 +8,15 @@
 #include <unordered_set>
 #include "Layout_LS.h"
 #include <fstream>
+#include "Vertex_Schedule.h"
 
-#define COMPRESSION_ENABLE
+//#define COMPRESSION_ENABLE
 
 struct ST_Time
 {
 	const static size_t UNSET = std::numeric_limits<size_t>::max();
 	size_t m_uiStartTime;
 	ST_Time(size_t uiStartTime);
-};
-
-struct Vertex_Schedule
-{
-	size_t m_uiInd;
-	size_t m_uiStart, m_uiEnd, m_uiWait;
-	Vertex_Schedule(size_t uiInd, size_t uiStart, size_t uiEnd, size_t uiWait) : m_uiInd(uiInd), m_uiStart(uiStart), m_uiEnd(uiEnd), m_uiWait(uiWait) {}
-	void print_schedule() const;	
 };
 
 //no constraint earliest finish time
