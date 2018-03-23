@@ -1,6 +1,7 @@
 #include "Local_Search.h"
 #include "Enabling_Graph.h"
 #include "Init_Sequence_Generator.h"
+#include "Sequence_Visualizer.h"
 
 void Local_Search::allocate_holes_to_robots_common_with_bias(std::vector<std::unordered_set<size_t>> &vec_com_hole_par, std::string strBias)
 {
@@ -62,12 +63,17 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 	hole_seq.emplace_back(uiVtx);	// add the start depot vertex
 	size_t uiIter = 0, uiStartVtx;
 	double dMaxDist = std::numeric_limits<double>::min();	
+	
+	std::vector<std::pair<double, double>> vec_coords;
+	vec_coords.push_back(std::make_pair(m_graph.getLoc(m_node_data.m_rob_depo[uiRobot].first).get_X_loc() , m_graph.getLoc(m_node_data.m_rob_depo[uiRobot].first).get_Y_loc()));
 		
 	do
 	{
 		const auto& vtx_vec_enablers = map_enablers.at(uiVtx).get_neighs();
 		for (auto it = vtx_vec_enablers.begin(); it != vtx_vec_enablers.end(); it++)
 		{
+			//if( (0 == uiIter) && (0 == uiRobot)) cout<<" \n";
+		
 			size_t uiNeigh = *it;
 			if (uiNeigh == m_node_data.m_rob_depo[uiRobot].second) continue;
 			auto it_holes = set_holes.find(uiNeigh);
@@ -80,9 +86,21 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 					set_holes.erase(it_holes);					
 				}
 			}
+			
+			/*if( (0 == uiIter) && (0 == uiRobot))
+			{
+				cout<<uiNeigh << " : " << m_graph.getLoc(uiNeigh).get_X_loc() << " , " <<m_graph.getLoc(uiNeigh).get_Y_loc()<<endl;
+			}*/
 		}
 
 		std::list<std::pair<size_t, double>> list_dist;
+		double dMinDist = std::numeric_limits<double>::max();
+		size_t uiNearestVtx;
+			
+		/*if(0 == uiRobot)
+			cout << "[" << uiVtx<< ": (" << m_graph.getLoc(uiVtx).get_X_loc() <<" , " <<m_graph.getLoc(uiVtx).get_Y_loc() << ")] -:" ;
+		*/
+				
 		for (auto it_cand = set_curr_enabled_holes.begin(); it_cand != set_curr_enabled_holes.end(); it_cand++)
 		{
 			auto loc1 = m_graph.getLoc(*it_cand);
@@ -98,14 +116,29 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 					uiStartVtx = *it_cand;
 				}
 			}
+			else
+			{
+				if (dMinDist > loc1.getDist_XY(loc2))
+				{
+					dMinDist = loc1.getDist_XY(loc2);
+					uiNearestVtx = *it_cand;
+				}
+			}
+			/*if(0 == uiRobot)
+				cout<< "[" << *it_cand << ", (" << m_graph.getLoc(*it_cand).get_X_loc() << "," << m_graph.getLoc(*it_cand).get_Y_loc()<< "), "<< loc1.getDist_XY(loc2) << "], ";
+				*/			
 		}
+		//cout<< "\n\n";
 
 		uiVtx = rand_select_list_pair_with_bias(m_rng, list_dist, "LOW_DIST", m_dWeight_Factor * 0.05);
 		
+		//uiVtx = uiNearestVtx;		
 		if( (0 == uiRobot) && (0 == uiIter) )
 		{
-			uiVtx = uiStartVtx;
-		}
+			uiVtx = uiStartVtx;					
+		}		
+		
+		vec_coords.push_back(std::make_pair(m_graph.getLoc(uiVtx).get_X_loc() , m_graph.getLoc(uiVtx).get_Y_loc()));
 		
 		hole_seq.emplace_back(uiVtx); // add the vertex that was chosen
 		uiErase = set_curr_enabled_holes.erase(uiVtx);
@@ -120,7 +153,9 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 	hole_seq.push_back(m_node_data.m_rob_depo[uiRobot].second);
 	set_seen_verts.emplace(m_node_data.m_rob_depo[uiRobot].second);
 	set_holes.erase(m_node_data.m_rob_depo[uiRobot].second);
-
+	
+	//cout<<"Holes not enabled: " << set_holes.size() << endl;
+	
 	//adds holes that could not reached by the enabling march but still needs to be covered by the robot through shortest diatnce insertion
 	for (auto it_unenabled = set_holes.begin(); it_unenabled != set_holes.end(); )
 	{
@@ -148,6 +183,7 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 
 		assert(dist != std::numeric_limits<double>::max());
 		hole_seq.insert(it_insert, uiUnEnabledHole);
+		vec_coords.push_back(std::make_pair(m_graph.getLoc(uiUnEnabledHole).get_X_loc() , m_graph.getLoc(uiUnEnabledHole).get_Y_loc()));
 		set_seen_verts.emplace(uiUnEnabledHole);
 		it_unenabled = set_holes.erase(it_unenabled);
 	}
@@ -181,6 +217,9 @@ void Local_Search::gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_s
 		exit(1);
 	}
 #endif	
+	
+	//Sequence_Visualization obj_vis;
+	//obj_vis.plot_robot_hole_sequence("Graphical_Plots/" , uiRobot, vec_coords, 1);
 }
 
 

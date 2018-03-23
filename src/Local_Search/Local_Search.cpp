@@ -183,7 +183,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	std::clock_t start_time;
 	start_time = std::clock();
 	
-	while (uiIter < 1)
+	while (uiIter < 5000000)
 	{
 		uiMakeSpan = std::numeric_limits<size_t>::max();
 		uiMakeSpan_legacy = std::numeric_limits<size_t>::max();
