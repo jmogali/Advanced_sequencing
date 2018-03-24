@@ -1,3 +1,4 @@
+#pragma once
 #ifndef SCHEDULE_VALIDITY_CHECK_H
 #define SCHEDULE_VALIDITY_CHECK_H
 

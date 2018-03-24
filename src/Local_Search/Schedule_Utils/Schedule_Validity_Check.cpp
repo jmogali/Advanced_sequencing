@@ -1,5 +1,4 @@
 #include "Schedule_Validity_Check.h"
-#include <iostream>
 
 bool Schedule_Validity_Check::check_sequence_info(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, const Layout_LS &graph)
 {
