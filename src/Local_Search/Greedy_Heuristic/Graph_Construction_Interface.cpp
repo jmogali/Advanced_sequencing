@@ -32,7 +32,7 @@ void construct_prec_graph_for_each_operation(const std::vector<std::list<size_t>
 	}
 }
 
-void get_verts_not_self_enabled(size_t uiRobot, std::unordered_set<size_t> &dep_vert, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, std::vector<std::list<size_t>>& vec_dep_vert)
+void get_verts_not_self_enabled(size_t uiRobot, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, std::list<size_t>& list_dep_vert)
 {
 	std::unordered_set<size_t> comp_vert;
 	size_t uiVert;
@@ -59,25 +59,26 @@ void get_verts_not_self_enabled(size_t uiRobot, std::unordered_set<size_t> &dep_
 			}
 		}
 		if (!bFound) {
-			dep_vert.emplace(uiVert);
-			vec_dep_vert[uiRobot].emplace_back(uiVert);
+			//dep_vert.emplace(uiVert);
+			list_dep_vert.emplace_back(uiVert);
 		}
 		comp_vert.emplace(uiVert);
 	}
 }
 
-bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::unordered_set<size_t> &dep_vert, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &map_enabler_pos_vert, std::vector<std::list<size_t>> &vec_dep_vert)
+bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &map_enabler_pos_vert, std::list<size_t> &list_dep_vert)
 {
 	size_t uiNumRobots = layout_graph.get_num_robots();
 	size_t uiVert;
 	std::vector<size_t> vec_pos_enabler;
 	auto &vec_enabler = layout_graph.get_Enablers();
 
-	for (auto it_vert = dep_vert.begin(); it_vert != dep_vert.end(); it_vert++)
+	//for (auto it_vert = dep_vert.begin(); it_vert != dep_vert.end(); it_vert++)
+	for(auto it_vert = list_dep_vert.begin(); it_vert != list_dep_vert.end(); )  //notice for loop has been changed this way because of deletions while iterating
 	{
+		vec_pos_enabler.clear();
 		uiVert = *it_vert;
-		if ("H" != layout_graph.getType(uiVert)) continue;
-
+		
 		for (size_t uiRobot = 0; uiRobot < uiNumRobots; uiRobot++)
 		{
 			if (uiGivenRobot == uiRobot) continue;
@@ -96,13 +97,16 @@ bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::unordered
 				}				
 			}
 		}
+
 		if (0 == vec_pos_enabler.size()) return false;
 		else if (1 == vec_pos_enabler.size()) 
 		{ 
 			alt_graph.add_prec_arc(vec_pos_enabler[0], uiVert, 0); 
 			list_prec_arcs_betw_jobs.emplace_back(arc(vec_pos_enabler[0], uiVert));
-		}
-		vec_pos_enabler.clear();
+			it_vert = list_dep_vert.erase(it_vert);	
+			continue;
+		}		
+		it_vert++;
 	}
 	return true;
 }
@@ -114,10 +118,49 @@ bool add_enabling_cons(const std::vector<std::list<size_t>> &rob_seq, const Layo
 
 	for (size_t uiRobot = 0; uiRobot < uiNumRobots; uiRobot++)
 	{
-		std::unordered_set<size_t> set_dep_vert;
-		get_verts_not_self_enabled(uiRobot, set_dep_vert, rob_seq, layout_graph, vec_dep_vert);
-		bFeasible = add_prec_arcs_for_dep_vert_of_job(uiRobot, set_dep_vert, rob_seq, layout_graph, alt_graph, list_prec_arcs_betw_jobs, map_enabler_pos_vert, vec_dep_vert);
+		get_verts_not_self_enabled(uiRobot, rob_seq, layout_graph, vec_dep_vert[uiRobot]);
+		bFeasible = add_prec_arcs_for_dep_vert_of_job(uiRobot, rob_seq, layout_graph, alt_graph, list_prec_arcs_betw_jobs, map_enabler_pos_vert, vec_dep_vert[uiRobot]);
 		if (false == bFeasible) return false;
+	}
+	return true;
+}
+
+bool check_if_new_precedences_can_be_added(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, const Layout_LS &layout_graph, const Collision_Filtering &coll_filter, std::vector<std::list<size_t>> &vec_dep_vert, std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &map_enabler_pos_vert)
+{
+	size_t uiNumRobots = layout_graph.get_num_robots();
+	size_t uiVtx, uiVtxPos, uiEnablerPos, uiEnablerVtx;
+	bool bResolved, bUpperBounded;
+
+	for (size_t uiRobot1 = 0; uiRobot1 < uiNumRobots; uiRobot1++)
+	{
+		for (auto it = vec_dep_vert[uiRobot1].begin(); it != vec_dep_vert[uiRobot1].end(); )
+		{
+			uiVtx = *it;
+			bResolved = false;
+			bUpperBounded = true;  // checks if all the enablers of vtx V are guaranteed to occur after V
+			uiVtxPos = alt_graph.get_vertex_position(*it);
+
+			for (size_t uiRobot2 = 0; uiRobot2 < uiNumRobots; uiRobot2++)
+			{
+				if (uiRobot1 == uiRobot2) continue;
+				
+				auto it_enabler = map_enabler_pos_vert.at(uiVtx).at(uiRobot2);
+				uiEnablerPos = it_enabler.first;
+				uiEnablerVtx = it_enabler.second;
+
+				if (coll_filter.get_lower_bound_pos(uiVtx, uiRobot2) >= uiEnablerPos)
+				{
+					bResolved = true;
+					break;
+				}
+				else if (coll_filter.get_lower_bound_pos(uiEnablerVtx, uiRobot1) <= uiVtxPos) bUpperBounded = false;
+			}
+
+			if (true == bUpperBounded) return false; //infeasible, implies all enablers are bound to occur later
+
+			if (bResolved) it = vec_dep_vert[uiRobot1].erase(it);
+			else it++;
+		}
 	}
 	return true;
 }
@@ -162,7 +205,7 @@ bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 }
 */
 
-bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter)
+bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, const Collision_Filtering &coll_filter)
 {
 	size_t uiRob_1_Pos;
 
@@ -237,7 +280,7 @@ bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 }
 */
 
-bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::unordered_set<Coll_Pair, CollHasher> &set_coll, Collision_Filtering &coll_filter)
+bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::unordered_set<Coll_Pair, CollHasher> &set_coll, const Collision_Filtering &coll_filter)
 {
 	size_t uiRob_1_Pos;
 	for (auto it1 = rob_seq[uiRobot1].begin(); it1 != rob_seq[uiRobot1].end(); it1++)
@@ -271,7 +314,7 @@ bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 	return true;
 }
 
-bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter)
+bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, const Collision_Filtering &coll_filter)
 {
 	size_t uiNumRobots = layout_graph.get_num_robots();
 	bool bFeasible;
@@ -544,6 +587,13 @@ bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const
 		{
 			bFeasible = add_enabling_cons(rob_seq, layout_graph, alt_graph, list_prec_arcs_betw_jobs, map_enabler_pos_vert, vec_dep_vert);
 			if (false == bFeasible) return false;
+			bFirstIter = false;
+		}
+		else
+		{
+			//check if new implications can be added- useful for > 2 robots case
+			bFeasible = check_if_new_precedences_can_be_added(rob_seq, alt_graph, layout_graph, coll_filter, vec_dep_vert, map_enabler_pos_vert);
+			if (false == bFeasible) return false;
 		}
 		
 		bFeasible = coll_filter.Check_Feasibility_Compute_Bounds_For_Each_Vertex(rob_seq, alt_graph);
@@ -562,9 +612,7 @@ bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const
 		if (false == bFeasible) return false;
 		bChange = bChange | pr.second;
 
-		bChange = bChange | add_impl_cons_rem_prev_cons(rob_seq, alt_graph, list_prec_arcs_betw_jobs, layout_graph);
-		
-		bFirstIter = false;
+		bChange = bChange | add_impl_cons_rem_prev_cons(rob_seq, alt_graph, list_prec_arcs_betw_jobs, layout_graph);		
 	}
 	return true;
 }

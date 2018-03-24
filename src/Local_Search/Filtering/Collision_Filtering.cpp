@@ -307,7 +307,7 @@ void Collision_Filtering::compute_lower_bound_for_component(const Alternative_Gr
 	}
 }
 
-size_t Collision_Filtering::get_lower_bound_pos(size_t uiVtx, size_t uiOtherRobot)
+size_t Collision_Filtering::get_lower_bound_pos(size_t uiVtx, size_t uiOtherRobot) const
 {
 	auto it_find = m_map_lower_bounds.find(uiVtx);
 	assert(m_map_lower_bounds.end() != it_find);

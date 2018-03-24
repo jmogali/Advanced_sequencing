@@ -54,7 +54,7 @@ class Collision_Filtering
 		Collision_Filtering() {};
 		bool Check_Feasibility_Compute_Bounds_For_Each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph);
 		std::pair<size_t, size_t> get_bounds(size_t uiVtx, size_t uiOtherRobot);
-		size_t get_lower_bound_pos(size_t uiVtx, size_t uiOtherRobot);
+		size_t get_lower_bound_pos(size_t uiVtx, size_t uiOtherRobot) const;
 		inline const std::list<std::unordered_set<size_t>>& get_scc() const { return m_list_Comp; };
 		bool add_scc_comps(Alternative_Graph &alt_graph, std::list<arc> &list_prec_arcs_betw_jobs) const;		
 };
