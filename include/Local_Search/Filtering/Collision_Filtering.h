@@ -9,11 +9,11 @@ class Collision_Filtering
 {
 	private:
 		std::list<std::unordered_set<size_t>> m_list_Comp;
-		std::unordered_map<int, std::unordered_set<int>> m_out_graph;
+		std::unordered_map<int, std::vector<int>> m_out_graph;
 		std::list<int> m_list_order;
 		std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> m_map_bounds; //<N_Ind , <R_Ind , <N_Ind, N_Ind>>>
 		std::unordered_map<size_t, std::vector<size_t>> m_map_lower_bounds;  // N_ind, vector<N_Ind> (vertex, vector containing min position for other robot)
-		std::unordered_map<int, std::unordered_set<int>> m_in_graph;
+		std::unordered_map<int, std::vector<int>> m_in_graph;
 						
 		void clear_prev_info();
 

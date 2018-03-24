@@ -67,10 +67,10 @@ void Collision_Filtering::construct_out_graph(const Alternative_Graph &alt_graph
 		if (str_comp_vtx_map.end() != it_find)
 		{
 			if (m_out_graph.end() != m_out_graph.find(it_find->second)) continue;
-			else m_out_graph.emplace(it_find->second, std::unordered_set<int>());
+			else m_out_graph.emplace(it_find->second, std::vector<int>());
 		}
 		else
-			m_out_graph.emplace((int)uiVtx, std::unordered_set<int>());
+			m_out_graph.emplace((int)uiVtx, std::vector<int>());
 	}
 
 	//populate adjacency information 
@@ -87,9 +87,9 @@ void Collision_Filtering::construct_out_graph(const Alternative_Graph &alt_graph
 			if (str_comp_vtx_map.end() != it_neigh)
 			{
 				if (iVtx == it_neigh->second) continue;
-				m_out_graph.at(iVtx).emplace(it_neigh->second);
+				m_out_graph.at(iVtx).emplace_back(it_neigh->second);
 			}
-			else m_out_graph.at(iVtx).emplace((int)it_succ->first);
+			else m_out_graph.at(iVtx).emplace_back((int)it_succ->first);
 		}
 	}
 }
@@ -98,14 +98,14 @@ void Collision_Filtering::construct_in_graph()
 {
 	for (auto it_vtx = m_out_graph.begin(); it_vtx != m_out_graph.end(); it_vtx++)
 	{
-		m_in_graph.emplace(it_vtx->first, std::unordered_set<int>());
+		m_in_graph.emplace(it_vtx->first, std::vector<int>());
 	}
 
 	for (auto it_tail = m_out_graph.begin(); it_tail != m_out_graph.end(); it_tail++)
 	{
 		for (auto it_head = it_tail->second.begin(); it_head != it_tail->second.end(); it_head++)
 		{
-			m_in_graph.at(*it_head).emplace(it_tail->first); // reverse the graph, so tail and head switched
+			m_in_graph.at(*it_head).emplace_back(it_tail->first); // reverse the graph, so tail and head switched
 		}
 	}
 }
