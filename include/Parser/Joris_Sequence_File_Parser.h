@@ -4,6 +4,7 @@
 
 #include "Typedefs.h"
 #include "Vertex_Schedule.h"
+#include "Schedule_Validity_Check.h"
 #include <string>
 #include <vector>
 #include <unordered_map>

@@ -124,8 +124,9 @@ bool Collision_Filtering::Check_Feasibility_Compute_Bounds_For_Each_Vertex(const
 	Topological_sort_out_graph();	
 
 	Compute_lower_bounds(alt_graph, rob_seq);
-	Compute_bounds(alt_graph, rob_seq);
 	
+	/*
+	Compute_bounds(alt_graph, rob_seq);
 	for (size_t uiRobot = 0; uiRobot < rob_seq.size(); uiRobot++)
 	{
 		for (auto it = rob_seq[uiRobot].begin(); it != rob_seq[uiRobot].end(); it++)
@@ -141,10 +142,10 @@ bool Collision_Filtering::Check_Feasibility_Compute_Bounds_For_Each_Vertex(const
 				}
 			}
 		}
-	}
-	
+	}	
 	//bFeasible = check_bounds_validity(rob_seq);
 	//if (false == bFeasible) return false;
+	*/
 
 	return true;
 }
