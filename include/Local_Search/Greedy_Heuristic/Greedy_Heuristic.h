@@ -14,7 +14,6 @@ class Greedy_Heuristic
 		const Layout_LS &m_graph;
 		Alternative_Graph m_alt_graph;
 		Power_Set &m_power;
-		size_t m_uiSuperVtxThresh;
 		std::vector<std::unordered_map<N_Ind, size_t, IndHasher>> m_set_prev_HD_states;     //records the depth just before which the vertex was completed 
 		std::unordered_set<size_t> m_set_to_do_verts;							//indictaes which vertices are not yet completed
 		std::vector<std::unordered_map<N_Ind, size_t, IndHasher>> m_set_prev_all_states;   //records the depth info regarding the first time a vertex is encountered
@@ -25,14 +24,7 @@ class Greedy_Heuristic
 		std::vector<std::unordered_map<N_Ind, ST_Time, IndHasher>> m_rob_hole_times;
 		Collision_Filtering m_coll_filter;
 		std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> m_map_enabler_pos_vert; // uiRobot, <position, vertex>
-		std::unordered_set<Coll_Pair, CollHasher> m_set_coll;
 		bool m_bWait , m_bVectorizeSchedule;
-
-#ifdef COMPRESSION_ENABLE
-		std::unordered_map<size_t, std::vector<size_t>> m_map_superVtx_vecVtx;
-		std::unordered_map<size_t, size_t> m_map_vtx_super_vtx;
-		std::unordered_map<size_t, size_t> m_map_super_vtx_proc_time;
-#endif
 
 		bool perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq);
 		void allocate_buffers(const std::vector<std::list<size_t>> &rob_seq);
@@ -82,13 +74,6 @@ class Greedy_Heuristic
 
 		void print_state(size_t uiDepth, size_t uiTime, const State &state);	
 
-#ifdef COMPRESSION_ENABLE
-		bool add_colls_compress_graph(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq);
-		bool gather_coll_cons_update_compr_verts(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<bool>> &vec_compress_status);
-		void construct_new_rob_sequence(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<bool>> &vec_compress_status, std::vector<std::list<size_t>> &new_rob_seq);
-		void update_compr_verts_by_unself_enabled_and_deps(std::vector<std::vector<bool>> &vec_compress_status);
-		void reassign_enablers();
-#endif
 		bool sanity_check_schedule(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
 
 		size_t getTime(size_t uiVert);

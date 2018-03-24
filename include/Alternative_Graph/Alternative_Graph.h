@@ -83,15 +83,7 @@ class Alternative_Graph
 		bool contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, const std::unordered_set<size_t> &comp);
 
 		void add_prec_arc(arc new_arc, size_t uiCost);
-		void remove_prec_arc(size_t uiVtx1, size_t uiVtx2, bool bAltGraphBackTrack = true);		
-		
-		void compress_prec_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time);
-		void add_compressed_alt_edges(const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::unordered_set<Coll_Pair, CollHasher> &set_coll);
-		void remove_buffer_redundant_vtx(size_t uiVert);
-		void reallocate_buffers_compressed_vertices(const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx);
-		void reassign_vertex_ownership_positions(std::vector<std::list<size_t>> &new_rob_seq);
-		void reassign_vertex_ownership_pos(size_t uiVtx, size_t uiRobot, size_t uiPos);
-		void sanity_check_compression(std::vector<std::list<size_t>> &new_rob_seq);
+		void remove_prec_arc(size_t uiVtx1, size_t uiVtx2, bool bAltGraphBackTrack = true);			
 
 	public:
 		Alternative_Graph();
@@ -122,8 +114,6 @@ class Alternative_Graph
 		inline bool containsVertex(size_t uiVtx) { return m_vec_adj_set_out.find(uiVtx) != m_vec_adj_set_out.end() ? true : false; };
 
 		bool check_if_all_collisions_backwards(size_t uiVtx1, size_t uiRobot1, const std::vector<size_t>& vec_rob_vertpos);  //vertex_position
-
-		void compress_graph(const Layout_LS &layout_graph, const std::unordered_map<size_t, std::vector<size_t>> &map_superVtx_vecVtx, const std::unordered_map<size_t, size_t> &map_vtx_super_vtx, const std::unordered_set<Coll_Pair, CollHasher> &set_coll, std::vector<std::list<size_t>> &new_rob_seq, std::unordered_map<size_t, size_t> &map_super_vtx_proc_time);
 
 		friend class Sequence_Visualization;
 };
