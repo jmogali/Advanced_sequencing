@@ -3,7 +3,6 @@
 #define JORIS_SEQUENCE_FILE_PARSER_H
 
 #include "Typedefs.h"
-#include "Vertex_Schedule.h"
 #include "Schedule_Validity_Check.h"
 #include <string>
 #include <vector>

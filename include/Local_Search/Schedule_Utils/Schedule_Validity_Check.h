@@ -2,7 +2,6 @@
 #ifndef SCHEDULE_VALIDITY_CHECK_H
 #define SCHEDULE_VALIDITY_CHECK_H
 
-#include "Vertex_Schedule.h"
 #include <vector>
 #include <list>
 #include <unordered_map>

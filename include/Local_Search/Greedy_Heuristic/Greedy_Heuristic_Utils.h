@@ -8,7 +8,6 @@
 #include <unordered_set>
 #include "Layout_LS.h"
 #include <fstream>
-#include "Vertex_Schedule.h"
 #include "Schedule_Validity_Check.h"
 
 //#define COMPRESSION_ENABLE
