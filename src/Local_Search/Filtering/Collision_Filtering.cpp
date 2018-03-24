@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include "Windows_Linux.h"
-
+#include "Greedy_Heuristic_Utils.h"
 
 void Collision_Filtering::clear_prev_info()
 {
@@ -11,8 +11,8 @@ void Collision_Filtering::clear_prev_info()
 	m_in_graph.clear();
 	m_list_order.clear();
 	m_list_Comp.clear();	
-	m_map_bounds.clear();	
 	m_map_lower_bounds.clear();
+	m_map_bounds.clear();		
 }
 
 void Collision_Filtering::Initialize_lower_bounds_map(const std::vector<std::list<size_t>> &rob_seq)
@@ -123,9 +123,28 @@ bool Collision_Filtering::Check_Feasibility_Compute_Bounds_For_Each_Vertex(const
 	construct_in_out_graphs(alt_graph);
 	Topological_sort_out_graph();	
 
+	Compute_lower_bounds(alt_graph, rob_seq);
 	Compute_bounds(alt_graph, rob_seq);
-	bFeasible = check_bounds_validity(rob_seq);
-	if (false == bFeasible) return false;
+	
+	for (size_t uiRobot = 0; uiRobot < rob_seq.size(); uiRobot++)
+	{
+		for (auto it = rob_seq[uiRobot].begin(); it != rob_seq[uiRobot].end(); it++)
+		{
+			for (size_t uiRobot1 = 0; uiRobot1 < rob_seq.size(); uiRobot1++)
+			{
+				if (uiRobot1 == uiRobot) continue;
+				if (m_map_lower_bounds[*it][uiRobot1] != m_map_bounds.at(*it).at(uiRobot1).first)
+				{
+					cout << "Mistake detected \n\n";
+					print_sequence(rob_seq);
+					exit(-1);
+				}
+			}
+		}
+	}
+	
+	//bFeasible = check_bounds_validity(rob_seq);
+	//if (false == bFeasible) return false;
 
 	return true;
 }

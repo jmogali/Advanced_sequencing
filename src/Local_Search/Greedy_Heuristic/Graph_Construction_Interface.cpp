@@ -121,7 +121,8 @@ bool add_enabling_cons(const std::vector<std::list<size_t>> &rob_seq, const Layo
 	}
 	return true;
 }
-     
+  
+/*
 bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter)
 {
 	size_t uiPos = 0;
@@ -159,7 +160,44 @@ bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 	}
 	return true;
 }
+*/
 
+bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter)
+{
+	size_t uiRob_1_Pos;
+
+	for (auto it1 = rob_seq[uiRobot1].begin(); it1 != rob_seq[uiRobot1].end(); it1++)
+	{
+		auto it12 = it1;
+		it12++;
+
+		auto pr1 = coll_filter.get_lower_bound_pos(*it1, uiRobot2);
+		auto it2_start = rob_seq[uiRobot2].begin();
+		std::advance(it2_start, pr1);
+		uiRob_1_Pos = alt_graph.get_vertex_position(*it1);
+
+		for (auto it2 = it2_start; it2 != rob_seq[uiRobot2].end(); it2++)
+		{
+			auto pr2 = coll_filter.get_lower_bound_pos(*it2, uiRobot1);
+			if (uiRob_1_Pos < pr2) break;			
+
+			if (layout_graph.areColliding(Coll_Pair(*it1, uiRobot1, *it2, uiRobot2)))
+			{
+				auto it22 = it2;
+				it22++;
+
+				bool bArc1 = alt_graph.containsPrecArc(arc(*it22, *it1));
+				bool bArc2 = alt_graph.containsPrecArc(arc(*it12, *it2));
+
+				if (!bArc1 & !bArc2) alt_graph.add_alt_arc(*it22, *it1, *it12, *it2);
+				else if (bArc1 & bArc2) return false;
+			}
+		}		
+	}
+	return true;
+}
+
+/*
 bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::unordered_set<Coll_Pair, CollHasher> &set_coll,Collision_Filtering &coll_filter)
 {
 	size_t uiPos = 0;
@@ -194,6 +232,41 @@ bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 			}
 		}
 		uiPos++;
+	}
+	return true;
+}
+*/
+
+bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::unordered_set<Coll_Pair, CollHasher> &set_coll, Collision_Filtering &coll_filter)
+{
+	size_t uiRob_1_Pos;
+	for (auto it1 = rob_seq[uiRobot1].begin(); it1 != rob_seq[uiRobot1].end(); it1++)
+	{
+		auto it12 = it1;
+		it12++;
+
+		auto pr1 = coll_filter.get_lower_bound_pos(*it1, uiRobot2);
+		auto it2_start = rob_seq[uiRobot2].begin();
+		std::advance(it2_start, pr1);
+		uiRob_1_Pos = alt_graph.get_vertex_position(*it1);
+
+		for (auto it2 = it2_start; it2 != rob_seq[uiRobot2].end(); it2++)
+		{
+			auto pr2 = coll_filter.get_lower_bound_pos(*it2, uiRobot1);
+			if (uiRob_1_Pos < pr2) break;
+
+			if (layout_graph.areColliding(Coll_Pair(*it1, uiRobot1, *it2, uiRobot2)))
+			{
+				auto it22 = it2;
+				it22++;
+
+				bool bArc1 = alt_graph.containsPrecArc(arc(*it22, *it1));
+				bool bArc2 = alt_graph.containsPrecArc(arc(*it12, *it2));
+
+				if (!bArc1 & !bArc2) set_coll.emplace(Coll_Pair(*it1, uiRobot1, *it2, uiRobot2));
+				else if (bArc1 & bArc2) return false;
+			}
+		}		
 	}
 	return true;
 }
