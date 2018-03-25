@@ -104,6 +104,16 @@ bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::vector<st
 			alt_graph.add_prec_arc(vec_pos_enabler[0], uiVert, 0); 
 			list_prec_arcs_betw_jobs.emplace_back(arc(vec_pos_enabler[0], uiVert));
 			it_vert = list_dep_vert.erase(it_vert);	
+			size_t uiErase = map_enabler_pos_vert.erase(uiVert); //because this vertex is no longer dependent, we can skip storing its enabler positions
+#ifdef WINDOWS
+			assert(1 == uiErase);
+#else
+			if (1 != uiErase)
+			{
+				cout << "Something wrong with enabling\n";
+				exit(-1);
+			}
+#endif
 			continue;
 		}		
 		it_vert++;
@@ -351,13 +361,13 @@ bool add_imp_prec_coll_con(const std::vector<std::list<size_t>> &rob_seq, Altern
 	size_t uiTailStartVtx = inp_arc.first;
 	size_t uiHeadStartVtx = inp_arc.second;
 
-	size_t uiRobot_Tail = alt_graph.get_vertex_ownership(uiTailStartVtx);
-	size_t uiRobot_Head = alt_graph.get_vertex_ownership(uiHeadStartVtx);
+	const size_t c_uiRobot_Tail = alt_graph.get_vertex_ownership(uiTailStartVtx);
+	const size_t c_uiRobot_Head = alt_graph.get_vertex_ownership(uiHeadStartVtx);
 
-	if (uiTailStartVtx == *rob_seq[uiRobot_Tail].rbegin()) return false;
+	if (uiTailStartVtx == *rob_seq[c_uiRobot_Tail].rbegin()) return false;
 	
 	//if (set_coll.end() != set_coll.find(Coll_Pair(uiTailStartVtx, uiRobot_Tail, uiHeadStartVtx, uiRobot_Head)))
-	if(true == layout_graph.areColliding(Coll_Pair(uiTailStartVtx, uiRobot_Tail, uiHeadStartVtx, uiRobot_Head)))
+	if(true == layout_graph.areColliding(Coll_Pair(uiTailStartVtx, c_uiRobot_Tail, uiHeadStartVtx, c_uiRobot_Head)))
 	{
 		auto pr = alt_graph.get_next_vtx_same_job(uiTailStartVtx);
 		assert(true == pr.first);
@@ -411,11 +421,11 @@ bool add_imp_con_for_given_prec_arc_forward_dir(const std::vector<std::list<size
 	const size_t c_uiTailStartVtx = inp_arc.first;
 	const size_t c_uiHeadStartVtx = inp_arc.second;
 
-	size_t uiRobot_Tail = alt_graph.get_vertex_ownership(c_uiTailStartVtx);
-	size_t uiRobot_Head = alt_graph.get_vertex_ownership(c_uiHeadStartVtx);
+	const size_t c_uiRobot_Tail = alt_graph.get_vertex_ownership(c_uiTailStartVtx);
+	const size_t c_uiRobot_Head = alt_graph.get_vertex_ownership(c_uiHeadStartVtx);
 
-	if (c_uiTailStartVtx == *rob_seq[uiRobot_Tail].rbegin()) return false;
-	if (c_uiHeadStartVtx == *rob_seq[uiRobot_Head].rbegin()) return false;
+	if (c_uiTailStartVtx == *rob_seq[c_uiRobot_Tail].rbegin()) return false;
+	if (c_uiHeadStartVtx == *rob_seq[c_uiRobot_Head].rbegin()) return false;
 
 	auto pr_head = alt_graph.get_next_vtx_same_job(c_uiHeadStartVtx);
 	assert(true == pr_head.first);
@@ -428,9 +438,9 @@ bool add_imp_con_for_given_prec_arc_forward_dir(const std::vector<std::list<size
 	while (1)
 	{
 		//if (set_coll.end() != set_coll.find(Coll_Pair(c_uiTailStartVtx, uiRobot_Tail, uiHeadVtx, uiRobot_Head)))
-		if(true == layout_graph.areColliding(Coll_Pair(c_uiTailStartVtx, uiRobot_Tail, uiHeadVtx, uiRobot_Head)))
+		if(true == layout_graph.areColliding(Coll_Pair(c_uiTailStartVtx, c_uiRobot_Tail, uiHeadVtx, c_uiRobot_Head)))
 		{
-			if (false == alt_graph.containsPrecArc(arc(c_uiTailVtx, uiHeadVtx)))
+			if (false == alt_graph.containsPrecArc(arc(c_uiTailVtx, uiHeadVtx))) 
 			{
 				alt_graph.add_prec_arc(c_uiTailVtx, uiHeadVtx, 0);
 				list_prec_arcs_betw_jobs.emplace_back(arc(c_uiTailVtx, uiHeadVtx));
@@ -443,7 +453,7 @@ bool add_imp_con_for_given_prec_arc_forward_dir(const std::vector<std::list<size
 		if(false == pr_head.first) break;
 		uiHeadVtx = pr_head.second;
 	}
-	return bAdded;
+	return bAdded;	
 }
 
 /*
@@ -486,11 +496,11 @@ bool add_imp_con_for_given_prec_arc_reverse_dir(const std::vector<std::list<size
 	const size_t c_uiTailStartVtx = inp_arc.first;
 	const size_t c_uiHeadStartVtx = inp_arc.second;
 
-	size_t uiRobot_Tail = alt_graph.get_vertex_ownership(c_uiTailStartVtx);
-	size_t uiRobot_Head = alt_graph.get_vertex_ownership(c_uiHeadStartVtx);
+	const size_t c_uiRobot_Tail = alt_graph.get_vertex_ownership(c_uiTailStartVtx);
+	const size_t c_uiRobot_Head = alt_graph.get_vertex_ownership(c_uiHeadStartVtx);
 
-	if (c_uiTailStartVtx == *rob_seq[uiRobot_Tail].begin()) return false;
-	if (c_uiHeadStartVtx == *rob_seq[uiRobot_Head].begin()) return false;
+	if (c_uiTailStartVtx == *rob_seq[c_uiRobot_Tail].begin()) return false;
+	if (c_uiHeadStartVtx == *rob_seq[c_uiRobot_Head].begin()) return false;
 
 	auto pr_head = alt_graph.get_prec_vtx_same_job(c_uiHeadStartVtx);
 	assert(true == pr_head.first);
@@ -504,7 +514,7 @@ bool add_imp_con_for_given_prec_arc_reverse_dir(const std::vector<std::list<size
 	while (1)
 	{
 		//if (set_coll.end() != set_coll.find(Coll_Pair(uiTailVtx, uiRobot_Tail, c_uiHeadVtx, uiRobot_Head)))
-		if(true == layout_graph.areColliding(Coll_Pair(uiTailVtx, uiRobot_Tail, c_uiHeadVtx, uiRobot_Head)))
+		if(true == layout_graph.areColliding(Coll_Pair(uiTailVtx, c_uiRobot_Tail, c_uiHeadVtx, c_uiRobot_Head)))
 		{
 			if (false == alt_graph.containsPrecArc(arc(uiTailSucc, c_uiHeadVtx)))
 			{

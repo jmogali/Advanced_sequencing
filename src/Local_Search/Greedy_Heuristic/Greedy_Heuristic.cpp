@@ -31,7 +31,7 @@ Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &gra
 	m_set_prev_all_states.resize(uiRobotNum);
 	m_vec_nc_eft.resize(uiRobotNum);
 	m_bWait = false;
-	m_bVectorizeSchedule = false;
+	m_bVectorizeSchedule = false;	
 }
 
 bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq)
@@ -301,7 +301,8 @@ int Greedy_Heuristic::check_if_enabling_feasible(const State& state)
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
 		N_Ind Ind(*state.m_vec_rob_pos[uiRobot]);
-		if (m_map_enabler_pos_vert.end() == m_map_enabler_pos_vert.find(Ind.getInd())) continue;
+
+		if (m_map_enabler_pos_vert.end() == m_map_enabler_pos_vert.find(Ind.getInd())) continue;  // either it is NOT a hole, or a hole that is already enabled established via filtering
 		else
 		{
 			bool bEnabled = false;
