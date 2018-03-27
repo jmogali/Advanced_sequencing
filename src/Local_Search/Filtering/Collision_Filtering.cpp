@@ -67,10 +67,10 @@ void Collision_Filtering::construct_out_graph(const Alternative_Graph &alt_graph
 		if (str_comp_vtx_map.end() != it_find)
 		{
 			if (m_out_graph.end() != m_out_graph.find(it_find->second)) continue;
-			else m_out_graph.emplace(it_find->second, std::vector<int>());
+			else m_out_graph.emplace(it_find->second, std::unordered_map<int, size_t>());
 		}
 		else
-			m_out_graph.emplace((int)uiVtx, std::vector<int>());
+			m_out_graph.emplace((int)uiVtx, std::unordered_map<int, size_t>());
 	}
 
 	//populate adjacency information 
@@ -87,9 +87,21 @@ void Collision_Filtering::construct_out_graph(const Alternative_Graph &alt_graph
 			if (str_comp_vtx_map.end() != it_neigh)
 			{
 				if (iVtx == it_neigh->second) continue;
-				m_out_graph.at(iVtx).emplace_back(it_neigh->second);
+				
+				// doing it this way to prevent creation of multigraph
+				auto it_find = m_out_graph.at(iVtx).find(it_neigh->second);
+
+				if (m_out_graph.at(iVtx).end() == it_find) m_out_graph.at(iVtx).emplace(it_neigh->second, it_succ->second);
+				else it_find->second = std::max(it_find->second, it_succ->second);				
 			}
-			else m_out_graph.at(iVtx).emplace_back((int)it_succ->first);
+			else
+			{
+				// doing it this way to prevent creation of multigraph
+				auto it_find = m_out_graph.at(iVtx).find((int)it_succ->first);
+
+				if(m_out_graph.at(iVtx).end() == it_find) m_out_graph.at(iVtx).emplace((int)it_succ->first, it_succ->second);
+				else it_find->second = std::max(it_find->second, it_succ->second);
+			}
 		}
 	}
 }
@@ -98,14 +110,14 @@ void Collision_Filtering::construct_in_graph()
 {
 	for (auto it_vtx = m_out_graph.begin(); it_vtx != m_out_graph.end(); it_vtx++)
 	{
-		m_in_graph.emplace(it_vtx->first, std::vector<int>());
+		m_in_graph.emplace(it_vtx->first, std::unordered_map<int, size_t>());
 	}
 
 	for (auto it_tail = m_out_graph.begin(); it_tail != m_out_graph.end(); it_tail++)
 	{
 		for (auto it_head = it_tail->second.begin(); it_head != it_tail->second.end(); it_head++)
 		{
-			m_in_graph.at(*it_head).emplace_back(it_tail->first); // reverse the graph, so tail and head switched
+			m_in_graph.at(it_head->first).emplace(it_tail->first, it_head->second); // reverse the graph, so tail and head switched
 		}
 	}
 }
@@ -189,7 +201,7 @@ void Collision_Filtering::Topological_sort_out_graph()
 	std::unordered_map<int, std::string> map_seen;
 	int iVtx;
 		
-	for (auto it = m_out_graph.begin(); it != m_out_graph.end(); it++)
+	for (auto it = m_out_graph.cbegin(); it != m_out_graph.cend(); it++)
 	{
 		iVtx = it->first;
 		if (map_seen.end() == map_seen.find(iVtx))
@@ -204,10 +216,10 @@ void Collision_Filtering::Topological_Dfs(int iVtx, std::unordered_map<int, std:
 	auto it_insert = map_seen.emplace(iVtx , "GRAY");
 	assert(true == it_insert.second);
 	
-	for (auto it = m_out_graph.at(iVtx).begin(); it != m_out_graph.at(iVtx).end(); it++)
+	for (auto it = m_out_graph.at(iVtx).cbegin(); it != m_out_graph.at(iVtx).cend(); it++)
 	{
-		auto it_neigh = map_seen.find(*it);
-		if (map_seen.end() == it_neigh) Topological_Dfs(*it, map_seen);
+		auto it_neigh = map_seen.find(it->first);
+		if (map_seen.end() == it_neigh) Topological_Dfs(it->first, map_seen);
 		else assert("BLACK" == it_neigh->second); // helps to check validity of DAG, note all valid loops are converted to super vertices by this step already
 	}
 
@@ -261,14 +273,14 @@ void Collision_Filtering::compute_lower_bound_for_component(const Alternative_Gr
 
 	for (auto it_tail = m_in_graph.at(iVtx).begin(); it_tail != m_in_graph.at(iVtx).end(); it_tail++)
 	{
-		if (*it_tail < 0)
+		if (it_tail->first < 0)
 		{
 			auto it_comp = m_list_Comp.begin();
-			size_t uiComp = (size_t)(-1 * *it_tail) - 1;
+			size_t uiComp = (size_t)(-1 * (it_tail->first)) - 1;
 			std::advance(it_comp, uiComp);
 			uiPredVtx = *(it_comp->begin()); // this is sufficient because pretty much all the bounds will be the same for all synch vertices
 		}
-		else uiPredVtx = *it_tail;
+		else uiPredVtx = it_tail->first;
 
 		for (size_t uiRobot = 0; uiRobot < c_uiNumRobots; uiRobot++)
 		{
@@ -312,6 +324,159 @@ size_t Collision_Filtering::get_lower_bound_pos(size_t uiVtx, size_t uiOtherRobo
 	auto it_find = m_map_lower_bounds.find(uiVtx);
 	assert(m_map_lower_bounds.end() != it_find);
 	return it_find->second[uiOtherRobot];
+}
+
+void Collision_Filtering::Compute_costs_for_each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_from_source, std::vector<std::vector<size_t>> &vec_cost_to_go)
+{
+	if (0 == m_list_order.size())
+	{
+		cout << "Topological order was not previously computed \n";
+		exit(-1);
+	}
+
+#ifdef WINDOWS
+	assert(0 == vec_cost_from_source.size());
+	assert(0 == vec_cost_to_go.size());
+#else
+	if ((0 != vec_cost_from_source.size()) || (0 != vec_cost_to_go.size()))
+	{
+		cout << "Wrongly placed cost based filtering\n";
+		exit(-1);
+	}
+#endif
+
+	vec_cost_from_source.resize(rob_seq.size());
+	vec_cost_to_go.resize(rob_seq.size());
+
+	for (size_t uiRobot = 0; uiRobot < rob_seq.size(); uiRobot++)
+	{
+		vec_cost_from_source[uiRobot].resize(rob_seq[uiRobot].size(), 0);
+		vec_cost_to_go[uiRobot].resize(rob_seq[uiRobot].size(), 0);
+	}	
+
+	Compute_FROM_costs_each_Vertex(alt_graph, vec_cost_from_source);
+	Compute_GO_costs_each_Vertex(alt_graph, vec_cost_to_go);
+}
+
+void Update_cost(size_t uiCost, int iVtx, std::vector<std::vector<size_t>> &vec_cost, const Alternative_Graph &alt_graph, const std::list<std::unordered_set<size_t>> &list_Comp)
+{
+	size_t uiRobot, uiPos;
+	if (iVtx < 0)
+	{
+		auto it_comp = list_Comp.begin();
+		size_t uiComp = (size_t)(-1 * iVtx) - 1;
+		std::advance(it_comp, uiComp);
+
+		//uiVal is introduced for both correctness and handling redundant precedence constraints
+		for (auto it_vtx = it_comp->begin(); it_vtx != it_comp->end(); it_vtx++)
+		{
+			uiRobot = alt_graph.get_vertex_ownership(*it_vtx);
+			uiPos = alt_graph.get_vertex_position(*it_vtx);
+			
+			assert(0 == vec_cost[uiRobot][uiPos]);			
+			vec_cost[uiRobot][uiPos] = uiCost;			
+		}
+	}
+	else
+	{
+		uiRobot = alt_graph.get_vertex_ownership((size_t) iVtx);
+		uiPos = alt_graph.get_vertex_position((size_t)iVtx);
+		assert(0 == vec_cost[uiRobot][uiPos]);
+		vec_cost[uiRobot][uiPos] = uiCost;
+	}	
+}
+
+size_t get_any_vertex_from_scc(int iVtx, const std::list<std::unordered_set<size_t>> &list_Comp)
+{
+#ifdef WINDOWS
+	assert(iVtx < 0);
+#else
+	if (iVtx >= 0)
+	{
+		cout << "Incorrect usage of vertices from scc \n";
+		exit(-1);
+	}
+#endif
+
+	auto it_comp = list_Comp.begin();
+	size_t uiComp = (size_t)(-1 * iVtx) - 1;
+	std::advance(it_comp, uiComp);
+
+#ifdef WINDOWS
+	assert(it_comp->size() > 1);
+#else
+	if (it_comp->size() <= 1)
+	{
+		cout << "SCC were not correctly filtered earlier \n";
+		exit(-1);
+	}
+#endif
+	return *(it_comp->begin());
+}
+
+void Collision_Filtering::Compute_FROM_costs_each_Vertex(const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_from_source)
+{
+	int iVtx, iPrev; 
+	size_t uiPrev, uiPrevPos, uiRobot, uiCost;
+
+	for (auto it_curr = m_list_order.begin(); it_curr != m_list_order.end(); it_curr++)
+	{
+		iVtx = *it_curr;
+		uiCost = std::numeric_limits<size_t>::min();
+
+		if (0 == m_in_graph.at(iVtx).size())
+		{
+			Update_cost(0, iVtx, vec_cost_from_source, alt_graph, m_list_Comp);
+			continue;
+		}
+
+		for (auto it_prev = m_in_graph.at(iVtx).begin(); it_prev != m_in_graph.at(iVtx).end(); it_prev++)
+		{
+			iPrev = it_prev->first;
+			
+			if(iPrev < 0) uiPrev = get_any_vertex_from_scc(iPrev, m_list_Comp);  // notice that uiPrev and iPrev can be different
+			else uiPrev = (size_t)iPrev;
+			
+			uiRobot = alt_graph.get_vertex_ownership(uiPrev);
+			uiPrevPos = alt_graph.get_vertex_position(uiPrev);
+
+			uiCost = std::max(uiCost , vec_cost_from_source[uiRobot][uiPrevPos] + it_prev->second);
+		}
+
+		Update_cost(uiCost, iVtx, vec_cost_from_source, alt_graph, m_list_Comp);
+	}
+}
+
+void Collision_Filtering::Compute_GO_costs_each_Vertex(const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_to_go)
+{
+	int iVtx, iNext;
+	size_t uiNext, uiNextPos, uiRobot, uiCost;
+
+	for (auto it_curr = m_list_order.rbegin(); it_curr != m_list_order.rend(); it_curr++)
+	{
+		iVtx = *it_curr;
+		uiCost = std::numeric_limits<size_t>::min();
+
+		if (0 == m_out_graph.at(iVtx).size())
+		{
+			Update_cost(0, iVtx, vec_cost_to_go, alt_graph, m_list_Comp);
+			continue;
+		}
+
+		for (auto it_next = m_out_graph.at(iVtx).begin(); it_next != m_out_graph.at(iVtx).end(); it_next++)
+		{
+			iNext = it_next->first;
+
+			if(iNext < 0) uiNext = get_any_vertex_from_scc(iNext, m_list_Comp);  // notice that uiPrev and iPrev can be different
+			else uiNext = (size_t)iNext;
+
+			uiRobot = alt_graph.get_vertex_ownership(uiNext);
+			uiNextPos = alt_graph.get_vertex_position(uiNext);
+
+			uiCost = std::max(uiCost, vec_cost_to_go[uiRobot][uiNextPos] + it_next->second);
+		}
+		Update_cost(uiCost, iVtx, vec_cost_to_go, alt_graph, m_list_Comp);
+	}
 }
 
 void Collision_Filtering::Initialize_bounds_map(std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &m_map_bounds, const std::vector<std::list<size_t>> &rob_seq)
@@ -403,7 +568,7 @@ void Collision_Filtering::insert_LB_non_r1_r2_comp_vtx(int iVtx, size_t uiVtx, s
 
 	for (auto it_tail = m_in_graph.at(iVtx).begin(); it_tail != m_in_graph.at(iVtx).end(); it_tail++)
 	{
-		auto pr = get_LB_from_pred(*it_tail, uiRobot, uiOtherRobot, alt_graph);
+		auto pr = get_LB_from_pred(it_tail->first, uiRobot, uiOtherRobot, alt_graph);
 		if (false == pr.first) continue;
 		uiVal = pr.second;
 		if (uiPos <= uiVal) uiPos = uiVal;	// Required this way for correctness and to handle redundant precedence constraints
@@ -525,7 +690,7 @@ void Collision_Filtering::insert_UB_non_r1_r2_comp_vtx(int iVtx, size_t uiVtx, s
 
 	for (auto it_head = m_out_graph.at(iVtx).begin(); it_head != m_out_graph.at(iVtx).end(); it_head++)
 	{
-		auto pr = get_UB_from_succ(*it_head, uiRobot, uiOtherRobot, alt_graph, set_marked_nodes);
+		auto pr = get_UB_from_succ(it_head->first, uiRobot, uiOtherRobot, alt_graph, set_marked_nodes);
 		if (true == pr.second.first)	// component corresponding to upper bound
 		{
 			uiVal = pr.second.second;

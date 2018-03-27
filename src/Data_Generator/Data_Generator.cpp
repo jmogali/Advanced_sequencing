@@ -40,7 +40,7 @@ void Data_Generator::add_depot_info(const Boeing_Fuesalage &boeing)
 
 	for (size_t uiRobot = 0; uiRobot < c_ui_num_robots; uiRobot++)
 	{
-		m_handle.add_depot(uiRobot , 0 , 2 * uiRobot , 2 * uiRobot + 1 , boeing.m_vec_depots[uiRobot]);		
+		m_handle.add_depot(uiRobot , DEPOT_TIME, 2 * uiRobot , 2 * uiRobot + 1 , boeing.m_vec_depots[uiRobot]);
 	}
 }
 

@@ -26,14 +26,14 @@ class Greedy_Heuristic
 		std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> m_map_enabler_pos_vert; // uiRobot, <position, vertex>
 		bool m_bWait , m_bVectorizeSchedule;
 
-		bool perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq);
+		bool perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq, const size_t c_uiUpperBound);
 		void allocate_buffers(const std::vector<std::list<size_t>> &rob_seq);
 		void initialize_to_do_verts(const std::vector<std::list<size_t>> &rob_seq);
 		void clear_prev_info_buffers();
 		void compute_NC_makespan(const std::vector<std::list<size_t>> &rob_seq);
 		
-		bool construct_Alt_Graph_STN(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq);
-		bool construct_Alt_Graph(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq);
+		bool construct_Alt_Graph_STN(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq, const size_t c_uiUpperBound);
+		bool construct_Alt_Graph(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq, const size_t c_uiUpperBound);
 		
 		void populate_root_node_info(State &root, const std::vector<std::list<size_t>> &rob_seq);
 		int compute_DFS(const State& state, size_t uiDepth, size_t uiStartTime);
@@ -80,7 +80,7 @@ class Greedy_Heuristic
 		size_t getTime(N_Ind Ind);
 	public:
 		Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power);
-		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strPlotFolder);
+		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strPlotFolder, const size_t c_uiUpperBound = std::numeric_limits<size_t>::max());
 		inline bool doRobotsWait() const { assert(true == m_bVectorizeSchedule); return m_bWait; };
 };
 

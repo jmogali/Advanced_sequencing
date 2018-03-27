@@ -34,9 +34,9 @@ Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &gra
 	m_bVectorizeSchedule = false;	
 }
 
-bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq)
+bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq, const size_t c_uiUpperBound)
 {
-	bool bFeasible = construct_Alt_Graph_STN(rob_seq, new_rob_seq);
+	bool bFeasible = construct_Alt_Graph_STN(rob_seq, new_rob_seq, c_uiUpperBound);
 	if (false == bFeasible) return false;
 	allocate_buffers(new_rob_seq);
 	initialize_to_do_verts(new_rob_seq);
@@ -124,13 +124,13 @@ void Greedy_Heuristic::populate_root_node_info(State &root, const std::vector<st
 	}	
 }
 
-int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strPlotFolder)
+int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strPlotFolder, const size_t c_uiUpperBound)
 {
 	//print_sequence(rob_seq);
 	Sequence_Visualization obj_vis;
 	clear_prev_info_buffers();
 	std::vector<std::list<size_t>> new_rob_seq;
-	bool bFeasible = perform_initializations(rob_seq, new_rob_seq);
+	bool bFeasible = perform_initializations(rob_seq, new_rob_seq, c_uiUpperBound);
 	if (false == bFeasible) 
 	{ 
 #ifdef PLOT_INFEASIBLE_CASES

@@ -1,9 +1,9 @@
 #include "Greedy_Heuristic.h"
 #include "Kosaraju_Algo.h"
 
-bool Greedy_Heuristic::construct_Alt_Graph_STN(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq)
+bool Greedy_Heuristic::construct_Alt_Graph_STN(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq, const size_t c_uiUpperBound)
 {
-	bool bFeasible = construct_Alt_Graph(rob_seq, new_rob_seq);
+	bool bFeasible = construct_Alt_Graph(rob_seq, new_rob_seq, c_uiUpperBound);
 	if (false == bFeasible) return false;
 	return true;
 }
@@ -15,16 +15,17 @@ void construct_prec_graph_for_each_operation(const std::vector<std::list<size_t>
 	for (size_t uiRobot = 0; uiRobot < uiNumRobots; uiRobot++)
 	{
 		size_t uiInd = 0;
-		auto it_next = rob_seq[uiRobot].begin();
-		for (auto it = rob_seq[uiRobot].begin(); it != rob_seq[uiRobot].end(); it++)
+		auto it_next = rob_seq[uiRobot].cbegin();
+		for (auto it = rob_seq[uiRobot].cbegin(); it != rob_seq[uiRobot].cend(); it++)
 		{
 			it_next++;
-			if (it_next == rob_seq[uiRobot].end())
+			if (it_next == rob_seq[uiRobot].cend())
 			{
 				alt_graph.add_vertex_ownership_pos(*it, uiRobot , uiInd);
-				assert(0 == layout_graph.getTime(*it));
+				assert(DEPOT_TIME == layout_graph.getTime(*it));
 				break;
 			}
+
 			alt_graph.add_prec_arc(*it, *it_next, layout_graph.getTime(*it));
 			alt_graph.add_vertex_ownership_pos(*it, uiRobot, uiInd);
 			uiInd++;
@@ -215,9 +216,9 @@ bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 }
 */
 
-bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, const Collision_Filtering &coll_filter)
+bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, const Collision_Filtering &coll_filter, const std::vector<std::vector<size_t>> &vec_cost_from_source, const std::vector<std::vector<size_t>> &vec_cost_to_go, const size_t c_uiUpperBound)
 {
-	size_t uiRob_1_Pos;
+	size_t uiRob_1_Pos, uiRob_2_Pos;
 
 	for (auto it1 = rob_seq[uiRobot1].begin(); it1 != rob_seq[uiRobot1].end(); it1++)
 	{
@@ -227,9 +228,11 @@ bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 		auto pr1 = coll_filter.get_lower_bound_pos(*it1, uiRobot2);
 		auto it2_start = rob_seq[uiRobot2].begin();
 		std::advance(it2_start, pr1);
+		
 		uiRob_1_Pos = alt_graph.get_vertex_position(*it1);
+		uiRob_2_Pos = pr1;
 
-		for (auto it2 = it2_start; it2 != rob_seq[uiRobot2].end(); it2++)
+		for (auto it2 = it2_start; it2 != rob_seq[uiRobot2].end(); it2++ , uiRob_2_Pos++)
 		{
 			auto pr2 = coll_filter.get_lower_bound_pos(*it2, uiRobot1);
 			if (uiRob_1_Pos < pr2) break;			
@@ -242,7 +245,17 @@ bool add_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 				bool bArc1 = alt_graph.containsPrecArc(arc(*it22, *it1));
 				bool bArc2 = alt_graph.containsPrecArc(arc(*it12, *it2));
 
-				if (!bArc1 & !bArc2) alt_graph.add_alt_arc(*it22, *it1, *it12, *it2);
+				if (!bArc1 & !bArc2)
+				{
+					//note - definitions of bArc1 and bArc2 are somewhat different from the usage above
+					if (vec_cost_from_source[uiRobot2][uiRob_2_Pos + 1] + vec_cost_to_go[uiRobot1][uiRob_1_Pos] > c_uiUpperBound) bArc1 = true;
+					if (vec_cost_from_source[uiRobot1][uiRob_1_Pos + 1] + vec_cost_to_go[uiRobot2][uiRob_2_Pos] > c_uiUpperBound) bArc2 = true;
+
+					if (bArc1 & bArc2) return false;  // infeasible by bounding
+					else if (bArc1 & !bArc2) alt_graph.add_prec_arc(*it12, *it2, 0); // pruned, arc(*it22, *it1) will shoot upper bound
+					else if (!bArc1 & bArc2) alt_graph.add_prec_arc(*it22, *it1, 0); // pruned, arc(*it12, *it2) will shoot upper bound
+					else alt_graph.add_alt_arc(*it22, *it1, *it12, *it2);
+				}
 				else if (bArc1 & bArc2) return false;
 			}
 		}		
@@ -324,7 +337,7 @@ bool get_coll_cons_bet_pair_jobs(size_t uiRobot1, size_t uiRobot2, const std::ve
 	return true;
 }
 
-bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, const Collision_Filtering &coll_filter)
+bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, const Collision_Filtering &coll_filter, const std::vector<std::vector<size_t>> &vec_cost_from_source, const std::vector<std::vector<size_t>> &vec_cost_to_go, const size_t c_uiUpperBound)
 {
 	size_t uiNumRobots = layout_graph.get_num_robots();
 	bool bFeasible;
@@ -333,7 +346,7 @@ bool add_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_L
 	{
 		for (size_t uiRobot2 = uiRobot1+1; uiRobot2 < uiNumRobots; uiRobot2++)
 		{
-			bFeasible = add_coll_cons_bet_pair_jobs(uiRobot1, uiRobot2, rob_seq, layout_graph, alt_graph, coll_filter);
+			bFeasible = add_coll_cons_bet_pair_jobs(uiRobot1, uiRobot2, rob_seq, layout_graph, alt_graph, coll_filter, vec_cost_from_source, vec_cost_to_go, c_uiUpperBound);
 			if (false == bFeasible) return false;
 		}
 	}
@@ -579,7 +592,7 @@ std::pair<bool, bool> add_scc_check_coll_feasible(Alternative_Graph &alt_graph, 
 	return std::make_pair(true, bAdded);
 }
 
-bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter, std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &map_enabler_pos_vert)
+bool add_enabling_fix_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, Collision_Filtering &coll_filter, std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &map_enabler_pos_vert)
 {
 	bool bChange = true, bFirstIter = true, bFeasible;
 	std::list<arc> list_prec_arcs_betw_jobs;
@@ -627,15 +640,63 @@ bool add_enabling_coll_cons(const std::vector<std::list<size_t>> &rob_seq, const
 	return true;
 }
 
-bool Greedy_Heuristic::construct_Alt_Graph(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq)
+void Check_costs(const std::vector<std::vector<size_t>> &vec_cost_from_source, const std::vector<std::vector<size_t>> vec_cost_to_go)
+{
+	size_t c_uiNumRobots = vec_cost_from_source.size();
+	size_t uiMaxFrom = std::numeric_limits<size_t>::min(), uiMaxGo = std::numeric_limits<size_t>::min();
+
+	for (size_t uiRobot = 0; uiRobot < c_uiNumRobots; uiRobot++)
+	{
+		uiMaxFrom = std::max(uiMaxFrom , vec_cost_from_source[uiRobot][vec_cost_from_source[uiRobot].size()-1]);
+		uiMaxGo = std::max(uiMaxGo , vec_cost_to_go[uiRobot][0]);
+	}
+
+#ifdef WINDOWS
+	assert(uiMaxFrom == uiMaxGo);
+#else
+	if (uiMaxFrom != uiMaxGo)
+	{
+		cout << "Cost computations incorrect";
+		exit(-1);
+	}
+#endif
+
+
+	for (size_t uiRobot = 0; uiRobot < c_uiNumRobots; uiRobot++)
+	{
+		for (size_t uiCount = 0; uiCount < vec_cost_from_source[uiRobot].size()-1; uiCount++)
+		{
+#ifdef WINDOWS
+			assert(vec_cost_from_source[uiRobot][uiCount] < vec_cost_from_source[uiRobot][uiCount+1]);
+			assert(vec_cost_to_go[uiRobot][uiCount + 1] < vec_cost_to_go[uiRobot][uiCount]);
+#else
+			if ((vec_cost_from_source[uiRobot][uiCount] >= vec_cost_from_source[uiRobot][uiCount + 1]) || (vec_cost_to_go[uiRobot][uiCount + 1] >= vec_cost_to_go[uiRobot][uiCount]))
+			{
+				cout << "Cost computations incorrect \n";
+				exit(-1);
+			}
+#endif
+		}
+	}
+}
+
+bool Greedy_Heuristic::construct_Alt_Graph(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq, const size_t c_uiUpperBound)
 {
 	m_alt_graph.allocate_buffer_for_graph(rob_seq);
 	construct_prec_graph_for_each_operation(rob_seq, m_graph, m_alt_graph);
-	bool bFeasible = add_enabling_coll_cons(rob_seq, m_graph, m_alt_graph, m_coll_filter, m_map_enabler_pos_vert);
+	bool bFeasible = add_enabling_fix_coll_cons(rob_seq, m_graph, m_alt_graph, m_coll_filter, m_map_enabler_pos_vert);
 	if (false == bFeasible) return false;
 
+	//buffers for cost based filtering
+	// this filtering is not done here instead of in the loop because we prefer not to enumerate all collisions earlier
+	std::vector<std::vector<size_t>> vec_cost_from_source;
+	std::vector<std::vector<size_t>> vec_cost_to_go;
+	m_coll_filter.Compute_costs_for_each_Vertex(rob_seq, m_alt_graph, vec_cost_from_source, vec_cost_to_go);
+	
+	Check_costs(vec_cost_from_source, vec_cost_to_go);
+
 	new_rob_seq = rob_seq;
-	bFeasible = add_coll_cons(rob_seq, m_graph, m_alt_graph, m_coll_filter);	
+	bFeasible = add_coll_cons(rob_seq, m_graph, m_alt_graph, m_coll_filter, vec_cost_from_source, vec_cost_to_go, c_uiUpperBound);	
 
 	if (false == bFeasible) return false;
 	return bFeasible;
