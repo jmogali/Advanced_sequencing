@@ -691,9 +691,12 @@ bool Greedy_Heuristic::construct_Alt_Graph(const std::vector<std::list<size_t>> 
 	// this filtering is not done here instead of in the loop because we prefer not to enumerate all collisions earlier
 	std::vector<std::vector<size_t>> vec_cost_from_source;
 	std::vector<std::vector<size_t>> vec_cost_to_go;
-	m_coll_filter.Compute_costs_for_each_Vertex(rob_seq, m_alt_graph, vec_cost_from_source, vec_cost_to_go);
-	
+	size_t uiMakeSpan = m_coll_filter.Compute_costs_for_each_Vertex(rob_seq, m_alt_graph, vec_cost_from_source, vec_cost_to_go);
+	if (uiMakeSpan > c_uiUpperBound) return false;
+
+#ifdef ENABLE_FULL_CHECKING	
 	Check_costs(vec_cost_from_source, vec_cost_to_go);
+#endif
 
 	new_rob_seq = rob_seq;
 	bFeasible = add_coll_cons(rob_seq, m_graph, m_alt_graph, m_coll_filter, vec_cost_from_source, vec_cost_to_go, c_uiUpperBound);	

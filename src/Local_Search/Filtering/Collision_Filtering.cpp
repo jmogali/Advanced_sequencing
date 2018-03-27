@@ -326,8 +326,9 @@ size_t Collision_Filtering::get_lower_bound_pos(size_t uiVtx, size_t uiOtherRobo
 	return it_find->second[uiOtherRobot];
 }
 
-void Collision_Filtering::Compute_costs_for_each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_from_source, std::vector<std::vector<size_t>> &vec_cost_to_go)
+size_t Collision_Filtering::Compute_costs_for_each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_from_source, std::vector<std::vector<size_t>> &vec_cost_to_go)
 {
+	size_t uiFromMakeSpan, uiGoMakeSpan;
 	if (0 == m_list_order.size())
 	{
 		cout << "Topological order was not previously computed \n";
@@ -354,8 +355,20 @@ void Collision_Filtering::Compute_costs_for_each_Vertex(const std::vector<std::l
 		vec_cost_to_go[uiRobot].resize(rob_seq[uiRobot].size(), 0);
 	}	
 
-	Compute_FROM_costs_each_Vertex(alt_graph, vec_cost_from_source);
-	Compute_GO_costs_each_Vertex(alt_graph, vec_cost_to_go);
+	uiFromMakeSpan = Compute_FROM_costs_each_Vertex(alt_graph, vec_cost_from_source);
+	uiGoMakeSpan = Compute_GO_costs_each_Vertex(alt_graph, vec_cost_to_go);
+
+#ifdef WINDOWS
+	assert(uiFromMakeSpan == uiGoMakeSpan);	
+#else
+	if (uiFromMakeSpan != uiGoMakeSpan)
+	{
+		cout << "From and To Makespans do not match\n";
+		exit(-1);
+	}
+#endif
+
+	return uiFromMakeSpan;
 }
 
 void Update_cost(size_t uiCost, int iVtx, std::vector<std::vector<size_t>> &vec_cost, const Alternative_Graph &alt_graph, const std::list<std::unordered_set<size_t>> &list_Comp)
@@ -414,10 +427,11 @@ size_t get_any_vertex_from_scc(int iVtx, const std::list<std::unordered_set<size
 	return *(it_comp->begin());
 }
 
-void Collision_Filtering::Compute_FROM_costs_each_Vertex(const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_from_source)
+size_t Collision_Filtering::Compute_FROM_costs_each_Vertex(const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_from_source)
 {
 	int iVtx, iPrev; 
 	size_t uiPrev, uiPrevPos, uiRobot, uiCost;
+	size_t uiMakeSpan = std::numeric_limits<size_t>::min();
 
 	for (auto it_curr = m_list_order.begin(); it_curr != m_list_order.end(); it_curr++)
 	{
@@ -444,13 +458,16 @@ void Collision_Filtering::Compute_FROM_costs_each_Vertex(const Alternative_Graph
 		}
 
 		Update_cost(uiCost, iVtx, vec_cost_from_source, alt_graph, m_list_Comp);
+		uiMakeSpan = std::max(uiMakeSpan, uiCost);
 	}
+	return uiMakeSpan;
 }
 
-void Collision_Filtering::Compute_GO_costs_each_Vertex(const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_to_go)
+size_t Collision_Filtering::Compute_GO_costs_each_Vertex(const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_to_go)
 {
 	int iVtx, iNext;
 	size_t uiNext, uiNextPos, uiRobot, uiCost;
+	size_t uiMakeSpan = std::numeric_limits<size_t>::min();
 
 	for (auto it_curr = m_list_order.rbegin(); it_curr != m_list_order.rend(); it_curr++)
 	{
@@ -476,7 +493,9 @@ void Collision_Filtering::Compute_GO_costs_each_Vertex(const Alternative_Graph &
 			uiCost = std::max(uiCost, vec_cost_to_go[uiRobot][uiNextPos] + it_next->second);
 		}
 		Update_cost(uiCost, iVtx, vec_cost_to_go, alt_graph, m_list_Comp);
+		uiMakeSpan = std::max(uiMakeSpan, uiCost);
 	}
+	return uiMakeSpan;
 }
 
 void Collision_Filtering::Initialize_bounds_map(std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &m_map_bounds, const std::vector<std::list<size_t>> &rob_seq)

@@ -29,8 +29,8 @@ class Collision_Filtering
 		void compute_lower_bound_for_component(const Alternative_Graph &alt_graph, int iVtx, const size_t c_uiNumRobots);
 		void Initialize_lower_bounds_map(const std::vector<std::list<size_t>> &rob_seq);
 
-		void Compute_FROM_costs_each_Vertex(const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_from_source);
-		void Compute_GO_costs_each_Vertex(const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_to_go);
+		size_t Compute_FROM_costs_each_Vertex(const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_from_source);
+		size_t Compute_GO_costs_each_Vertex(const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_to_go);
 
 		void Compute_bounds(const Alternative_Graph &alt_graph, const std::vector<std::list<size_t>> &rob_seq);
 		bool check_bounds_validity(const std::vector<std::list<size_t>> &rob_seq);
@@ -56,7 +56,7 @@ class Collision_Filtering
 	public:
 		Collision_Filtering() {};
 		bool Check_Feasibility_Compute_Bounds_For_Each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph);
-		void Compute_costs_for_each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_from_source, std::vector<std::vector<size_t>> &vec_cost_to_go);
+		size_t Compute_costs_for_each_Vertex(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_from_source, std::vector<std::vector<size_t>> &vec_cost_to_go);
 		std::pair<size_t, size_t> get_bounds(size_t uiVtx, size_t uiOtherRobot);
 		size_t get_lower_bound_pos(size_t uiVtx, size_t uiOtherRobot) const;
 		inline const std::list<std::unordered_set<size_t>>& get_scc() const { return m_list_Comp; };
