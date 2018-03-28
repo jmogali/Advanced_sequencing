@@ -116,3 +116,23 @@ void dump_data_to_file(const std::vector<std::list<size_t>> &rob_seq, const std:
 	}
 	myFile.close();
 }
+
+
+#ifdef ENABLE_FULL_CHECKING
+void check_state_correctness(const State &state, const Alternative_Graph& alt_graph)
+{
+	size_t c_uiRobotNum = state.getRobotNum();
+	for (size_t uiRobot = 0; uiRobot < c_uiRobotNum; uiRobot++)
+	{
+#ifdef WINDOWS
+		assert(alt_graph.get_vertex_position(*state.m_vec_rob_pos_itr[uiRobot]) == state.m_vec_rob_pos_index[uiRobot]);
+#else
+		if (alt_graph.get_vertex_position(*state.m_vec_rob_pos_itr[uiRobot]) != state.m_vec_rob_pos_index[uiRobot])
+		{
+			cout << "Positions mismatch in state \n";
+			exit(-1);
+		}
+#endif
+	}
+}
+#endif
