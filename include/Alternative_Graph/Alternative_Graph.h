@@ -79,8 +79,8 @@ class Alternative_Graph
 		std::unordered_map<size_t, std::unordered_map<size_t, size_t>> m_vec_vtx_alt_edge_ind_out;   // Vertex, Index - contains indices for m_alt_edges
 
 		void construct_induced_sub_graph(std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &graph, const std::unordered_set<size_t> &B_Q);
-		void filter_components(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, std::list<std::unordered_set<size_t>> &listComp);
-		bool contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, const std::unordered_set<size_t> &comp);
+		void filter_components(const std::unordered_set<size_t> &B_Q, const std::vector<size_t> &vec_B_Q_pos, std::list<std::unordered_set<size_t>> &listComp);
+		bool contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::vector<size_t> &vec_B_Q_pos, const std::unordered_set<size_t> &comp);
 
 		void add_prec_arc(arc new_arc, size_t uiCost);
 		void remove_prec_arc(size_t uiVtx1, size_t uiVtx2, bool bAltGraphBackTrack = true);			
@@ -95,7 +95,8 @@ class Alternative_Graph
 		void clear_prev_info();
 
 		bool get_arcs_to_make_sel_positional(const std::unordered_set<size_t> &R, std::unordered_map<size_t, std::pair<std::pair<arc, std::string>, std::pair<arc, std::string>>> &map_new_sel_arcs);
-		void get_next_strongly_conn_components(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, std::list<std::unordered_set<size_t>> &listComp);
+		//void get_next_strongly_conn_components(const size_t c_uiNumRobots, const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, std::list<std::unordered_set<size_t>> &listComp);
+		void get_next_strongly_conn_components(const size_t c_uiNumRobots, const std::unordered_set<size_t> &B_Q, std::list<std::unordered_set<size_t>> &listComp);
 		void make_selection_positional(const std::unordered_map<size_t, std::pair<std::pair<arc, std::string>, std::pair<arc, std::string>>> &map_new_sel_arcs);
 		void unselect_positional_arcs(const std::unordered_map<size_t, std::pair<std::pair<arc, std::string>, std::pair<arc, std::string>>> &map_new_sel_arcs);
 		

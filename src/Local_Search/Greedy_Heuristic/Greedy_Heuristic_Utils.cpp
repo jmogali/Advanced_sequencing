@@ -7,7 +7,7 @@ bool operator== (const State& lhs, const State& rhs)
 
 	for (size_t uiRobot = 0; uiRobot < lhs.getRobotNum(); uiRobot++)
 	{
-		if (*lhs.m_vec_rob_pos[uiRobot] != *rhs.m_vec_rob_pos[uiRobot])
+		if (*lhs.m_vec_rob_pos_itr[uiRobot] != *rhs.m_vec_rob_pos_itr[uiRobot])
 			return false;
 	}
 	return true;
@@ -15,10 +15,13 @@ bool operator== (const State& lhs, const State& rhs)
 
 State::State(const State& state)
 {
-	m_vec_rob_pos.resize(state.m_vec_rob_pos.size());
-	for (size_t uiRobot = 0; uiRobot < state.m_vec_rob_pos.size(); uiRobot++)
+	m_vec_rob_pos_itr.resize(state.m_vec_rob_pos_itr.size());
+	m_vec_rob_pos_index.resize(state.m_vec_rob_pos_index.size());
+
+	for (size_t uiRobot = 0; uiRobot < state.m_vec_rob_pos_itr.size(); uiRobot++)
 	{
-		m_vec_rob_pos[uiRobot] = state.m_vec_rob_pos[uiRobot];
+		m_vec_rob_pos_itr[uiRobot] = state.m_vec_rob_pos_itr[uiRobot];
+		m_vec_rob_pos_index[uiRobot] = state.m_vec_rob_pos_index[uiRobot];
 	}
 }
 
@@ -26,9 +29,9 @@ State::State(const State& state)
 void State::get_vertices(std::unordered_set<size_t> &set_vert) const
 {
 	assert(0 == set_vert.size());
-	for (size_t uiRobot = 0; uiRobot < m_vec_rob_pos.size(); uiRobot++)
+	for (size_t uiRobot = 0; uiRobot < m_vec_rob_pos_itr.size(); uiRobot++)
 	{
-		set_vert.emplace(*m_vec_rob_pos[uiRobot]);
+		set_vert.emplace(*m_vec_rob_pos_itr[uiRobot]);
 	}
 }
 

@@ -28,10 +28,15 @@ struct NoConstraint_EFT
 
 struct State
 {
-	std::vector<std::list<size_t>::const_iterator> m_vec_rob_pos;
-	State(size_t uiNumRobots) { m_vec_rob_pos.resize(uiNumRobots); };
+	std::vector<std::list<size_t>::const_iterator> m_vec_rob_pos_itr;
+	std::vector<size_t> m_vec_rob_pos_index;
+	State(size_t uiNumRobots) 
+	{ 
+		m_vec_rob_pos_itr.resize(uiNumRobots); 
+		m_vec_rob_pos_index.resize(uiNumRobots);
+	};
 	State(const State& state);
-	inline size_t getRobotNum() const { return m_vec_rob_pos.size(); };
+	inline size_t getRobotNum() const { return m_vec_rob_pos_itr.size(); };
 	void get_vertices(std::unordered_set<size_t> &set_vert) const;
 };
 
@@ -44,7 +49,7 @@ struct StateHasher
 		size_t seed = 0;
 		for (size_t uiRobot = 0; uiRobot < state.getRobotNum(); uiRobot++)
 		{
-			Hash_It(seed, *state.m_vec_rob_pos[uiRobot]);
+			Hash_It(seed, *state.m_vec_rob_pos_itr[uiRobot]);
 		}
 		return seed;
 	}
