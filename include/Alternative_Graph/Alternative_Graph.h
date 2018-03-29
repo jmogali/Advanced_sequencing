@@ -78,17 +78,15 @@ class Alternative_Graph
 		std::unordered_map<size_t, std::unordered_map<size_t, size_t>> m_vec_vtx_alt_edge_ind_in;   // Vertex, Index - contains indices for m_alt_edges
 		std::unordered_map<size_t, std::unordered_map<size_t, size_t>> m_vec_vtx_alt_edge_ind_out;   // Vertex, Index - contains indices for m_alt_edges
 
-		std::vector<size_t> m_vec_B_Q_pos; // stores the positions of the vertices in B_Q
-
 		void construct_induced_sub_graph(std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &graph, const std::unordered_set<size_t> &B_Q);
-		void filter_components(const std::unordered_set<size_t> &B_Q, std::list<std::unordered_set<size_t>> &listComp);
-		bool contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &comp);
+		void filter_components(const std::unordered_set<size_t> &B_Q, const std::vector<size_t> &vec_B_Q_pos, std::list<std::unordered_set<size_t>> &listComp);
+		bool contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::vector<size_t> &vec_B_Q_pos, const std::unordered_set<size_t> &comp);
 
 		void add_prec_arc(arc new_arc, size_t uiCost);
 		void remove_prec_arc(size_t uiVtx1, size_t uiVtx2, bool bAltGraphBackTrack = true);			
 
 	public:
-		Alternative_Graph(const size_t c_uiNumRobots);
+		Alternative_Graph();
 		void add_prec_arc(size_t uiVtx1, size_t uiVtx2, size_t uiCost);
 		void add_alt_arc(size_t uiVtx11, size_t uiVtx12, size_t uiVtx21, size_t uiVtx22);
 		void remove_prec_arc(arc new_arc, bool bAltGraphBackTrack = true);

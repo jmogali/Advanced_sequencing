@@ -24,7 +24,7 @@ bool greedy_heuristic(const std::pair<Comparison_Object, State>& lhs, const std:
 	return f(lhs.second) < f(rhs.second);
 }
 
-Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power) : m_uiNumRobots(uiRobotNum), m_alt_graph(uiRobotNum), m_graph(graph), m_power(power)
+Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power) : m_uiNumRobots(uiRobotNum), m_graph(graph), m_power(power)
 {
 	m_rob_hole_times.resize(uiRobotNum);
 	m_vec_nc_eft.resize(uiRobotNum);
@@ -195,10 +195,6 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 int Greedy_Heuristic::compute_DFS(const State& state , size_t uiDepth, size_t uiStartTime)
 {
 	//print_state(uiDepth , uiStartTime, state);
-#ifdef ENABLE_FULL_CHECKING	
-	check_state_correctness(state, m_alt_graph);
-#endif
-
 	bool bSeen = wasStatePreviouslySeen(state);
 	if (true == bSeen) return -1;
 

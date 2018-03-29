@@ -62,10 +62,8 @@ bool Alterative_arc::isSelected()
 	return true;
 }
 
-Alternative_Graph::Alternative_Graph(const size_t c_uiNumRobots)
-{
-	m_vec_B_Q_pos.resize(c_uiNumRobots, std::numeric_limits<size_t>::max());
-}
+Alternative_Graph::Alternative_Graph()
+{}
 
 void Alternative_Graph::add_prec_arc(size_t uiVtx1, size_t uiVtx2, size_t uiCost)
 {
@@ -126,25 +124,16 @@ void Alternative_Graph::get_next_strongly_conn_components(const size_t c_uiNumRo
 	Kosaraju_Algo obj_strong_conn;
 	obj_strong_conn.compute_maximal_components(graph, listComp);
 
-#ifdef WINDOWS
-	assert(m_vec_B_Q_pos.size() <= c_uiNumRobots);
-#else
-	if (m_vec_B_Q_pos.size() > c_uiNumRobots)
-	{
-		cout << "B_Q is incorrect\n"
-		exit(1);
-	}
-#endif
+	std::vector<size_t> vec_B_Q_pos;
+	vec_B_Q_pos.resize(c_uiNumRobots, std::numeric_limits<size_t>::max());
 
-	std::fill(m_vec_B_Q_pos.begin() , m_vec_B_Q_pos.end(), std::numeric_limits<size_t>::max());
-	
 	for (auto it = B_Q.begin(); it != B_Q.end(); it++)
 	{
-		m_vec_B_Q_pos[get_vertex_ownership(*it)] = get_vertex_position(*it);
+		vec_B_Q_pos[get_vertex_ownership(*it)] = get_vertex_position(*it);
 	}
 
 	//filter_components(B_Q, Q, listComp);
-	filter_components(B_Q, listComp);
+	filter_components(B_Q, vec_B_Q_pos, listComp);
 }
 
 void Alternative_Graph::construct_induced_sub_graph(std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &graph, const std::unordered_set<size_t> &B_Q)
@@ -174,12 +163,12 @@ void Alternative_Graph::construct_induced_sub_graph(std::unordered_map<size_t, s
 }
 
 //void Alternative_Graph::filter_components(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, std::list<std::unordered_set<size_t>> &listComp)
-void Alternative_Graph::filter_components(const std::unordered_set<size_t> &B_Q, std::list<std::unordered_set<size_t>> &listComp)
+void Alternative_Graph::filter_components(const std::unordered_set<size_t> &B_Q, const std::vector<size_t> &vec_B_Q_pos, std::list<std::unordered_set<size_t>> &listComp)
 {
 	for (auto it = listComp.begin(); it != listComp.end(); )
 	{
 		//if (true == contains_incoming_edge(B_Q, Q, *it))
-		if (true == contains_incoming_edge(B_Q, *it))
+		if (true == contains_incoming_edge(B_Q, vec_B_Q_pos, *it))
 		{
 			it = listComp.erase(it);			// it is okay to erase because the list components form a DAG
 		}
@@ -189,7 +178,7 @@ void Alternative_Graph::filter_components(const std::unordered_set<size_t> &B_Q,
 }
 
 //bool Alternative_Graph::contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, const std::unordered_set<size_t> &comp)
-bool Alternative_Graph::contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &comp)
+bool Alternative_Graph::contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::vector<size_t> &vec_B_Q_pos, const std::unordered_set<size_t> &comp)
 {
 	size_t uiHeadVtx , uiTailVtx, uiTailRobot, uiTailVtxPos;
 	for (auto it1 = comp.begin(); it1 != comp.end(); it1++)
@@ -205,7 +194,7 @@ bool Alternative_Graph::contains_incoming_edge(const std::unordered_set<size_t> 
 			uiTailRobot = get_vertex_ownership(uiTailVtx);
 			uiTailVtxPos = get_vertex_position(uiTailVtx);
 
-			if (uiTailVtxPos > m_vec_B_Q_pos[uiTailRobot]) return true;
+			if (uiTailVtxPos > vec_B_Q_pos[uiTailRobot]) return true;
 		}
 	}
 	return false;

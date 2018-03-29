@@ -10,10 +10,6 @@
 #include <fstream>
 #include "Schedule_Validity_Check.h"
 
-#ifdef ENABLE_FULL_CHECKING
-#include "Alternative_Graph.h"
-#endif
-
 //#define COMPRESSION_ENABLE
 
 struct ST_Time
@@ -71,9 +67,5 @@ struct Comparison_Object
 void print_sequence(const std::vector<std::list<size_t>> &rob_seq);
 void print_schedule(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
 void dump_data_to_file(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strFolder, std::string strFileName, bool bFeasible);
-
-#ifdef ENABLE_FULL_CHECKING
-void check_state_correctness(const State &state, const Alternative_Graph& alt_graph);
-#endif
 
 #endif
