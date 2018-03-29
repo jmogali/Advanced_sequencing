@@ -79,7 +79,7 @@ void Greedy_Heuristic_old::populate_root_node_info(State &root, const std::vecto
 {
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
-		root.m_vec_rob_pos_itr[uiRobot] = rob_seq[uiRobot].begin();
+		root.m_vec_rob_pos[uiRobot] = rob_seq[uiRobot].begin();
 	}	
 }
 
@@ -136,7 +136,7 @@ int Greedy_Heuristic_old::check_if_final_state(const State& state)
 	const auto &vec_depo = m_graph.getDepotMap();
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
-		if (*state.m_vec_rob_pos_itr[uiRobot] != vec_depo.at(uiRobot).getToInd())
+		if (*state.m_vec_rob_pos[uiRobot] != vec_depo.at(uiRobot).getToInd())
 			return 0;
 	}
 	return 1;
@@ -170,10 +170,10 @@ int Greedy_Heuristic_old::check_if_coll_feasible(const State& state)
 
 	for (size_t uiRobot1 = 0; uiRobot1 < m_uiNumRobots; uiRobot1++)
 	{
-		N_Ind Ind1(*state.m_vec_rob_pos_itr[uiRobot1]);
+		N_Ind Ind1(*state.m_vec_rob_pos[uiRobot1]);
 		for (size_t uiRobot2 = uiRobot1 + 1; uiRobot2 < m_uiNumRobots; uiRobot2++)
 		{
-			N_Ind Ind2(*state.m_vec_rob_pos_itr[uiRobot2]);
+			N_Ind Ind2(*state.m_vec_rob_pos[uiRobot2]);
 			if (true == m_graph.areColliding(Coll_Pair(Ind1, uiRobot1, Ind2, uiRobot2)))
 				return -1;
 		}
@@ -196,7 +196,7 @@ int Greedy_Heuristic_old::check_if_enabling_feasible(const State& state)
 
 bool Greedy_Heuristic_old::check_if_self_enabling(size_t uiRobot, const State& state)
 {
-	N_Ind Ind(*state.m_vec_rob_pos_itr[uiRobot]);
+	N_Ind Ind(*state.m_vec_rob_pos[uiRobot]);
 
 	if ("H" != m_graph.getType(Ind)) return true;
 
@@ -236,7 +236,7 @@ bool Greedy_Heuristic_old::check_if_self_enabling(size_t uiRobot, const State& s
 
 bool Greedy_Heuristic_old::check_if_other_enabling(size_t uiRobot, const State& state)
 {
-	N_Ind Ind(*state.m_vec_rob_pos_itr[uiRobot]);
+	N_Ind Ind(*state.m_vec_rob_pos[uiRobot]);
 	const auto &vec_Enablers = m_graph.get_Enablers();
 	
 	for (size_t uiOtherRobot = 0; uiOtherRobot < m_uiNumRobots; uiOtherRobot++)
@@ -275,8 +275,8 @@ void Greedy_Heuristic_old::compute_succ_nodes(const size_t uiCurrTime, const Sta
 		for (size_t uiCount2 = 0; uiCount2 < vec_robot_incr[uiCount1].size(); uiCount2++)
 		{
 			uiRobot = vec_robot_incr[uiCount1][uiCount2];			
-			child.m_vec_rob_pos_itr[uiRobot]++;
-			N_Ind Ind(*state.m_vec_rob_pos_itr[uiRobot]);
+			child.m_vec_rob_pos[uiRobot]++;
+			N_Ind Ind(*state.m_vec_rob_pos[uiRobot]);
 			assert(m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime != ST_Time::UNSET);
 			uiTime = std::max( m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime + m_graph.getTime(Ind) , uiTime);
 		}
@@ -294,7 +294,7 @@ std::pair<int, int> Greedy_Heuristic_old::compute_greedy_heursitic1(const size_t
 	
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
-		auto it = state.m_vec_rob_pos_itr[uiRobot];
+		auto it = state.m_vec_rob_pos[uiRobot];
 		assert(m_rob_hole_times[uiRobot].at(*it).m_uiStartTime != ST_Time::UNSET);
 		ui_comp_Time = m_rob_hole_times[uiRobot].at(*it).m_uiStartTime + m_graph.getTime(*it);
 		if (uiTime >= ui_comp_Time)
@@ -335,7 +335,7 @@ void Greedy_Heuristic_old::get_updatable_robots(const State& state, std::vector<
 	const auto &vec_depots = m_graph.getDepotMap();
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
-		if (*state.m_vec_rob_pos_itr[uiRobot] != vec_depots.at(uiRobot).getToInd())
+		if (*state.m_vec_rob_pos[uiRobot] != vec_depots.at(uiRobot).getToInd())
 			set_robots.push_back(uiRobot);
 	}
 }
@@ -350,7 +350,7 @@ void Greedy_Heuristic_old::update_visited_states_schedule(size_t uiCurrTime, siz
 
 void Greedy_Heuristic_old::update_visited_all_states_schedule(size_t uiRobot, size_t uiCurrTime, size_t uiDepth, const State& state)
 {
-	auto it = state.m_vec_rob_pos_itr[uiRobot];
+	auto it = state.m_vec_rob_pos[uiRobot];
 	N_Ind Ind(*it);
 	if (m_set_prev_all_states[uiRobot].find(Ind) == m_set_prev_all_states[uiRobot].end())
 	{
@@ -377,7 +377,7 @@ void Greedy_Heuristic_old::remove_visited_state_and_schedule(size_t uiDepth, con
 
 void Greedy_Heuristic_old::remove_visited_all_states_schedule(size_t uiRobot, size_t uiDepth, const State& state)
 {
-	auto it = state.m_vec_rob_pos_itr[uiRobot];
+	auto it = state.m_vec_rob_pos[uiRobot];
 	N_Ind Ind(*it);
 	if (uiDepth == m_set_prev_all_states[uiRobot].at(Ind))
 	{
@@ -421,7 +421,7 @@ void Greedy_Heuristic_old::print_state(size_t uiDepth, size_t uiTime, const Stat
 	cout << "Depth: " << uiDepth << " , Robots loc:";
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
-		cout << *state.m_vec_rob_pos_itr[uiRobot] << " , ";
+		cout << *state.m_vec_rob_pos[uiRobot] << " , ";
 	}
 	cout << " , Time: " << uiTime<<endl;
 }

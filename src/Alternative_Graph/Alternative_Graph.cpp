@@ -115,25 +115,14 @@ void Alternative_Graph::add_alt_arc(size_t uiVtx11, size_t uiVtx12, size_t uiVtx
 	m_vec_vtx_alt_edge_ind_in[uiVtx22].emplace(uiVtx21, uiInd);	
 }
 
-//void Alternative_Graph::get_next_strongly_conn_components(const size_t c_uiNumRobots, const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, std::list<std::unordered_set<size_t>> &listComp)
-void Alternative_Graph::get_next_strongly_conn_components(const size_t c_uiNumRobots, const std::unordered_set<size_t> &B_Q, std::list<std::unordered_set<size_t>> &listComp)
+void Alternative_Graph::get_next_strongly_conn_components(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, std::list<std::unordered_set<size_t>> &listComp)
 {
 	assert(true == listComp.empty());
 	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> graph;
 	construct_induced_sub_graph(graph, B_Q);
 	Kosaraju_Algo obj_strong_conn;
 	obj_strong_conn.compute_maximal_components(graph, listComp);
-
-	std::vector<size_t> vec_B_Q_pos;
-	vec_B_Q_pos.resize(c_uiNumRobots, std::numeric_limits<size_t>::max());
-
-	for (auto it = B_Q.begin(); it != B_Q.end(); it++)
-	{
-		vec_B_Q_pos[get_vertex_ownership(*it)] = get_vertex_position(*it);
-	}
-
-	//filter_components(B_Q, Q, listComp);
-	filter_components(B_Q, vec_B_Q_pos, listComp);
+	filter_components(B_Q, Q, listComp);
 }
 
 void Alternative_Graph::construct_induced_sub_graph(std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &graph, const std::unordered_set<size_t> &B_Q)
@@ -162,13 +151,11 @@ void Alternative_Graph::construct_induced_sub_graph(std::unordered_map<size_t, s
 	}
 }
 
-//void Alternative_Graph::filter_components(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, std::list<std::unordered_set<size_t>> &listComp)
-void Alternative_Graph::filter_components(const std::unordered_set<size_t> &B_Q, const std::vector<size_t> &vec_B_Q_pos, std::list<std::unordered_set<size_t>> &listComp)
+void Alternative_Graph::filter_components(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, std::list<std::unordered_set<size_t>> &listComp)
 {
 	for (auto it = listComp.begin(); it != listComp.end(); )
 	{
-		//if (true == contains_incoming_edge(B_Q, Q, *it))
-		if (true == contains_incoming_edge(B_Q, vec_B_Q_pos, *it))
+		if (true == contains_incoming_edge(B_Q, Q, *it))
 		{
 			it = listComp.erase(it);			// it is okay to erase because the list components form a DAG
 		}
@@ -177,24 +164,18 @@ void Alternative_Graph::filter_components(const std::unordered_set<size_t> &B_Q,
 	}	
 }
 
-//bool Alternative_Graph::contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, const std::unordered_set<size_t> &comp)
-bool Alternative_Graph::contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::vector<size_t> &vec_B_Q_pos, const std::unordered_set<size_t> &comp)
+bool Alternative_Graph::contains_incoming_edge(const std::unordered_set<size_t> &B_Q, const std::unordered_set<size_t> &Q, const std::unordered_set<size_t> &comp)
 {
-	size_t uiHeadVtx , uiTailVtx, uiTailRobot, uiTailVtxPos;
+	size_t uiHeadVtx , uiTailVtx;
 	for (auto it1 = comp.begin(); it1 != comp.end(); it1++)
 	{
 		uiHeadVtx = *it1;
 		for (auto it2 = m_vec_adj_set_in[uiHeadVtx].begin(); it2 != m_vec_adj_set_in[uiHeadVtx].end(); it2++)
 		{
 			uiTailVtx = it2->first;
-			if (comp.find(uiTailVtx) != comp.end()) continue;  // first check whether tail vtx is part of the same synch component
-			if (B_Q.find(uiTailVtx) != B_Q.end()) return true; // check if tail vtx is from another component in B_Q
-			//if (Q.find(uiTailVtx) != Q.end()) return true;   // checks if tail vtx is from one of the unvisited vertices not in B_Q (i.e. Q \ {B_Q})
-			
-			uiTailRobot = get_vertex_ownership(uiTailVtx);
-			uiTailVtxPos = get_vertex_position(uiTailVtx);
-
-			if (uiTailVtxPos > vec_B_Q_pos[uiTailRobot]) return true;
+			if (comp.find(uiTailVtx) != comp.end()) continue;
+			if (B_Q.find(uiTailVtx) != B_Q.end()) return true;
+			if (Q.find(uiTailVtx) != Q.end()) return true;
 		}
 	}
 	return false;
