@@ -27,7 +27,9 @@ bool greedy_heuristic(const std::pair<Comparison_Object, State>& lhs, const std:
 Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power) : m_uiNumRobots(uiRobotNum), m_graph(graph), m_power(power)
 {
 	m_rob_hole_times.resize(uiRobotNum);
+#ifdef	ENABLE_FULL_CHECKING
 	m_set_prev_HD_states.resize(uiRobotNum);
+#endif
 	m_set_prev_all_states.resize(uiRobotNum);
 	m_vec_nc_eft.resize(uiRobotNum);
 	m_bWait = false;
@@ -51,7 +53,9 @@ void Greedy_Heuristic::clear_prev_info_buffers()
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
 		m_rob_hole_times[uiRobot].clear();
+#ifdef	ENABLE_FULL_CHECKING
 		m_set_prev_HD_states[uiRobot].clear();
+#endif
 		m_set_prev_all_states[uiRobot].clear();	
 		m_vec_nc_eft[uiRobot].m_map_eft.clear();
 		m_vec_nc_eft[uiRobot].m_uiNC_Makespan = std::numeric_limits<size_t>::max();
@@ -335,7 +339,7 @@ int Greedy_Heuristic::check_if_enabling_feasible(const State& state)
 	}
 	return 0;
 }
-*/
+
 
 
 bool Greedy_Heuristic::check_if_self_enabling(size_t uiRobot, const State& state)
@@ -405,6 +409,8 @@ bool Greedy_Heuristic::check_if_other_enabling(size_t uiRobot, const State& stat
 	}
 	return false;
 }
+
+*/
 
 // minimize expected makespan
 std::pair<size_t, size_t> Greedy_Heuristic::compute_exp_Mkspn_delay(const size_t uiCurrTime, const State& state)
@@ -509,6 +515,7 @@ void Greedy_Heuristic::update_visited_all_states_schedule(size_t uiRobot, size_t
 		assert(m_rob_hole_times[uiRobot].at(Ind.getInd()).m_uiStartTime == ST_Time::UNSET);
 		m_rob_hole_times[uiRobot].at(Ind.getInd()).m_uiStartTime = uiCurrTime;		
 
+#ifdef	ENABLE_FULL_CHECKING
 		const auto &vec_depo = m_graph.getDepotMap();
 		if (*it == vec_depo.at(uiRobot).getFromInd())
 		{
@@ -517,6 +524,7 @@ void Greedy_Heuristic::update_visited_all_states_schedule(size_t uiRobot, size_t
 		it--;		
 		auto it_insert_HD_states = m_set_prev_HD_states[uiRobot].emplace(*it, uiDepth);
 		assert(true == it_insert_HD_states.second);		
+#endif
 	}
 }
 
@@ -542,11 +550,13 @@ void Greedy_Heuristic::remove_visited_all_states_schedule(size_t uiRobot, size_t
 
 		m_rob_hole_times[uiRobot].at(Ind.getInd()).m_uiStartTime = ST_Time::UNSET;
 
+#ifdef	ENABLE_FULL_CHECKING
 		const auto &vec_depo = m_graph.getDepotMap();
 		if (*it == vec_depo.at(uiRobot).getFromInd()) return;
 		it--;
 		uiErase = m_set_prev_HD_states[uiRobot].erase(*it);
 		assert(1 == uiErase);
+#endif
 	}
 }
 
