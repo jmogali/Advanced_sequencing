@@ -134,9 +134,9 @@ bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::vector<st
 				{
 					it++;	// we need to store the vertex following the enabler
 					uiPos++; // position also needs to be reflected
-					vec_pos_enabler.emplace_back(*it);
+					//vec_pos_enabler.emplace_back(*it);
 					
-					if (map_enabler_pos_vert.at(uiVert).at(uiRobot).first != uiPos)
+					if ( (map_enabler_pos_vert.at(uiVert).at(uiRobot).first != uiPos) || (map_enabler_pos_vert.at(uiVert).at(uiRobot).second != *it))
 					{
 #ifdef WINDOWS
 						cout << "Something wrong with enabler code above \n";
