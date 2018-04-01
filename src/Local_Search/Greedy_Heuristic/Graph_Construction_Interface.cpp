@@ -143,7 +143,7 @@ bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::vector<st
 						assert(true);
 #else
 						cout << "Something wrong with enabler code above \n";
-						exit("-1");
+						exit(-1);
 #endif
 					}
 					
