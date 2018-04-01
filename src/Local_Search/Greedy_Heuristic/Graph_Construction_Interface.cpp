@@ -129,7 +129,7 @@ bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::vector<st
 			size_t uiPos = 0;
 			for (auto it = rob_seq[uiRobot].begin(); it != rob_seq[uiRobot].end(); it++, uiPos++)
 			{
-				map_enabler_pos_vert.emplace(uiVert, std::unordered_map<size_t, std::pair<size_t, size_t>>());
+				//map_enabler_pos_vert.emplace(uiVert, std::unordered_map<size_t, std::pair<size_t, size_t>>());
 				if (vec_enabler.at(uiVert).set.find(*it) != vec_enabler.at(uiVert).set.end())
 				{
 					it++;	// we need to store the vertex following the enabler
@@ -139,14 +139,15 @@ bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::vector<st
 					if (map_enabler_pos_vert.at(uiVert).at(uiRobot).first != uiPos)
 					{
 #ifdef WINDOWS
+						cout << "Something wrong with enabler code above \n";
 						assert(true);
 #else
-						cout << "Something wrong with enabler code above \n"
+						cout << "Something wrong with enabler code above \n";
 						exit("-1");
 #endif
 					}
 					
-					map_enabler_pos_vert.at(uiVert).emplace(uiRobot, std::make_pair(uiPos, *it)); // we need to store the position following the vertex
+					//map_enabler_pos_vert.at(uiVert).emplace(uiRobot, std::make_pair(uiPos, *it)); // we need to store the position following the vertex
 					break;
 				}				
 			}
