@@ -7,7 +7,7 @@
 
 class Greedy_Heuristic_old
 {
-	private:
+	protected:
 		const size_t m_uiNumRobots;
 		const Layout_LS &m_graph;
 		Power_Set &m_power;
@@ -28,7 +28,7 @@ class Greedy_Heuristic_old
 		int check_if_final_state(const State& state);
 		
 		int check_if_feasible(const State& state);
-		int check_if_enabling_feasible(const State& state);
+		virtual int check_if_enabling_feasible(const State& state);
 		bool check_if_self_enabling(size_t uiRobot, const State& state);
 		bool check_if_other_enabling(size_t uiRobot, const State& state);
 		int check_if_coll_feasible(const State& state);
@@ -49,6 +49,7 @@ class Greedy_Heuristic_old
 		void vectorize_schedule(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
 
 		void print_state(size_t uiDepth, size_t uiTime, const State &state);
+		size_t getTime(size_t uiVert);
 	public:
 		Greedy_Heuristic_old(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power);
 		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);

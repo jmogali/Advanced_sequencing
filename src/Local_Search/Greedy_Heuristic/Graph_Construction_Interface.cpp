@@ -69,17 +69,59 @@ void get_verts_not_self_enabled(size_t uiRobot, const std::vector<std::list<size
 
 bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::vector<std::list<size_t>> &rob_seq, const Layout_LS &layout_graph, Alternative_Graph &alt_graph, std::list<arc> &list_prec_arcs_betw_jobs, std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> &map_enabler_pos_vert, std::list<size_t> &list_dep_vert)
 {
-	size_t uiNumRobots = layout_graph.get_num_robots();
-	size_t uiVert;
+	size_t uiNumRobots = layout_graph.get_num_robots(), uiEnablerRobot;
+	size_t uiVert, uiEnablerVtx;
+	size_t uiEnablerPos;
 	std::vector<size_t> vec_pos_enabler;
 	auto &vec_enabler = layout_graph.get_Enablers();
-
+	
 	//for (auto it_vert = dep_vert.begin(); it_vert != dep_vert.end(); it_vert++)
 	for(auto it_vert = list_dep_vert.begin(); it_vert != list_dep_vert.end(); )  //notice for loop has been changed this way because of deletions while iterating
 	{
 		vec_pos_enabler.clear();
 		uiVert = *it_vert;
 		
+		if (map_enabler_pos_vert.end() != map_enabler_pos_vert.find(uiVert)) map_enabler_pos_vert.at(uiVert).clear();
+		else map_enabler_pos_vert.emplace(uiVert, std::unordered_map<size_t, std::pair<size_t, size_t>>());
+
+		//perhaps more effecient to do this way since enablers are in general fewer than number of vertices
+		for (auto it_enabler = vec_enabler.at(uiVert).set.begin(); it_enabler != vec_enabler.at(uiVert).set.end(); it_enabler++)
+		{
+			uiEnablerVtx = it_enabler->getInd();
+			uiEnablerRobot = alt_graph.get_vertex_ownership(uiEnablerVtx);
+			if (uiGivenRobot == uiEnablerRobot) continue; 
+			uiEnablerPos = alt_graph.get_vertex_position(uiEnablerVtx);
+
+			uiEnablerPos++; // we need to store vertex following the enabler;
+			auto res = alt_graph.get_next_vtx_same_job(uiEnablerVtx);
+			assert(true == res.first);
+			uiEnablerVtx = res.second;
+
+			auto it_find = map_enabler_pos_vert.at(uiVert).find(uiEnablerRobot);
+			if (map_enabler_pos_vert.at(uiVert).end() == it_find)
+			{
+				map_enabler_pos_vert.at(uiVert).emplace(uiEnablerRobot, std::make_pair(uiEnablerPos, uiEnablerVtx));				
+			}
+			else if (it_find->second.first > uiEnablerPos)
+			{
+				map_enabler_pos_vert.at(uiVert)[uiEnablerRobot] = std::make_pair(uiEnablerPos, uiEnablerVtx);				
+			}
+		}
+
+		// this step below is crucial, we have to populate vec_pos_enabler correctly (exactly earliest enabler from each robot)
+		//for robots that do not have any enablers to the given vertex, we enter infinty values
+		for (size_t uiRobot = 0; uiRobot < uiNumRobots; uiRobot++)
+		{
+			if (uiGivenRobot == uiRobot) continue;
+			auto it_find = map_enabler_pos_vert.at(uiVert).find(uiRobot);
+			if (map_enabler_pos_vert.at(uiVert).end() == it_find)
+			{
+				map_enabler_pos_vert.at(uiVert).emplace(uiRobot, std::make_pair(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()));
+			}
+			else vec_pos_enabler.emplace_back(it_find->second.second);			
+		}
+		
+#ifdef ENABLE_FULL_CHECKING
 		for (size_t uiRobot = 0; uiRobot < uiNumRobots; uiRobot++)
 		{
 			if (uiGivenRobot == uiRobot) continue;
@@ -93,11 +135,23 @@ bool add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, const std::vector<st
 					it++;	// we need to store the vertex following the enabler
 					uiPos++; // position also needs to be reflected
 					vec_pos_enabler.emplace_back(*it);
+					
+					if (map_enabler_pos_vert.at(uiVert).at(uiRobot).first != uiPos)
+					{
+#ifdef WINDOWS
+						assert(true);
+#else
+						cout << "Something wrong with enabler code above \n"
+						exit("-1");
+#endif
+					}
+					
 					map_enabler_pos_vert.at(uiVert).emplace(uiRobot, std::make_pair(uiPos, *it)); // we need to store the position following the vertex
 					break;
 				}				
 			}
 		}
+#endif
 
 		if (0 == vec_pos_enabler.size()) return false;
 		else if (1 == vec_pos_enabler.size()) 

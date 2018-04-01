@@ -60,6 +60,11 @@ void Greedy_Heuristic_old::allocate_interval_buffer(const std::vector<std::list<
 	}
 }
 
+size_t Greedy_Heuristic_old::getTime(size_t uiVert)
+{
+	return m_graph.getTime(uiVert);
+}
+
 // NC -: No - Collision
 void Greedy_Heuristic_old::compute_NC_makespan(const std::vector<std::list<size_t>> &rob_seq)
 {
@@ -68,7 +73,8 @@ void Greedy_Heuristic_old::compute_NC_makespan(const std::vector<std::list<size_
 		size_t uiMakespan = 0;
 		for (auto it  = rob_seq[uiRobot].begin() ; it != rob_seq[uiRobot].end() ; it++)
 		{
-			uiMakespan += m_graph.getTime(*it);
+			//uiMakespan += m_graph.getTime(*it);
+			uiMakespan += getTime(*it);
 			m_vec_nc_eft[uiRobot].m_map_eft.emplace(*it, uiMakespan);
 		}
 		m_vec_nc_eft[uiRobot].m_uiNC_Makespan = uiMakespan;
@@ -278,7 +284,8 @@ void Greedy_Heuristic_old::compute_succ_nodes(const size_t uiCurrTime, const Sta
 			child.m_vec_rob_pos[uiRobot]++;
 			N_Ind Ind(*state.m_vec_rob_pos[uiRobot]);
 			assert(m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime != ST_Time::UNSET);
-			uiTime = std::max( m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime + m_graph.getTime(Ind) , uiTime);
+			//uiTime = std::max( m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime + m_graph.getTime(Ind) , uiTime);
+			uiTime = std::max(m_rob_hole_times[uiRobot].at(Ind).m_uiStartTime + getTime(Ind.getInd()), uiTime);
 		}
 		auto pr = compute_greedy_heursitic1(uiTime, state);
 		vec_children.emplace_back(std::make_tuple(pr.first, pr.second, (int)vec_robot_incr[uiCount1].size(), uiTime, child)); //need to change this
@@ -296,7 +303,9 @@ std::pair<int, int> Greedy_Heuristic_old::compute_greedy_heursitic1(const size_t
 	{
 		auto it = state.m_vec_rob_pos[uiRobot];
 		assert(m_rob_hole_times[uiRobot].at(*it).m_uiStartTime != ST_Time::UNSET);
-		ui_comp_Time = m_rob_hole_times[uiRobot].at(*it).m_uiStartTime + m_graph.getTime(*it);
+		//ui_comp_Time = m_rob_hole_times[uiRobot].at(*it).m_uiStartTime + m_graph.getTime(*it);
+		ui_comp_Time = m_rob_hole_times[uiRobot].at(*it).m_uiStartTime + getTime(*it);
+
 		if (uiTime >= ui_comp_Time)
 		{
 			uiDelay = uiTime - m_vec_nc_eft[uiRobot].m_map_eft.at(*it);
@@ -407,7 +416,8 @@ void Greedy_Heuristic_old::vectorize_schedule(const std::vector<std::list<size_t
 		for (; it2 != rob_seq[uiRobot].end(); it2++)
 		{
 			uiEnd = m_rob_hole_times[uiRobot].at(*it2).m_uiStartTime;
-			uiWait = uiEnd - m_graph.getTime(*it1) - uiStart;
+			//uiWait = uiEnd - m_graph.getTime(*it1) - uiStart;
+			uiWait = uiEnd - getTime(*it1) - uiStart;
 			vec_rob_sch[uiRobot].emplace_back(*it1, uiStart , uiEnd, uiWait);
 			uiStart = uiEnd;
 			it1++;

@@ -5,6 +5,7 @@
 #include "Node_Partitions.h"
 #include "Greedy_Heuristic.h"
 #include "Greedy_Heuristic_old.h"
+#include "LS_Greedy_Heuristic_old.h"
 #include "Enabling_Graph.h"
 #include <random>
 
@@ -27,7 +28,7 @@ class Local_Search
 		bool check_validity_of_schedule(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
 		
 		//local search section
-		void generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, const Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq, bool bSuccess);
+		void generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, const bool c_bWait, std::vector<std::list<size_t>> &rob_seq, bool bSuccess);
 
 		//local search operators section
 		//random operators section
@@ -50,8 +51,9 @@ class Local_Search
 		void get_Wait_Holes_For_Robot(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, size_t uiRobot, std::vector<std::pair<size_t, size_t>> &vec_wait_ind_pos);
 
 		// scheduling section
-		int perform_greedy_scheduling(Greedy_Heuristic &heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder);
-		int perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
+		int perform_greedy_scheduling(Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder);
+		int perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
+		int perform_greedy_scheduling(LS_Greedy_Heuristic_Old &heur_old, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
 
 	public:
 		Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor);
