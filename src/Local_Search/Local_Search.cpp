@@ -14,7 +14,7 @@ size_t getMakeSpan_From_Schedule(const std::vector<std::vector<Vertex_Schedule>>
 	return uiMakeSpan;
 }
 
-Local_Search::Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor) :m_rng(m_rd()) , m_node_data(node_data) , m_graph(graph), m_dWeight_Factor(dWeightFactor)
+Local_Search::Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor) :m_rng(m_rd()) , m_node_data(node_data) , m_graph(graph), m_dWeight_Factor(dWeightFactor), m_en_graph(graph)
 {
 	srand(time(0));
 }

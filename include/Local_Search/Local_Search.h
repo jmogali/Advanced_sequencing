@@ -17,12 +17,14 @@ class Local_Search
 		const Node_Partitions &m_node_data;
 		const Layout_LS &m_graph;
 		const double m_dWeight_Factor;
+		const Enabling_Graph m_en_graph;
 
 		// Sequence generation section
 		void allocate_holes_to_robots_common_with_bias(std::vector<std::unordered_set<size_t>> &vec_com_hole_par, std::string strBias);
 		void generate_constructive_sequence_VBSS(std::vector<std::list<size_t>> &rob_seq);
-		void gen_seq_VBSS_march_for_robot(size_t uiRobot, std::unordered_set<size_t> &set_holes, std::list<size_t> &hole_seq, const Enabling_Graph &en_graph);
-		
+		void gen_seq_VBSS_march_for_robot(std::vector<std::unordered_set<size_t>> &vec_com_hole_par, std::vector<std::list<size_t>> &rob_seq);
+		bool add_new_enabled_holes(const std::vector<size_t> &vec_rob_curr_node, std::unordered_set<size_t> &set_curr_enabled_holes, const std::unordered_set<size_t> &set_completed_verts);
+
 		// validation section
 		bool check_validity_of_sequence(const std::vector<std::list<size_t>> &rob_seq);
 		bool check_validity_of_schedule(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
