@@ -6,7 +6,7 @@
 #include <list>
 #include <vector>
 #include "Greedy_Heuristic_Utils.h"
-#include "Topological_Sorting_Utils\Topological_Sorting_Utils.h"
+#include "Topological_Sorting_Utils.h"
 
 struct State_pos
 {

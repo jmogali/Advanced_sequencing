@@ -3,7 +3,7 @@
 #define COLLISION_FILTERING_H
 
 #include "Alternative_Graph.h"
-#include "Topological_Sorting_Utils\Topological_Sorting_Utils.h"
+#include "Topological_Sorting_Utils.h"
 
 class Collision_Filtering : public Topological_Sorting_Utils
 {
