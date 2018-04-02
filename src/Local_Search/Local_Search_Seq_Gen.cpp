@@ -129,7 +129,15 @@ void Local_Search::gen_seq_VBSS_march_for_robot(std::vector<std::unordered_set<s
 	for (size_t uiRobot = 0; uiRobot < rob_seq.size(); uiRobot++)
 	{
 		rob_seq[uiRobot].emplace_back(m_node_data.m_rob_depo[uiRobot].second);
+#ifdef WINDOWS		
 		assert(rob_seq[uiRobot].size() == vec_com_hole_par[uiRobot].size());
+#else
+		if(rob_seq[uiRobot].size() != vec_com_hole_par[uiRobot].size())
+		{
+			cout << "Certain holes are not covered in VBSS march\n";
+			exit(-1);
+		}
+#endif		
 	}
 }
 
