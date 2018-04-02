@@ -17,7 +17,8 @@ class Greedy_Heuristic_old
 		std::unordered_map<State, int, StateHasher> m_map_states_feas;                       // -1 is infeasible, 0 if feasible
 		std::unordered_map<N_Ind, bool, IndHasher> m_map_self_enabling;
 		std::vector<std::unordered_map<N_Ind, ST_Time, IndHasher>> m_rob_hole_times;
-		
+		std::vector<std::pair<size_t, size_t>> m_vec_rob_first_last_vtx;
+
 		void perform_initializations(const std::vector<std::list<size_t>> &rob_seq);
 		void clear_prev_info_buffers();
 		void allocate_interval_buffer(const std::vector<std::list<size_t>> &rob_seq);
@@ -36,6 +37,7 @@ class Greedy_Heuristic_old
 		void compute_succ_nodes(const size_t uiCurrTime, const State& state, std::vector<std::tuple<int, int, int, size_t, State>> &vec_children);
 		const std::vector<std::vector<size_t>>& get_child_states_iter_inc(const State& state);
 		void get_updatable_robots(const State& state, std::vector<size_t> &set_robots);
+		void set_first_last_vertices(const std::vector<std::list<size_t>> &rob_seq);
 
 		void update_visited_states_schedule(size_t uiCurrTime, size_t uiDepth, const State& state);
 		void update_visited_all_states_schedule(size_t uiRobot, size_t uiCurrTime, size_t uiDepth, const State& state);
