@@ -9,7 +9,7 @@ class LS_Greedy_Heuristic_Old : public Greedy_Heuristic_old
 	private:
 		std::unordered_map<size_t, size_t> m_map_rob_start_vtx; // <start vtx , time> //we are not storing the corresponding robot
 		std::unordered_set<size_t> m_set_skip_enabling; // vertices that are already enabled
-
+		
 		size_t getTime(size_t uiVert);
 		void clear_prev_info_buffers();
 		void perform_initializations(const std::vector<std::list<size_t>> &rob_seq, const std::vector<size_t>& vec_start_times, const std::unordered_set<size_t> &set_enabled_verts);
