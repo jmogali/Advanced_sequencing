@@ -9,8 +9,8 @@ void Hole_Exchange::construct_state_transition_path(const std::vector<std::vecto
 
 	while (!bEnd)
 	{
-		m_vec_state_path.emplace_back(State_pos(m_uiNumRobots));
-		State_pos &newState = m_vec_state_path[m_vec_state_path.size() - 1];
+		m_vec_state_path.emplace_back(State_vtx(m_uiNumRobots));
+		State_vtx &newState = m_vec_state_path[m_vec_state_path.size() - 1];
 		uiNextTime = std::numeric_limits<size_t>::max();
 
 		for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
@@ -43,26 +43,27 @@ void Hole_Exchange::construct_state_transition_path(const std::vector<std::vecto
 	}
 }
 
-void Hole_Exchange::construct_rob_sub_sequences(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<std::list<size_t>> &rob_seq, const std::vector<State_pos> &vec_state_path
-												, std::vector<std::pair<std::list<size_t>::const_iterator, std::list<size_t>::const_iterator>> &vec_start_end_itr, std::unordered_set<size_t> &set_comp_verts)
+void Hole_Exchange::construct_rob_sub_sequences(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<std::list<size_t>> &rob_seq, const std::vector<State_vtx> &vec_state_path
+												, std::vector<std::tuple<std::list<size_t>::const_iterator, std::list<size_t>::const_iterator, size_t>> &vec_start_end_itr_start_pos, std::unordered_set<size_t> &set_comp_verts)
 {
-	size_t uiStartHole, uiEndHole;
+	size_t uiStartVtx, uiEndVtx;
 	rob_sub_seq.clear();
 	rob_sub_seq.resize(m_uiNumRobots);
 	assert(0 == set_comp_verts.size());
 
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
-		uiStartHole = vec_state_path[c_uiLeft].m_vec_rob_vtx[uiRobot];
-		uiEndHole = vec_state_path[c_uiRight].m_vec_rob_vtx[uiRobot];
+		uiStartVtx = vec_state_path[c_uiLeft].m_vec_rob_vtx[uiRobot];
+		uiEndVtx = vec_state_path[c_uiRight].m_vec_rob_vtx[uiRobot];
 		bool bAdd = false;
+		size_t uiStartPos = 0;
 
-		for (auto it = rob_seq[uiRobot].cbegin(); it != rob_seq[uiRobot].cend(); it++)
+		for (auto it = rob_seq[uiRobot].cbegin(); it != rob_seq[uiRobot].cend(); it++, uiStartPos++)
 		{
-			if (*it == uiStartHole)
+			if (*it == uiStartVtx)
 			{
 				bAdd = true;
-				vec_start_end_itr.emplace_back(std::make_pair(it, rob_seq[uiRobot].end()));
+				vec_start_end_itr_start_pos.emplace_back(std::make_tuple(it, rob_seq[uiRobot].end(), uiStartPos));
 			}
 
 			if (bAdd) rob_sub_seq[uiRobot].emplace_back(*it);
@@ -71,54 +72,72 @@ void Hole_Exchange::construct_rob_sub_sequences(std::vector<std::list<size_t>> &
 				if("IV" != m_graph.getType(*it)) set_comp_verts.emplace(*it); // we are not storing "IV" here
 			}
 
-			if (*it == uiEndHole)
+			if (*it == uiEndVtx)
 			{
-				vec_start_end_itr[uiRobot].second = it;
+				std::get<1>(vec_start_end_itr_start_pos[uiRobot]) = it;
 				break;
 			}
 		}
 	}
 }
 
-void Hole_Exchange::construct_rob_sub_sequences_with_iterators(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<std::list<size_t>> &rob_seq, const std::vector<State_pos> &vec_state_path
-	, std::vector<std::pair<std::list<size_t>::const_iterator, std::list<size_t>::const_iterator>> &vec_start_end_itr, std::unordered_set<size_t> &set_comp_verts)
+void Hole_Exchange::construct_rob_sub_sequences_with_iterators(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<State_vtx> &vec_state_path
+	, std::vector<std::tuple<std::list<size_t>::const_iterator, std::list<size_t>::const_iterator, size_t>> &vec_start_end_itr_start_pos, std::unordered_set<size_t> &set_comp_verts)
 
 {
-	size_t uiStartHole, uiEndHole, uiErase;
+	size_t uiStartVtx, uiEndVtx;
 	rob_sub_seq.clear();
 	rob_sub_seq.resize(m_uiNumRobots);
 	
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
-		uiStartHole = vec_state_path[c_uiLeft].m_vec_rob_vtx[uiRobot];
-		uiEndHole = vec_state_path[c_uiRight].m_vec_rob_vtx[uiRobot];
+		uiStartVtx = vec_state_path[c_uiLeft].m_vec_rob_vtx[uiRobot];
+		uiEndVtx = vec_state_path[c_uiRight].m_vec_rob_vtx[uiRobot];
 		
-		while (uiStartHole != *vec_start_end_itr[uiRobot].first)
+		while (1)
 		{
-			uiErase = set_comp_verts.erase(*vec_start_end_itr[uiRobot].first);
-#ifdef WINDOWS
-			assert(1 == uiErase);
-#else
-			if (1 != uiErase)
+			set_comp_verts.erase(*(std::get<0>(vec_start_end_itr_start_pos[uiRobot])));
+			
+			if (*rob_sub_seq[uiRobot].begin() != *(std::get<0>(vec_start_end_itr_start_pos[uiRobot])))
 			{
-				cout << "Mistake in updation of completed vertices\n";
-				exit(-1);
+				rob_sub_seq[uiRobot].emplace_front(*(std::get<0>(vec_start_end_itr_start_pos[uiRobot])));
 			}
-#endif
-			vec_start_end_itr[uiRobot].first--;
+
+			if (uiStartVtx == *(std::get<0>(vec_start_end_itr_start_pos[uiRobot]))) break;
+			std::get<0>(vec_start_end_itr_start_pos[uiRobot])--;
+			std::get<2>(vec_start_end_itr_start_pos[uiRobot])--;
 		}
 
-		while (uiEndHole != *vec_start_end_itr[uiRobot].second)
+		while (uiEndVtx != *(std::get<1>(vec_start_end_itr_start_pos[uiRobot])))
 		{
-			vec_start_end_itr[uiRobot].second++;
-		}
+			std::get<1>(vec_start_end_itr_start_pos[uiRobot])++;
+			rob_sub_seq[uiRobot].emplace_back(*(std::get<1>(vec_start_end_itr_start_pos[uiRobot])));
+		}		
+	}
+}
 
-		auto it = vec_start_end_itr[uiRobot].first;
-		while(1)
+void Hole_Exchange::compute_enabled_holes_for_rob_sub_seq(const std::vector<std::list<size_t>> &rob_sub_seq, const std::unordered_set<size_t> &set_comp_verts, std::unordered_set<size_t> set_enabled_holes)
+{
+	set_enabled_holes.clear();
+	const auto &vec_Enablers = m_graph.get_Enablers();
+
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		for (auto it = rob_sub_seq[uiRobot].begin(); it != rob_sub_seq[uiRobot].end(); it++)
 		{
-			rob_sub_seq[uiRobot].emplace_back(*it);
-			if (it == vec_start_end_itr[uiRobot].second) break;
-			it++;
+			if ("H" != m_graph.getType(*it)) continue;
+			bool bEnabled = false;
+
+			for (auto it_enablers = vec_Enablers.at(*it).set.cbegin(); it_enablers != vec_Enablers.at(*it).set.cend(); it_enablers++)
+			{
+				if (set_comp_verts.end() != set_comp_verts.find(it_enablers->getInd()))
+				{
+					bEnabled = true;
+					break;
+				}
+			}
+
+			if (bEnabled) set_enabled_holes.emplace(*it);
 		}
 	}
 }
