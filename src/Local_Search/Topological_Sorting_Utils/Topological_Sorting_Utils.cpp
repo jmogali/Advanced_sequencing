@@ -8,20 +8,19 @@ void Topological_Sorting_Utils::clear_prev_info()
 	m_list_Super_Comp.clear();
 }
 
-// m_out_graph(m_in_graph) graphs are different from those in alt_graph in the sense that some vertices correspond to strongly connected components
-void Topological_Sorting_Utils::construct_in_out_graphs(const Alternative_Graph &alt_graph)
+void Topological_Sorting_Utils::construct_in_out_graphs(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph)
 {
-	construct_out_graph(alt_graph);
+	construct_out_graph(out_graph, in_graph);
 	construct_in_graph();
 }
 
-void Topological_Sorting_Utils::construct_out_graph(const Alternative_Graph &alt_graph)
+void Topological_Sorting_Utils::construct_out_graph(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph)
 {
 	size_t uiVtx;
 	int iVtx;
 	int iNewLabel = -1; // numbering it starting with -1 is very important, note we are decrementing
-	const auto& out_alt_graph = alt_graph.getGraph();
-	const auto& in_alt_graph = alt_graph.getReverseGraph();
+	const auto& out_alt_graph = out_graph;
+	const auto& in_alt_graph = in_graph;
 	std::unordered_map<size_t, int> str_comp_vtx_map;	// size_t, int
 
 	// at this point, m_list_Super_Comp contains only components with 2 or more vertices
@@ -132,11 +131,8 @@ void Topological_Sorting_Utils::Topological_Dfs(int iVtx, std::unordered_map<int
 	m_list_order.push_front(iVtx);
 }
 
-bool Topological_Sorting_Utils::Check_Pos_Loop_Remove_1comp(const Alternative_Graph &alt_graph, const size_t c_uiNumRobots)
+void Topological_Sorting_Utils::Remove_1comp()
 {
-	size_t uiVtx1, uiVtx2, uiRobot;
-	const auto& out_alt_graph = alt_graph.getGraph();
-
 	for (auto it_list = m_list_Super_Comp.begin(); it_list != m_list_Super_Comp.end(); )
 	{
 		if (1 == it_list->size())
@@ -144,36 +140,59 @@ bool Topological_Sorting_Utils::Check_Pos_Loop_Remove_1comp(const Alternative_Gr
 			it_list = m_list_Super_Comp.erase(it_list);
 			continue;
 		}
-		else if (it_list->size() > c_uiNumRobots) return true;  // assumes that all jobs have > 0 durations
-
-		for (auto it_vtx1 = it_list->begin(); it_vtx1 != it_list->end(); it_vtx1++)
-		{
-			uiVtx1 = *it_vtx1;
-			uiRobot = alt_graph.get_vertex_ownership(uiVtx1);
-
-			for (auto it_vtx2 = out_alt_graph.at(uiVtx1).begin(); it_vtx2 != out_alt_graph.at(uiVtx1).end(); it_vtx2++)
-			{
-				uiVtx2 = it_vtx2->first;
-				if (uiRobot == alt_graph.get_vertex_ownership(uiVtx2))
-				{
-					if (it_list->end() != it_list->find(uiVtx2)) return true;
-				}
-			}
-		}
 		it_list++;
-	}
-	return false;
+	}	
 }
 
-bool Topological_Sorting_Utils::construct_graph_populate_order(const Alternative_Graph &alt_graph, const size_t c_uiNumRobots)
+size_t Topological_Sorting_Utils::get_any_vertex_from_scc(int iVtx)
+{
+#ifdef WINDOWS
+	assert(iVtx < 0);
+#else
+	if (iVtx >= 0)
+	{
+		cout << "Incorrect usage of vertices from scc \n";
+		exit(-1);
+	}
+#endif
+
+	auto it_comp = m_list_Super_Comp.begin();
+	size_t uiComp = (size_t)(-1 * iVtx) - 1;
+	std::advance(it_comp, uiComp);
+
+#ifdef WINDOWS
+	assert(it_comp->size() > 1);
+#else
+	if (it_comp->size() <= 1)
+	{
+		cout << "SCC were not correctly filtered earlier \n";
+		exit(-1);
+	}
+#endif
+	return *(it_comp->begin());
+}
+
+
+int Topological_Sorting_Utils::get_vtx_containing_rob_vtx(size_t uiVtx)
+{
+	if (m_out_graph.end() != m_out_graph.find((int)uiVtx)) return (int)uiVtx;
+
+	int iVtx = -1; // this initialization is crucial
+	for (auto it_list = m_list_Super_Comp.begin(); it_list != m_list_Super_Comp.end(); it_list++, iVtx--)
+	{
+		if (it_list->end() != it_list->find(uiVtx)) return iVtx;
+	}
+
+	assert(false); // should not occur, the vertex must have been found earlier
+	return std::numeric_limits<int>::max();
+}
+
+void Topological_Sorting_Utils::construct_graph_populate_order(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph)
 {
 	clear_prev_info();
 	Kosaraju_Algo obj;
-	obj.compute_maximal_components(alt_graph.getGraph(), alt_graph.getReverseGraph(), m_list_Super_Comp);
-	bool bFeasible = !(Check_Pos_Loop_Remove_1comp(alt_graph, c_uiNumRobots));
-	if (false == bFeasible) return false;
-
-	construct_in_out_graphs(alt_graph);
-	Topological_sort_out_graph();
-	return true;
+	obj.compute_maximal_components(out_graph, in_graph, m_list_Super_Comp);
+	Remove_1comp();	
+	construct_in_out_graphs(out_graph, in_graph);
+	Topological_sort_out_graph();	
 }

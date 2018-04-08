@@ -49,13 +49,13 @@ void Local_Search::allocate_holes_to_robots_common_with_bias(std::vector<std::un
 
 bool Local_Search::add_new_enabled_holes(const std::vector<size_t> &vec_rob_curr_node, std::unordered_set<size_t> &set_rem_enabled_holes, const std::unordered_set<size_t> &set_completed_verts)
 {
-	const auto& map_enablers = m_en_graph.get_Node_vec();
+	const auto& map_enabled = m_en_graph.get_Node_vec();
 	bool bAdded = false;
 
 	for (size_t uiRobot = 0; uiRobot < vec_rob_curr_node.size(); uiRobot++)
 	{
-		const auto& vtx_vec_enablers = map_enablers.at(vec_rob_curr_node[uiRobot]).get_neighs();
-		for (auto it = vtx_vec_enablers.begin(); it != vtx_vec_enablers.end(); it++)
+		const auto& vtx_vec_enabled = map_enabled.at(vec_rob_curr_node[uiRobot]).get_neighs();
+		for (auto it = vtx_vec_enabled.begin(); it != vtx_vec_enabled.end(); it++)
 		{
 			size_t uiNeigh = *it;
 			if (uiNeigh == m_node_data.m_rob_depo[uiRobot].second) continue;			
@@ -78,7 +78,6 @@ void Local_Search::gen_seq_VBSS_march_for_robot(std::vector<std::unordered_set<s
 {
 	std::unordered_set<size_t> set_compl_verts;
 	std::unordered_set<size_t> set_rem_enabled_holes;
-	const auto& map_enablers = m_en_graph.get_Node_vec();
 	std::vector<size_t> vec_rob_curr_node;
 	
 	//add start depots for each robot

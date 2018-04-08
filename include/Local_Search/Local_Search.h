@@ -5,7 +5,7 @@
 #include "Node_Partitions.h"
 #include "Greedy_Heuristic.h"
 #include "Greedy_Heuristic_old.h"
-#include "LS_Greedy_Heuristic_old.h"
+#include "LS_Greedy_Heuristic.h"
 #include "Enabling_Graph.h"
 #include <random>
 
@@ -55,12 +55,13 @@ class Local_Search
 		// scheduling section
 		int perform_greedy_scheduling(Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder);
 		int perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
-		int perform_greedy_scheduling(LS_Greedy_Heuristic_Old &heur_old, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
+		int perform_greedy_scheduling(LS_Greedy_Heuristic &ls_heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder, bool bDummy);
 
 	public:
 		Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor);
 		void perform_local_search(std::string strFolderPath, std::string strDataDumpFolder);
 		void perform_VBSS_search(std::string strFolderPath);
+		inline const Enabling_Graph& get_Enabling_graph() { return m_en_graph; };
 };
 
 bool string_Exchange(std::list<size_t> &r1, const std::pair<size_t, size_t> &pr1, size_t uiRobot1, std::list<size_t> &r2, const std::pair<size_t, size_t> &pr2, size_t uiRobot2, const Layout_LS& graph);

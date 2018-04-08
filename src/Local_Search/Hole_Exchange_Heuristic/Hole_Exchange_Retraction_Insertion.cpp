@@ -1,6 +1,6 @@
 #include "Hole_exchanges.h"
 
-size_t get_first_occurence_index(size_t uiVtx, size_t uiRobot, const std::vector<State_vtx> &vec_state_path)
+size_t get_first_occurence_index(size_t uiVtx, size_t uiRobot, const std::vector<State_vtx_time> &vec_state_path)
 {
 	for (size_t uiIndex = 0; uiIndex < vec_state_path.size(); uiIndex++)
 	{
@@ -9,7 +9,7 @@ size_t get_first_occurence_index(size_t uiVtx, size_t uiRobot, const std::vector
 	return std::numeric_limits<size_t>::max();
 }
 
-void get_new_left_right_hole_state_offset(const size_t c_uiVtx, const size_t c_uiRobot_Vtx, size_t &uiLeft, size_t &uiRight, const std::vector<State_vtx> &vec_state_path, const Layout_LS &graph, const size_t c_uiIter)
+void get_new_left_right_hole_state_offset(const size_t c_uiVtx, const size_t c_uiRobot_Vtx, size_t &uiLeft, size_t &uiRight, const std::vector<State_vtx_time> &vec_state_path, const Layout_LS &graph, const size_t c_uiIter)
 {
 	size_t uiNewLeft, uiNewRight;
 	bool bFound;
@@ -44,7 +44,7 @@ void get_new_left_right_hole_state_offset(const size_t c_uiVtx, const size_t c_u
 	uiRight = std::min(uiNewRight, vec_state_path.size()-1);
 }
 
-void Hole_Exchange::check_ifsub_seq_construction_correct(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<State_vtx> &vec_state_path)
+void Hole_Exchange::check_ifsub_seq_construction_correct(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<State_vtx_time> &vec_state_path)
 {
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
@@ -119,10 +119,10 @@ void remove_hole_in_rob_seq(size_t c_uiHole, const size_t c_uiRobot, std::vector
 }
 
 //Here we assume inp_seq contains c_uiHole, so care must be taken to remove it when checking for feaibility
-bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const size_t c_uiRobot, const std::vector<State_vtx> &vec_state_path, const std::vector<std::list<size_t>> &inp_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
+bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const size_t c_uiRobot, const std::vector<State_vtx_time> &vec_state_path, const std::vector<std::list<size_t>> &inp_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
 {
 	bool bFeasible = false;
-	size_t uiIter = 0;
+	size_t uiIter = 0, uiRemTime;
 	std::vector<std::tuple<std::list<size_t>::const_iterator, std::list<size_t>::const_iterator, size_t>> vec_start_end_itr_start_pos;
 	std::vector<size_t> vec_start_pos;
 	std::vector<std::list<size_t>> rob_sub_seq;
@@ -154,12 +154,15 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 
 		compute_enabled_holes_for_rob_sub_seq(rob_sub_seq, set_comp_verts, set_enabled_verts);
 		
+		//need to adjust start times to take into the fact that some portion of the work for the hole must have been completed already
 		for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 		{
-			vec_start_times[uiRobot] = vec_rob_sch[uiRobot][std::get<2>(vec_start_end_itr_start_pos[uiRobot])].m_uiStart;
+			int iRemTime = (int)vec_state_path[uiLeftPathIndex].m_uiTime - (int)vec_rob_sch[uiRobot][std::get<2>(vec_start_end_itr_start_pos[uiRobot])].m_uiStart;
+			uiRemTime = (size_t) std::max(0, (int)m_graph.getTime(*std::get<0>(vec_start_end_itr_start_pos[uiRobot])) - iRemTime);
+			vec_start_times[uiRobot] = uiRemTime;
 		}
 
-		int iRetVal = ls_heur.compute_greedy_sol(rob_sub_seq, vec_start_times, set_enabled_verts, new_vec_rob_sub_seq_sch);
+		int iRetVal = m_ls_heur.compute_greedy_sol(rob_sub_seq, vec_start_times, set_enabled_verts, new_vec_rob_sub_seq_sch, "");
 		if (1 == iRetVal) bFeasible = true;
 
 		if (uiRightPathIndex - uiLeftPathIndex>= std::min(c_uiHoleExchMaxLen , vec_state_path.size()-1)) break;
@@ -206,10 +209,10 @@ void insert_hole_in_rob_seq(size_t c_uiHole, const size_t c_uiRobot, const std::
 }
 
 //here obviously inp_seq does not contain c_uiHole
-bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair, const std::vector<State_vtx> &vec_state_path, const std::vector<std::list<size_t>> &inp_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
+bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair, const std::vector<State_vtx_time> &vec_state_path, const std::vector<std::list<size_t>> &inp_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
 {
 	bool bFeasible = false;
-	size_t uiIter = 0;
+	size_t uiIter = 0, uiRemTime;
 	std::vector<std::tuple<std::list<size_t>::const_iterator, std::list<size_t>::const_iterator, size_t>> vec_start_end_itr_start_pos;
 	std::vector<size_t> vec_start_pos;
 	std::vector<std::list<size_t>> rob_sub_seq;
@@ -241,12 +244,15 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 
 		compute_enabled_holes_for_rob_sub_seq(rob_sub_seq, set_comp_verts, set_enabled_verts);
 
+		//need to adjust start times to take into the fact that some portion of the work for the hole must have been completed already
 		for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 		{
-			vec_start_times[uiRobot] = vec_rob_sch[uiRobot][std::get<2>(vec_start_end_itr_start_pos[uiRobot])].m_uiStart;
+			int iRemTime = (int)vec_state_path[uiLeftPathIndex].m_uiTime - (int)vec_rob_sch[uiRobot][std::get<2>(vec_start_end_itr_start_pos[uiRobot])].m_uiStart;
+			uiRemTime = (size_t)std::max(0, (int)m_graph.getTime(*std::get<0>(vec_start_end_itr_start_pos[uiRobot])) - iRemTime);
+			vec_start_times[uiRobot] = uiRemTime;
 		}
 
-		int iRetVal = ls_heur.compute_greedy_sol(rob_sub_seq, vec_start_times, set_enabled_verts, new_vec_rob_sub_seq_sch);
+		int iRetVal = m_ls_heur.compute_greedy_sol(rob_sub_seq, vec_start_times, set_enabled_verts, new_vec_rob_sub_seq_sch, "");
 		if (1 == iRetVal) bFeasible = true;
 
 		if (uiRightPathIndex - uiLeftPathIndex>= std::min(c_uiHoleExchMaxLen, vec_state_path.size() - 1)) break;

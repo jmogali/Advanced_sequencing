@@ -243,34 +243,6 @@ void Update_cost(size_t uiCost, int iVtx, std::vector<std::vector<size_t>> &vec_
 	}	
 }
 
-size_t get_any_vertex_from_scc(int iVtx, const std::list<std::unordered_set<size_t>> &list_Comp)
-{
-#ifdef WINDOWS
-	assert(iVtx < 0);
-#else
-	if (iVtx >= 0)
-	{
-		cout << "Incorrect usage of vertices from scc \n";
-		exit(-1);
-	}
-#endif
-
-	auto it_comp = list_Comp.begin();
-	size_t uiComp = (size_t)(-1 * iVtx) - 1;
-	std::advance(it_comp, uiComp);
-
-#ifdef WINDOWS
-	assert(it_comp->size() > 1);
-#else
-	if (it_comp->size() <= 1)
-	{
-		cout << "SCC were not correctly filtered earlier \n";
-		exit(-1);
-	}
-#endif
-	return *(it_comp->begin());
-}
-
 size_t Collision_Filtering::Compute_FROM_costs_each_Vertex(const Alternative_Graph &alt_graph, std::vector<std::vector<size_t>> &vec_cost_from_source)
 {
 	int iVtx, iPrev; 
@@ -292,7 +264,7 @@ size_t Collision_Filtering::Compute_FROM_costs_each_Vertex(const Alternative_Gra
 		{
 			iPrev = it_prev->first;
 			
-			if(iPrev < 0) uiPrev = get_any_vertex_from_scc(iPrev, m_list_Super_Comp);  // notice that uiPrev and iPrev can be different
+			if(iPrev < 0) uiPrev = get_any_vertex_from_scc(iPrev);  // notice that uiPrev and iPrev can be different
 			else uiPrev = (size_t)iPrev;
 			
 			uiRobot = alt_graph.get_vertex_ownership(uiPrev);
@@ -328,7 +300,7 @@ size_t Collision_Filtering::Compute_GO_costs_each_Vertex(const Alternative_Graph
 		{
 			iNext = it_next->first;
 
-			if(iNext < 0) uiNext = get_any_vertex_from_scc(iNext, m_list_Super_Comp);  // notice that uiPrev and iPrev can be different
+			if(iNext < 0) uiNext = get_any_vertex_from_scc(iNext);  // notice that uiPrev and iPrev can be different
 			else uiNext = (size_t)iNext;
 
 			uiRobot = alt_graph.get_vertex_ownership(uiNext);

@@ -3,9 +3,9 @@
 #define COLLISION_FILTERING_H
 
 #include "Alternative_Graph.h"
-#include "Topological_Sorting_Utils.h"
+#include "Coll_Topological_Sorting_Utils.h"
 
-class Collision_Filtering : public Topological_Sorting_Utils
+class Collision_Filtering : public Coll_Topological_Sorting_Utils
 {
 	private:
 		std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> m_map_bounds; //<N_Ind , <R_Ind , <N_Ind, N_Ind>>>

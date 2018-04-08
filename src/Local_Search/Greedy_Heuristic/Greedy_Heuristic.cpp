@@ -32,12 +32,14 @@ Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &gra
 #endif
 	m_set_prev_all_states.resize(uiRobotNum);
 	m_vec_nc_eft.resize(uiRobotNum);
+	m_vec_rob_first_last_vtx.resize(uiRobotNum, std::make_pair(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()));
 	m_bWait = false;
 	m_bVectorizeSchedule = false;	
 }
 
 bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq, const size_t c_uiUpperBound)
 {
+	set_first_last_vertices(rob_seq);
 	bool bFeasible = construct_Alt_Graph_STN(rob_seq, new_rob_seq, c_uiUpperBound);
 	if (false == bFeasible) return false;
 	allocate_buffers(new_rob_seq);
@@ -46,6 +48,15 @@ bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_
 	m_bWait = false;
 	m_bVectorizeSchedule = false;
 	return true;
+}
+
+void Greedy_Heuristic::set_first_last_vertices(const std::vector<std::list<size_t>> &rob_seq)
+{
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		m_vec_rob_first_last_vtx[uiRobot].first = *rob_seq[uiRobot].begin();
+		m_vec_rob_first_last_vtx[uiRobot].second = *rob_seq[uiRobot].rbegin();
+	}
 }
 
 void Greedy_Heuristic::clear_prev_info_buffers()
@@ -68,6 +79,7 @@ void Greedy_Heuristic::clear_prev_info_buffers()
 	assert(0 == m_set_to_do_verts.size());
 	m_set_to_do_verts.clear();	
 	m_map_enabler_pos_vert.clear();	
+	std::fill(m_vec_rob_first_last_vtx.begin(), m_vec_rob_first_last_vtx.end(), std::make_pair(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()));
 }
 
 // populates buffers for storing timing information
@@ -245,11 +257,11 @@ bool Greedy_Heuristic::wasStatePreviouslySeen(const State &state)
 //checks if last element is depot of that robot
 int Greedy_Heuristic::check_if_final_state(const State& state)
 {
-	const auto &vec_depo = m_graph.getDepotMap();
+	//const auto &vec_depo = m_graph.getDepotMap();
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
-		if (*state.m_vec_rob_pos[uiRobot] != vec_depo.at(uiRobot).getToInd())
-			return 0;
+		//if (*state.m_vec_rob_pos[uiRobot] != vec_depo.at(uiRobot).getToInd()) return 0;
+		if (*state.m_vec_rob_pos[uiRobot] != m_vec_rob_first_last_vtx[uiRobot].second) return 0;
 	}
 	return 1;
 }
@@ -430,8 +442,9 @@ std::pair<size_t, size_t> Greedy_Heuristic::compute_exp_Mkspn_delay(const size_t
 		}
 		else
 		{
-			const auto &vec_depo = m_graph.getDepotMap();
-			if ( *it == vec_depo.at(uiRobot).getFromInd())
+			//const auto &vec_depo = m_graph.getDepotMap();
+			//if ( *it == vec_depo.at(uiRobot).getFromInd())
+			if (*it == m_vec_rob_first_last_vtx[uiRobot].first)
 			{
 				maxMakespan = std::max(m_vec_nc_eft[uiRobot].m_uiNC_Makespan , maxMakespan);
 				uiDelay = 0;
@@ -458,11 +471,11 @@ const std::vector<std::vector<size_t>>& Greedy_Heuristic::get_child_states_iter_
 
 void Greedy_Heuristic::get_updatable_robots(const State& state, std::vector<size_t> &set_robots)
 {
-	const auto &vec_depots = m_graph.getDepotMap();
+	//const auto &vec_depots = m_graph.getDepotMap();
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
-		if (*state.m_vec_rob_pos[uiRobot] != vec_depots.at(uiRobot).getToInd())
-			set_robots.push_back(uiRobot);
+		//if (*state.m_vec_rob_pos[uiRobot] != vec_depots.at(uiRobot).getToInd()) set_robots.push_back(uiRobot);
+		if (*state.m_vec_rob_pos[uiRobot] != m_vec_rob_first_last_vtx[uiRobot].second) set_robots.push_back(uiRobot);
 	}
 }
 
@@ -516,11 +529,9 @@ void Greedy_Heuristic::update_visited_all_states_schedule(size_t uiRobot, size_t
 		m_rob_hole_times[uiRobot].at(Ind.getInd()).m_uiStartTime = uiCurrTime;		
 
 #ifdef	ENABLE_FULL_CHECKING
-		const auto &vec_depo = m_graph.getDepotMap();
-		if (*it == vec_depo.at(uiRobot).getFromInd())
-		{
-			return;
-		}
+		//const auto &vec_depo = m_graph.getDepotMap();
+		//if (*it == vec_depo.at(uiRobot).getFromInd()) return;
+		if (*it == m_vec_rob_first_last_vtx[uiRobot].first) return;
 		it--;		
 		auto it_insert_HD_states = m_set_prev_HD_states[uiRobot].emplace(*it, uiDepth);
 		assert(true == it_insert_HD_states.second);		
@@ -551,8 +562,10 @@ void Greedy_Heuristic::remove_visited_all_states_schedule(size_t uiRobot, size_t
 		m_rob_hole_times[uiRobot].at(Ind.getInd()).m_uiStartTime = ST_Time::UNSET;
 
 #ifdef	ENABLE_FULL_CHECKING
-		const auto &vec_depo = m_graph.getDepotMap();
-		if (*it == vec_depo.at(uiRobot).getFromInd()) return;
+		//const auto &vec_depo = m_graph.getDepotMap();
+		//if (*it == vec_depo.at(uiRobot).getFromInd()) return;
+		if (*it == m_vec_rob_first_last_vtx[uiRobot].first) return;
+
 		it--;
 		uiErase = m_set_prev_HD_states[uiRobot].erase(*it);
 		assert(1 == uiErase);

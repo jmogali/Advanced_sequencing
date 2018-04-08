@@ -11,13 +11,9 @@
 class Topological_Sorting_Utils
 {
 	private:
-		void clear_prev_info();
-		void construct_in_out_graphs(const Alternative_Graph &alt_graph);
-		bool Check_Pos_Loop_Remove_1comp(const Alternative_Graph &alt_graph, const size_t c_uiNumRobots);
-		void construct_out_graph(const Alternative_Graph &alt_graph);
+		void Remove_1comp();
+		void construct_out_graph(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph);
 		void construct_in_graph();
-
-		void Topological_sort_out_graph();
 		void Topological_Dfs(int iVtx, std::unordered_map<int, std::string> &map_seen);
 
 	protected:
@@ -26,7 +22,18 @@ class Topological_Sorting_Utils
 		std::unordered_map<int, std::unordered_map<int, size_t>> m_in_graph;	//  <vtx, <in_vtx, arc cost>> 
 		std::list<int> m_list_order;
 
-		bool construct_graph_populate_order(const Alternative_Graph &alt_graph, const size_t c_uiNumRobots);
+		void clear_prev_info();
+		void construct_in_out_graphs(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph);	
+		void Topological_sort_out_graph();
+		size_t get_any_vertex_from_scc(int iVtx);
+		int get_vtx_containing_rob_vtx(size_t uiVtx);
+		void construct_graph_populate_order(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph);
+
+	public:
+		inline const std::list<int>& get_top_list() const { return m_list_order; };
+		inline const std::unordered_map<int, std::unordered_map<int, size_t>>& get_out_graph() const { return m_out_graph; };
+		inline const std::unordered_map<int, std::unordered_map<int, size_t>>& get_in_graph() const { return m_in_graph; };
+		inline const std::list<std::unordered_set<size_t>>& get_super_comp() const { return m_list_Super_Comp; };
 };
 
 #endif
