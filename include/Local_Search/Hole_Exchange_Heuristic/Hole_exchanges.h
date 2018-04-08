@@ -31,8 +31,10 @@ class Hole_Exchange
 		std::unordered_map<size_t, std::unordered_map<size_t, size_t>> m_alt_out_graph;   // <vtx, <out_vtx, arc cost>>
 		std::unordered_map<size_t, std::unordered_map<size_t, size_t>> m_alt_in_graph;	//  <vtx, <in_vtx, arc cost>> 
 		std::unordered_map<size_t, size_t> m_map_start_times; //<vtx, start time>
+		std::unordered_map<size_t, size_t> m_hole_rob_owner; //<vtx, robot>
 
 		void clear_prev_info();
+		void populate_robot_owners(const std::vector<std::list<size_t>> &rob_seq);
 		void populate_rob_graphs(const Alternative_Graph &alt_graph);
 
 		//picking hole function
@@ -45,7 +47,8 @@ class Hole_Exchange
 		bool check_if_retraction_feasible(const size_t c_uiVtx, const size_t c_uiRobot, const std::vector<State_vtx_time> &vec_state_path, const std::vector<std::list<size_t>> &inp_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
 		bool check_if_insertion_feasible(const size_t c_uiVtx, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair,const std::vector<State_vtx_time> &vec_state_path, const std::vector<std::list<size_t>> &inp_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
 		void check_ifsub_seq_construction_correct(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<State_vtx_time> &vec_state_path);
-		
+		bool check_if_candidate_improving(const size_t c_uiVtx, const size_t c_uiMinTime, const size_t c_uiMaxTime);
+
 		//heuristic utilities
 		void construct_state_transition_path(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
 		void construct_rob_sub_sequences(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<std::list<size_t>> &rob_seq, const std::vector<State_vtx_time> &vec_state_path

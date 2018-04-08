@@ -165,6 +165,24 @@ void update_queue(const size_t c_uiVtx, const size_t c_uiCost, std::list<size_t>
 			it_find->second = c_uiCost;
 			auto it_list = std::find(queue_open_list.begin(), queue_open_list.end(), c_uiVtx);
 			if (queue_open_list.end() == it_list) queue_open_list.push_back(c_uiVtx);
+			else
+			{
+				// we wish to sort the queue_open_list. So we remove the element and enter it in its sorted (ascending by cost)
+				// location this step is meant to decrease the number of times a vertex will be pushed back into the open list
+				// can be rewritten by merging with the find step above, but for now we defer it
+				queue_open_list.erase(it_list);
+				bool bInsert = false;
+				for (auto it = queue_open_list.begin(); it != queue_open_list.end(); it++)
+				{
+					if (start_times.at(*it) > c_uiCost)
+					{
+						queue_open_list.insert(it, c_uiVtx);
+						bInsert = true;
+						break;
+					}
+				}
+				if (false == bInsert) queue_open_list.push_back(c_uiVtx);
+			}
 		}
 	}	
 }
@@ -173,8 +191,8 @@ void compute_start_times(const std::unordered_map<size_t, std::unordered_map<siz
 {
 	assert(0 == start_times.size());
 	size_t uiVtx;
-	std::list<size_t> queue_open_list; // <vert, start time>
-
+	std::list<size_t> queue_open_list; // <vert>
+	
 	//gather all 0 start vertices and set their start times to 0
 	for (auto it = in_graph.begin(); it != in_graph.end(); it++)
 	{
