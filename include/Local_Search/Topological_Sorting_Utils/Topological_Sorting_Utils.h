@@ -33,7 +33,7 @@ class Topological_Sorting_Utils
 		inline const std::list<int>& get_top_list() const { return m_list_order; };
 		inline const std::unordered_map<int, std::unordered_map<int, size_t>>& get_out_graph() const { return m_out_graph; };
 		inline const std::unordered_map<int, std::unordered_map<int, size_t>>& get_in_graph() const { return m_in_graph; };
-		inline const std::list<std::unordered_set<size_t>>& get_super_comp() const { return m_list_Super_Comp; };
+		inline const std::list<std::unordered_set<size_t>>& get_super_comp() const { return m_list_Super_Comp; };		
 };
 
 #endif

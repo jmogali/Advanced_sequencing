@@ -25,6 +25,8 @@ class Greedy_Heuristic
 		std::unordered_map<size_t, std::unordered_map<size_t, std::pair<size_t, size_t>>> m_map_enabler_pos_vert; // uiRobot, <position, vertex>
 		bool m_bWait , m_bVectorizeSchedule;
 		std::vector<std::pair<size_t, size_t>> m_vec_rob_first_last_vtx;
+		std::vector<std::list<size_t>> m_rob_seq;
+		bool m_bComplete_Graph;
 
 #ifdef ENABLE_FULL_CHECKING		
 		std::vector<std::unordered_map<N_Ind, size_t, IndHasher>> m_set_prev_HD_states;     //records the depth just before which the vertex was completed 
@@ -59,8 +61,7 @@ class Greedy_Heuristic
 		bool add_impl_cons_rem_prev_cons(const std::vector<std::list<size_t>> &rob_seq, std::list<arc> &list_prec_arcs_betw_jobs);
 		std::pair<bool, bool> add_scc_check_coll_feasible(std::list<arc> &list_prec_arcs_betw_jobs);
 		bool add_enabling_fix_coll_cons(const std::vector<std::list<size_t>> &rob_seq);
-
-
+		
 		//DFS functions
 		void populate_root_node_info(State &root, const std::vector<std::list<size_t>> &rob_seq);
 		int compute_DFS(const State& state, size_t uiDepth, size_t uiStartTime);
@@ -97,10 +98,17 @@ class Greedy_Heuristic
 		void print_state(size_t uiDepth, size_t uiTime, const State &state);	
 		bool sanity_check_schedule(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
 				
+		//Filling the pruned collisions arcs and enabling arcs. This is used for swap heuristic.
+		void fill_back_pruned_collision_arcs();
+		void fill_back_pruned_collision_arcs(size_t uiRobot1, size_t uiRobot2);
+		void insert_missing_enabling_arcs();
+		void insert_missing_enabling_arcs(const size_t c_uiGivenRobot);
+
 	public:
 		Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power);
 		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strPlotFolder, const size_t c_uiUpperBound = std::numeric_limits<size_t>::max());
 		inline bool doRobotsWait() const { assert(true == m_bVectorizeSchedule); return m_bWait; };
+		const Alternative_Graph& get_complete_alt_graph(int iOptions); //0 - none, 1 - only enabling, 2 - only collision, 3 - both
 };
 
 #endif

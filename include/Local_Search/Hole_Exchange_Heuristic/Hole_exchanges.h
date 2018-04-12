@@ -31,32 +31,57 @@ class Hole_Exchange
 		std::unordered_map<size_t, std::unordered_map<size_t, size_t>> m_alt_out_graph;   // <vtx, <out_vtx, arc cost>>
 		std::unordered_map<size_t, std::unordered_map<size_t, size_t>> m_alt_in_graph;	//  <vtx, <in_vtx, arc cost>> 
 		std::unordered_map<size_t, size_t> m_map_start_times; //<vtx, start time>
+		std::unordered_map<size_t, size_t> m_map_completion_times; //<vtx, end time>
 		std::unordered_map<size_t, size_t> m_hole_rob_owner; //<vtx, robot>
+		Topological_Sorting_Utils_Dist m_top_order_dist;
 
 		void clear_prev_info();
 		void populate_robot_owners(const std::vector<std::list<size_t>> &rob_seq);
 		void populate_rob_graphs(const Alternative_Graph &alt_graph);
 
 		//picking hole function
+		void compute_critical_path(std::list<size_t> &critical_path);
 		void get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<std::tuple<size_t, size_t, size_t>> &list_best_cand); //<vtx, min time, max time>
 		std::pair<size_t, size_t> compute_enabler_flexibility(const size_t uiVtx, const size_t c_uiMakeSpan);
 		size_t compute_min_time(const size_t uiVtx);
 		size_t compute_max_time(const size_t uiVtx, const size_t c_uiMakeSpan);
 
 		//heuristic operations
-		bool check_if_retraction_feasible(const size_t c_uiVtx, const size_t c_uiRobot, const std::vector<State_vtx_time> &vec_state_path, const std::vector<std::list<size_t>> &inp_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
+		bool check_if_retraction_feasible(const size_t c_uiVtx, const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_sub_seq);
 		bool check_if_insertion_feasible(const size_t c_uiVtx, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair,const std::vector<State_vtx_time> &vec_state_path, const std::vector<std::list<size_t>> &inp_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
 		void check_ifsub_seq_construction_correct(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<State_vtx_time> &vec_state_path);
-		bool check_if_candidate_improving(const size_t c_uiVtx, const size_t c_uiMinTime, const size_t c_uiMaxTime);
+		bool check_if_candidate_improving(const size_t c_uiHole, const size_t c_uiMinTime, const size_t c_uiMaxTime);
+		
+		//heuristic graph and sequence updates
+		bool update_sequence_graphs(const size_t c_uiHole, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq);
+		void remove_hole_update_rob_sequence(const size_t c_uiHole, const size_t c_uiRobot);
+		void update_out_in_graphs(const size_t c_uiHole, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq);
+		void gather_arcs_betw_rob_sub_seq_start_vtcs(std::vector<arc> &vec_arcs, const std::vector<std::list<size_t>> &rob_sub_seq);
+		void perform_del_vtx_arcs_in_update(const size_t c_uiHole, const size_t c_uiRobot, const std::set<size_t> &set_rob_sub_seq_vts);
+		void perform_patch_rob_sub_seq_graph(int iOption, const std::vector<std::list<size_t>> &rob_sub_seq, const std::vector<arc> &vec_arcs);
+		void populate_removed_hole_prev_next_iv(const size_t c_uiHole, const size_t c_uiRobot, std::set<size_t> &set_vts);
+		bool make_solution_feasible(const std::vector<std::list<size_t>> &rob_sub_seq);
+		bool resolve_collisions_unenabled_vts_dynamically(const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq, const std::unordered_map<size_t, size_t> &map_old_start_times, const std::unordered_map<size_t, size_t> &map_old_completion_times);
+		void check_and_resolve_collision(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq, const std::unordered_map<size_t, size_t> &map_old_start_times);
+		bool check_if_vtx1_prec_vtx2_sequence_partition(const size_t c_uiVtx1, const size_t c_uiVtx2, const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq);
+		bool check_and_resolve_enablers(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::unordered_map<size_t, size_t> &map_old_completion_times);
 
 		//heuristic utilities
+		void compute_start_completion_times_from_schedule();
+		void compute_completion_times();
+		void construct_vertex_schedule();
+		void construct_state_transition_path();
 		void construct_state_transition_path(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
-		void construct_rob_sub_sequences(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<std::list<size_t>> &rob_seq, const std::vector<State_vtx_time> &vec_state_path
-										, std::vector<std::tuple<std::list<size_t>::const_iterator, std::list<size_t>::const_iterator, size_t>> &vec_start_end_itr_start_pos, std::unordered_set<size_t> &set_comp_verts);
-		void construct_rob_sub_sequences_with_iterators(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<State_vtx_time> &vec_state_path
-			, std::vector<std::tuple<std::list<size_t>::const_iterator, std::list<size_t>::const_iterator, size_t>> &vec_start_end_itr_start_pos, std::unordered_set<size_t> &set_comp_verts);
-		void compute_enabled_holes_for_rob_sub_seq(const std::vector<std::list<size_t>> &rob_sub_seq, const std::unordered_set<size_t> &set_comp_verts, std::unordered_set<size_t> set_enabled_holes);
-		
+		void construct_rob_sub_sequences(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<std::list<size_t>> &rob_seq, const std::vector<State_vtx_time> &vec_state_path,
+										 std::vector<std::tuple<std::list<size_t>::const_iterator, std::list<size_t>::const_iterator, size_t>> &vec_start_end_itr_start_pos, std::unordered_set<size_t> &set_comp_HD);
+		void construct_rob_sub_sequences_with_iterators(std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiLeft, const size_t c_uiRight, const std::vector<State_vtx_time> &vec_state_path,
+										 std::vector<std::tuple<std::list<size_t>::const_iterator, std::list<size_t>::const_iterator, size_t>> &vec_start_end_itr_start_pos, std::unordered_set<size_t> &set_comp_HD);
+		void compute_enabled_holes_for_rob_sub_seq(const std::vector<std::list<size_t>> &rob_sub_seq, const std::unordered_set<size_t> &set_comp_HD, std::unordered_set<size_t> &set_enabled_holes);
+		void copy_to_temp_buffers(std::vector<std::list<size_t>> &rob_seq, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph, std::vector<State_vtx_time> &vec_state_path, std::vector<std::vector<Vertex_Schedule>> &vec_full_rob_sch);
+		void copy_from_temp_buffers(std::vector<std::list<size_t>> &rob_seq, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph, std::vector<State_vtx_time> &vec_state_path, std::vector<std::vector<Vertex_Schedule>> &vec_full_rob_sch);
+		void gather_vertices_before_sub_seq_after(std::set<size_t> &set_vts_before_sub_seq, std::set<size_t> &set_vts_sub_seq, std::set<size_t> &set_vts_after_sub_seq, const std::vector<std::list<size_t>> &rob_sub_seq);
+		void remove_robo_hole_owner(const size_t c_uiHole);
+
 		void perform_swap_operation();
 
 	public:
@@ -66,6 +91,6 @@ class Hole_Exchange
 
 // this function computes start times using longest path for each vertex, start time is 0 if incoming edges are 0.
 // this function can tolerate 0 length cycles but does not have detection mechanisms for positive length cycles.
-void compute_start_times(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph, std::unordered_map<size_t , size_t> &start_times);   // <vtx, <out_vtx, arc cost>>
 void compute_critical_path(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph, std::unordered_map<size_t, size_t> &start_times, std::list<size_t> &critical_path);   // <vtx, <out_vtx, arc cost>>
+
 #endif

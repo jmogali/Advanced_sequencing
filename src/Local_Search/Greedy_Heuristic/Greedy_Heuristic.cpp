@@ -40,6 +40,7 @@ Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &gra
 bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq, const size_t c_uiUpperBound)
 {
 	set_first_last_vertices(rob_seq);
+	m_rob_seq = rob_seq;
 	bool bFeasible = construct_Alt_Graph_STN(rob_seq, new_rob_seq, c_uiUpperBound);
 	if (false == bFeasible) return false;
 	allocate_buffers(new_rob_seq);
@@ -70,6 +71,7 @@ void Greedy_Heuristic::clear_prev_info_buffers()
 		m_set_prev_all_states[uiRobot].clear();	
 		m_vec_nc_eft[uiRobot].m_map_eft.clear();
 		m_vec_nc_eft[uiRobot].m_uiNC_Makespan = std::numeric_limits<size_t>::max();
+		m_rob_seq[uiRobot].clear();
 	}
 
 	m_map_states_feas.clear();
@@ -80,6 +82,7 @@ void Greedy_Heuristic::clear_prev_info_buffers()
 	m_set_to_do_verts.clear();	
 	m_map_enabler_pos_vert.clear();	
 	std::fill(m_vec_rob_first_last_vtx.begin(), m_vec_rob_first_last_vtx.end(), std::make_pair(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()));
+	m_bComplete_Graph = false;
 }
 
 // populates buffers for storing timing information
@@ -607,7 +610,8 @@ void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &
 			uiStart = uiEnd;
 			it1++;
 		}
-		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart, 0 );				
+		//adding last vtx (depot) times
+		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart + m_graph.getTime(*it1), 0 );				
 	}
 
 #ifdef ENABLE_FULL_CHECKING

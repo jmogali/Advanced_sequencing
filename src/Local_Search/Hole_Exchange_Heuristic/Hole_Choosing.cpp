@@ -11,14 +11,17 @@ bool isWorthInserting(const std::tuple<size_t, size_t, size_t> &curr_choice, con
 																	                                           //<vtx, min time, max time>
 void Hole_Exchange::get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<std::tuple<size_t, size_t, size_t>> &list_best_cand)
 {
-	assert(0 == list_best_cand.size());
+	critical_path.clear();
+	list_best_cand.clear();
+
 	size_t uiVtx;
 	std::tuple<size_t, size_t, size_t> val;
-	const size_t c_uiMakeSpan = m_map_start_times.at(*critical_path.rbegin()) + m_graph.getTime(*critical_path.rbegin());
+	const size_t c_uiMakeSpan = m_map_completion_times.at(*critical_path.rbegin());
 	
 	for (auto it_vtx = critical_path.begin(); it_vtx != critical_path.end(); it_vtx++)
 	{
 		uiVtx = *it_vtx;
+		if ("H" != m_graph.getType(uiVtx)) continue;
 		
 		if (1 == uiChoice)
 		{
@@ -67,7 +70,6 @@ size_t Hole_Exchange::compute_max_time(const size_t c_uiVtx, const size_t c_uiMa
 {
 	size_t uiMaxTime = c_uiMakeSpan;
 	size_t uiEnabler;
-	int iEnbaler;
 	size_t uiEnabledVtx, uiEnabledTime;
 		
 	const auto& vec_enablers = m_graph.get_Enablers();

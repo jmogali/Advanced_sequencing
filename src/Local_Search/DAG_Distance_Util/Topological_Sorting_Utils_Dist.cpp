@@ -8,7 +8,7 @@ void Topological_Sorting_Utils_Dist::clear_prev_dist_info()
 	m_list_critical_path.clear();
 }
 
-size_t Topological_Sorting_Utils_Dist::Compute_FROM_costs_each_Vertex()
+size_t Topological_Sorting_Utils_Dist::Compute_FROM_costs_each_Vertex(std::unordered_map<size_t, size_t> &start_times)
 {
 	int iVtx, iPrev;
 	size_t uiCost;
@@ -33,6 +33,18 @@ size_t Topological_Sorting_Utils_Dist::Compute_FROM_costs_each_Vertex()
 			uiCost = std::max(uiCost, m_map_from_costs[iPrev] + it_prev->second);
 		}
 		m_map_from_costs.emplace(iVtx, uiCost);
+
+		//fills the start_time costs as well
+		if (iVtx < 0)
+		{
+			auto it_comp = m_list_Super_Comp.begin();
+			size_t uiComp = (size_t)(-1 * iVtx) - 1;
+			std::advance(it_comp, uiComp);
+
+			for (auto it_vtx = it_comp->begin(); it_vtx != it_comp->end(); it_vtx++) start_times.emplace(*it_vtx, uiCost);
+		}
+		else start_times.emplace((size_t) iVtx, uiCost);
+
 		if (uiMakeSpan < uiCost)
 		{
 			uiMakeSpan = uiCost;
@@ -98,16 +110,15 @@ void Topological_Sorting_Utils_Dist::compute_critical_path()
 	}
 }
 
-void Topological_Sorting_Utils_Dist::construct_graph_populate_order_with_dist(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph)
+size_t Topological_Sorting_Utils_Dist::construct_graph_populate_order_with_dist(const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, const std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph, std::unordered_map<size_t, size_t> &start_times)
 {
+	assert(0 == start_times.size());
 	construct_graph_populate_order(out_graph, in_graph);
-	compute_shortest_path_costs();
-	compute_critical_path();
+	return compute_shortest_from_costs(start_times);
 }
 
-void Topological_Sorting_Utils_Dist::compute_shortest_path_costs()
+size_t Topological_Sorting_Utils_Dist::compute_shortest_from_costs(std::unordered_map<size_t, size_t> &start_times)
 {
 	clear_prev_dist_info();
-	Compute_FROM_costs_each_Vertex();
-	Compute_GO_costs_each_Vertex();
+	return Compute_FROM_costs_each_Vertex(start_times);
 }

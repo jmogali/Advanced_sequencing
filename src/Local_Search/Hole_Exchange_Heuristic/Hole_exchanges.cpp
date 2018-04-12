@@ -14,6 +14,8 @@ void Hole_Exchange::clear_prev_info()
 	m_alt_out_graph.clear();
 	m_rob_seq.clear();
 	m_hole_rob_owner.clear();
+	m_map_start_times.clear();
+	m_map_completion_times.clear();
 }
 
 void Hole_Exchange::populate_rob_graphs(const Alternative_Graph &alt_graph)
@@ -38,7 +40,6 @@ void Hole_Exchange::perform_heuristic_moves(const std::vector<std::list<size_t>>
 {
 	assert(rob_seq.size() == m_uiNumRobots);
 	clear_prev_info();
-	//construct_graph_populate_order_with_dist(alt_graph.getGraph(), alt_graph.getReverseGraph());
 		
 	//populates m_vec_state_path
 	m_rob_seq = rob_seq;
@@ -50,42 +51,72 @@ void Hole_Exchange::perform_heuristic_moves(const std::vector<std::list<size_t>>
 	perform_swap_operation();
 }
 
-void clear_buffers(std::list<size_t> &critical_path, std::list<std::tuple<size_t, size_t, size_t>> &list_best_cand, std::unordered_map<size_t, size_t> &map_start_times)
+void Hole_Exchange::copy_to_temp_buffers(std::vector<std::list<size_t>> &rob_seq, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph, std::vector<State_vtx_time> &vec_state_path, std::vector<std::vector<Vertex_Schedule>> &vec_full_rob_sch)
 {
-	critical_path.clear();
-	list_best_cand.clear();
-	map_start_times.clear();
+	rob_seq = m_rob_seq;
+	out_graph = m_alt_out_graph;
+	in_graph = m_alt_in_graph;
+	vec_state_path = m_vec_state_path;
+	vec_full_rob_sch = m_vec_full_rob_sch;
+}
+
+void Hole_Exchange::copy_from_temp_buffers(std::vector<std::list<size_t>> &rob_seq, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph, std::vector<State_vtx_time> &vec_state_path, std::vector<std::vector<Vertex_Schedule>> &vec_full_rob_sch)
+{
+	m_rob_seq = rob_seq;
+	m_alt_out_graph = out_graph;
+	m_alt_in_graph = in_graph;
+	m_vec_state_path = vec_state_path;
+	m_vec_full_rob_sch = vec_full_rob_sch;
 }
 
 void Hole_Exchange::perform_swap_operation()
 {
 	size_t uiIter = 0;
-	bool bFeasible, bImproving;
+	bool bImproving;
+
+	std::vector<std::list<size_t>> rob_seq_temp;
+	std::vector<State_vtx_time> vec_state_path_temp;
+	std::vector<std::vector<Vertex_Schedule>> vec_full_rob_sch_temp;
+	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> alt_out_graph_temp;   // <vtx, <out_vtx, arc cost>>
+	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> alt_in_graph_temp;	//  <vtx, <in_vtx, arc cost>> 
+
 	std::list<size_t> critical_path;
 	std::list<std::tuple<size_t, size_t, size_t>> list_best_cand;
 
 	while (uiIter < c_uiMaxNumSwaps)
 	{
-		clear_buffers(critical_path, list_best_cand, m_map_start_times);
-		
-		//computes start time of all vertices
-		compute_start_times(m_alt_out_graph, m_alt_in_graph, m_map_start_times);
-		
-		compute_critical_path(m_alt_in_graph, m_map_start_times, critical_path);
+		copy_to_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp);
+
+		compute_start_completion_times_from_schedule();
+		compute_critical_path(critical_path);
 		get_cand_vertex_critical_path(1, critical_path, list_best_cand);
 
 		for (auto it_cand = list_best_cand.begin(); it_cand != list_best_cand.end(); it_cand++)
 		{
 			bImproving = check_if_candidate_improving(std::get<0>(*it_cand), std::get<1>(*it_cand), std::get<2>(*it_cand));
-			//if (bImproving) break;
+			if (bImproving) break;
+
+			copy_from_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp);			
 		}
 
+		if (false == bImproving) break;
+		uiIter++;
 	}
 }
 
-bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiVtx, const size_t c_uiMinTime, const size_t c_uiMaxTime)
+bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiHole, const size_t c_uiMinTime, const size_t c_uiMaxTime)
 {
-	bool bFeasible = check_if_retraction_feasible(c_uiVtx, m_hole_rob_owner.at(c_uiVtx), m_vec_state_path, m_rob_seq, m_vec_full_rob_sch);
+	std::vector<std::list<size_t>> rob_sub_seq;
+	const size_t c_uiRobot = m_hole_rob_owner.at(c_uiHole);
+	bool bFeasible = check_if_retraction_feasible(c_uiHole, c_uiRobot, rob_sub_seq);
 	if (false == bFeasible) return false;
+
+	bFeasible = update_sequence_graphs(c_uiHole, c_uiRobot, rob_sub_seq);
+	if (false == bFeasible) return false;
+
+	remove_robo_hole_owner(c_uiHole);
+
+	//will add insertion of hole code here
+	return true;
 }
 

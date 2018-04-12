@@ -438,7 +438,8 @@ void Greedy_Heuristic_old::vectorize_schedule(const std::vector<std::list<size_t
 			uiStart = uiEnd;
 			it1++;
 		}
-		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart, 0 );
+		//adding last vtx (depot) times
+		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart + m_graph.getTime(*it1), 0 );
 	}
 }
 
