@@ -1,5 +1,8 @@
 #include "Hole_exchanges.h"
 
+Cand_for_insertion::Cand_for_insertion(size_t uiHD1, size_t uiHD2, size_t uiRobot, int iVal) :m_uiHD1(uiHD1), m_uiHD2(uiHD2), m_uiRobot(uiRobot), m_iVal(iVal)
+{}
+
 Hole_Exchange::Hole_Exchange(size_t uiNumRobots, const Layout_LS &graph, Power_Set &power, const Enabling_Graph &en_graph) : m_uiNumRobots(uiNumRobots), m_graph(graph), m_ls_heur(uiNumRobots, graph, power), m_en_graph(en_graph)
 {
 	m_rob_seq.resize(m_uiNumRobots);
@@ -16,6 +19,7 @@ void Hole_Exchange::clear_prev_info()
 	m_hole_rob_owner.clear();
 	m_map_start_times.clear();
 	m_map_completion_times.clear();
+	m_map_vertex_slack.clear();
 }
 
 void Hole_Exchange::populate_rob_graphs(const Alternative_Graph &alt_graph)
@@ -36,7 +40,7 @@ void Hole_Exchange::populate_robot_owners(const std::vector<std::list<size_t>> &
 	}
 }
 
-void Hole_Exchange::perform_heuristic_moves(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)
+void Hole_Exchange::perform_heuristic_moves(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, size_t uiTargetMakeSpan)
 {
 	assert(rob_seq.size() == m_uiNumRobots);
 	clear_prev_info();
@@ -47,6 +51,7 @@ void Hole_Exchange::perform_heuristic_moves(const std::vector<std::list<size_t>>
 	construct_state_transition_path(full_rob_sch);
 	populate_rob_graphs(alt_graph);
 	populate_robot_owners(rob_seq);	
+	m_uiTargetMakeSpan = uiTargetMakeSpan;
 
 	perform_swap_operation();
 }
@@ -81,7 +86,7 @@ void Hole_Exchange::perform_swap_operation()
 	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> alt_in_graph_temp;	//  <vtx, <in_vtx, arc cost>> 
 
 	std::list<size_t> critical_path;
-	std::list<std::tuple<size_t, size_t, size_t>> list_best_cand;
+	std::list<std::tuple<N_Ind, size_t, size_t>> list_best_cand;
 
 	while (uiIter < c_uiMaxNumSwaps)
 	{
@@ -93,7 +98,7 @@ void Hole_Exchange::perform_swap_operation()
 
 		for (auto it_cand = list_best_cand.begin(); it_cand != list_best_cand.end(); it_cand++)
 		{
-			bImproving = check_if_candidate_improving(std::get<0>(*it_cand), std::get<1>(*it_cand), std::get<2>(*it_cand));
+			bImproving = check_if_candidate_improving(std::get<0>(*it_cand).getInd(), std::get<1>(*it_cand), std::get<2>(*it_cand));
 			if (bImproving) break;
 
 			copy_from_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp);			
@@ -111,12 +116,92 @@ bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiHole, const si
 	bool bFeasible = check_if_retraction_feasible(c_uiHole, c_uiRobot, rob_sub_seq);
 	if (false == bFeasible) return false;
 
-	bFeasible = update_sequence_graphs(c_uiHole, c_uiRobot, rob_sub_seq);
+	std::pair<size_t, size_t> taboo_hole_pair; //should not insert new hole between the taboo hole pair
+	bFeasible = update_sequence_graphs_for_removal(c_uiHole, c_uiRobot, rob_sub_seq, taboo_hole_pair);
 	if (false == bFeasible) return false;
 
 	remove_robo_hole_owner(c_uiHole);
+	compute_vertex_slack();
+
+	std::vector<std::list<size_t>> rob_seq_temp;
+	std::vector<State_vtx_time> vec_state_path_temp;
+	std::vector<std::vector<Vertex_Schedule>> vec_full_rob_sch_temp;
+	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> alt_out_graph_temp;   // <vtx, <out_vtx, arc cost>>
+	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> alt_in_graph_temp;	//  <vtx, <in_vtx, arc cost>> 
+
+	std::list<Cand_for_insertion> list_cand_insertion;
+	get_cand_for_insertion(c_uiHole, c_uiMinTime, c_uiMaxTime, list_cand_insertion, taboo_hole_pair);
+	const size_t c_uiDeletionMakeSpan = m_top_order_dist.get_makespan();
 
 	//will add insertion of hole code here
-	return true;
+
+	size_t uiIter = 0;
+	bool bImproving = false;
+	
+	copy_to_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp);
+
+	for(auto it_cand = list_cand_insertion.begin(); it_cand != list_cand_insertion.end(); it_cand++)
+	{
+		if (c_uiDeletionMakeSpan + it_cand->m_iVal > m_uiTargetMakeSpan) return false;
+		
+		bFeasible = check_if_insertion_feasible(c_uiHole, it_cand->m_uiRobot.getInd(), std::make_pair(it_cand->m_uiHD1.getInd(), it_cand->m_uiHD2.getInd()), rob_sub_seq);
+
+		if (bFeasible)
+		{
+			//need to update graphs and then check whether it_cand improves
+			bFeasible = update_sequence_graphs_for_insertion(c_uiHole, std::make_pair(it_cand->m_uiHD1.getInd(), it_cand->m_uiHD2.getInd()), it_cand->m_uiRobot.getInd(), rob_sub_seq);
+			if (false == bFeasible) break;
+
+			if (m_uiTargetMakeSpan > m_top_order_dist.get_makespan()) return true;
+			else bImproving = false;
+		}
+
+		if (!bFeasible || !bImproving)
+		{
+			copy_from_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp);			
+		}
+
+		if (uiIter > c_uiMaxNumInsertTries) break;
+		uiIter++;
+	}
+	return false;
 }
 
+void Hole_Exchange::compute_vertex_slack()
+{
+	m_map_vertex_slack.clear();
+
+	//no need to recompute latest topological order since it_cand was already done during removal
+	m_top_order_dist.compute_vertex_slack(m_map_vertex_slack);
+}
+
+int Hole_Exchange::compute_desirability_of_insertion(const size_t c_uiHD1, const size_t c_uiHD2, const size_t c_uiRobot, const size_t c_uiHole)
+{
+	int iVal;
+	size_t uiOldPath, uiNewPath;
+	uiOldPath = uiNewPath = m_graph.getTime(c_uiHD1);
+
+	const auto &vec_rob_iv = m_graph.get_IV_Vec();
+	const auto &vec_iv_1 = vec_rob_iv[c_uiRobot].map.at(c_uiHD1).map.at(c_uiHD2).vec;
+	for (auto it_iv = vec_iv_1.begin(); it_iv != vec_iv_1.end(); it_iv++)
+	{
+		uiOldPath += m_graph.getTime(*it_iv);
+	}
+
+	const auto &vec_iv_2 = vec_rob_iv[c_uiRobot].map.at(c_uiHD1).map.at(c_uiHole).vec;
+	for (auto it_iv = vec_iv_2.begin(); it_iv != vec_iv_2.end(); it_iv++)
+	{
+		uiNewPath += m_graph.getTime(*it_iv);
+	}
+
+	uiNewPath += m_graph.getTime(c_uiHole);
+	const auto &vec_iv_3 = vec_rob_iv[c_uiRobot].map.at(c_uiHole).map.at(c_uiHD2).vec;
+	for (auto it_iv = vec_iv_3.begin(); it_iv != vec_iv_3.end(); it_iv++)
+	{
+		uiNewPath += m_graph.getTime(*it_iv);
+	}
+
+	iVal = (int)(m_map_vertex_slack.at(c_uiHD2) + uiOldPath) - (int)uiNewPath;
+
+	return iVal;
+}

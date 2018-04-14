@@ -32,6 +32,7 @@ Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &gra
 #endif
 	m_set_prev_all_states.resize(uiRobotNum);
 	m_vec_nc_eft.resize(uiRobotNum);
+	m_rob_seq.resize(uiRobotNum);
 	m_vec_rob_first_last_vtx.resize(uiRobotNum, std::make_pair(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()));
 	m_bWait = false;
 	m_bVectorizeSchedule = false;	
@@ -611,7 +612,7 @@ void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &
 			it1++;
 		}
 		//adding last vtx (depot) times
-		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart + m_graph.getTime(*it1), 0 );				
+		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart, 0 );				
 	}
 
 #ifdef ENABLE_FULL_CHECKING

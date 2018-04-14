@@ -22,9 +22,10 @@ void Hole_Exchange::compute_completion_times()
 		auto it_next = m_rob_seq[uiRobot].begin();
 		for (auto it = m_rob_seq[uiRobot].begin(); it != m_rob_seq[uiRobot].end(); it++ , it_next++)
 		{
+			//note for last vertex we assume that the processing time is 0, even if that is not the case
 			if (it_next == m_rob_seq[uiRobot].end()) 
 			{
-				m_map_completion_times.emplace(*it, m_map_start_times.at(*it) + m_graph.getTime(*it));
+				m_map_completion_times.emplace(*it, m_map_start_times.at(*it));
 				break;
 			}
 
@@ -55,8 +56,8 @@ void Hole_Exchange::construct_vertex_schedule()
 			uiStart = uiEnd;
 			it1++;
 		}
-		m_vec_full_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart + m_graph.getTime(*it1), 0);
-		assert(uiStart + m_graph.getTime(*it1) == m_map_completion_times.at(*it1));
+		m_vec_full_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart, 0);
+		assert(uiStart  == m_map_completion_times.at(*it1));
 	}
 }
 

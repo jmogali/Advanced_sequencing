@@ -82,7 +82,7 @@ void Hole_Exchange::check_ifsub_seq_construction_correct(std::vector<std::list<s
 	}
 }
 
-void remove_INP_HOLE_in_rob_sub_seq(size_t c_uiHole, const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph)
+std::pair<size_t , size_t> remove_INP_HOLE_in_rob_sub_seq(size_t c_uiHole, const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph)
 {
 	const size_t c_uiInitialSize = rob_sub_seq[c_uiRobot].size();
 	const auto &vec_rob_iv = graph.get_IV_Vec();
@@ -127,6 +127,43 @@ void remove_INP_HOLE_in_rob_sub_seq(size_t c_uiHole, const size_t c_uiRobot, std
 		rob_sub_seq[c_uiRobot].insert(it_next_HD, it_iv->getInd());
 	}	
 	assert(c_uiInitialSize - rob_sub_seq[c_uiRobot].size() == 2);
+	return std::make_pair(uiPrevHD, *it_next_HD);
+}
+
+
+void insert_INP_HOLE_in_rob_seq(size_t c_uiHole, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph)
+{
+	const size_t c_uiInitialSize = rob_sub_seq[c_uiRobot].size();
+	auto it_HD2 = std::find(rob_sub_seq[c_uiRobot].begin(), rob_sub_seq[c_uiRobot].end(), pr_hole_pair.second);
+	assert(it_HD2 != rob_sub_seq[c_uiRobot].end());
+
+	auto it_HD1 = it_HD2;
+	it_HD1--;
+	while ("IV" == graph.getType(*it_HD1))
+	{
+		it_HD1 = rob_sub_seq[c_uiRobot].erase(it_HD1);
+		assert(*it_HD2 == *it_HD1);
+		it_HD1--;
+	}
+	
+	assert(pr_hole_pair.first == *it_HD1);
+	const auto &vec_rob_iv = graph.get_IV_Vec();
+	const auto &vec_iv_1 = vec_rob_iv[c_uiRobot].map.at(pr_hole_pair.first).map.at(c_uiHole).vec;
+
+	for (auto it_iv = vec_iv_1.begin(); it_iv != vec_iv_1.end(); it_iv++)
+	{
+		rob_sub_seq[c_uiRobot].insert(it_HD2, it_iv->getInd());
+	}
+
+	rob_sub_seq[c_uiRobot].insert(it_HD2, c_uiHole);
+
+	const auto &vec_iv_2 = vec_rob_iv[c_uiRobot].map.at(c_uiHole).map.at(pr_hole_pair.second).vec;
+	for (auto it_iv = vec_iv_2.begin(); it_iv != vec_iv_2.end(); it_iv++)
+	{
+		rob_sub_seq[c_uiRobot].insert(it_HD2, it_iv->getInd());
+	}
+		
+	assert(rob_sub_seq[c_uiRobot].size() - c_uiInitialSize == 2);
 }
 
 //Here we assume inp_seq contains c_uiHole, so care must be taken to remove it when checking for feaibility
@@ -151,8 +188,6 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 		if (uiRightPathIndex - uiLeftPathIndex >= std::min(c_uiHoleExchMaxLen, m_vec_state_path.size() - 1)) break;
 		get_new_left_right_hole_state_offset(c_uiHole, c_uiRobot, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path, m_graph, uiIter);
 		
-		for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++) rob_sub_seq[uiRobot].clear();
-
 		if (0 == uiIter)
 		{
 			construct_rob_sub_sequences(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_rob_seq, m_vec_state_path, vec_start_end_itr_start_pos, set_comp_HD);
@@ -183,91 +218,55 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 	return bFeasible;
 }
 
-void insert_hole_in_rob_seq(size_t c_uiHole, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph)
-{
-	const size_t c_uiInitialSize = rob_sub_seq[c_uiRobot].size();
-	auto it_curr = std::find(rob_sub_seq[c_uiRobot].begin(), rob_sub_seq[c_uiRobot].end(), pr_hole_pair.first);
-	assert(it_curr != rob_sub_seq[c_uiRobot].end());
-
-	const auto &vec_rob_iv = graph.get_IV_Vec();
-		
-	it_curr++;
-	it_curr = rob_sub_seq[c_uiRobot].erase(it_curr);
-	if (*it_curr != pr_hole_pair.second)
-	{
-#ifdef WINDOWS
-		assert(false);
-#else
-		cout << "Incorrect hole pair inputted";
-		exit(-1);
-#endif
-	}
-
-	const auto &vec_iv_1 = vec_rob_iv[c_uiRobot].map.at(pr_hole_pair.first).map.at(c_uiHole).vec;
-	for (auto it_iv = vec_iv_1.begin(); it_iv != vec_iv_1.end(); it_iv++)
-	{
-		rob_sub_seq[c_uiRobot].insert(it_curr, it_iv->getInd());				
-	}
-
-	rob_sub_seq[c_uiRobot].insert(it_curr, c_uiHole);
-
-	const auto &vec_iv_2 = vec_rob_iv[c_uiRobot].map.at(c_uiHole).map.at(pr_hole_pair.second).vec;
-	for (auto it_iv = vec_iv_2.begin(); it_iv != vec_iv_2.end(); it_iv++)
-	{
-		rob_sub_seq[c_uiRobot].insert(it_curr, it_iv->getInd());
-	}
-
-	assert(*it_curr == pr_hole_pair.second);
-	assert(rob_sub_seq[c_uiRobot].size() - c_uiInitialSize == 2);
-}
-
 //here obviously inp_seq does not contain c_uiHole
-bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair, const std::vector<State_vtx_time> &vec_state_path, const std::vector<std::list<size_t>> &inp_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
+bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair, std::vector<std::list<size_t>> &rob_sub_seq)
 {
 	bool bFeasible = false;
-	size_t uiIter = 0, uiRemTime;
+	size_t uiIter = 0;
 	std::vector<std::tuple<std::list<size_t>::const_iterator, std::list<size_t>::const_iterator, size_t>> vec_start_end_itr_start_pos;
-	std::vector<std::list<size_t>> rob_sub_seq;
-	std::unordered_set<size_t> set_comp_verts;
+	std::unordered_set<size_t> set_comp_HD;
 	std::unordered_set<size_t> set_enabled_verts;
 	std::vector<size_t> vec_start_times_first_vertex;
 	vec_start_times_first_vertex.resize(m_uiNumRobots);
 	std::vector<std::vector<Vertex_Schedule>> new_vec_rob_sub_seq_sch;
 
-	size_t uiLeftPathIndex = get_first_occurence_index(pr_hole_pair.first, c_uiRobot, vec_state_path);
-	size_t uiRightPathIndex = get_first_occurence_index(pr_hole_pair.second, c_uiRobot, vec_state_path);
+	size_t uiLeftPathIndex = get_first_occurence_index(pr_hole_pair.first, c_uiRobot, m_vec_state_path);
+	size_t uiRightPathIndex = get_first_occurence_index(pr_hole_pair.second, c_uiRobot, m_vec_state_path);
+
+	rob_sub_seq.clear();
+	rob_sub_seq.resize(m_uiNumRobots);
 
 	while (!bFeasible)
 	{
-		get_new_left_right_hole_state_offset(c_uiHole, c_uiRobot, uiLeftPathIndex, uiRightPathIndex, vec_state_path, m_graph, uiIter);
+		get_new_left_right_hole_state_offset(c_uiHole, c_uiRobot, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path, m_graph, uiIter);
 
 		if (0 == uiIter)
 		{
-			construct_rob_sub_sequences(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, inp_seq, vec_state_path, vec_start_end_itr_start_pos, set_comp_verts);
-			insert_hole_in_rob_seq(c_uiHole, c_uiRobot, pr_hole_pair, rob_sub_seq, m_graph);
+			construct_rob_sub_sequences(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_rob_seq, m_vec_state_path, vec_start_end_itr_start_pos, set_comp_HD);
+			insert_INP_HOLE_in_rob_seq(c_uiHole, c_uiRobot, pr_hole_pair, rob_sub_seq, m_graph);
 			uiIter++;
 		}
 		else
 		{
-			construct_rob_sub_sequences_with_iterators(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, vec_state_path, vec_start_end_itr_start_pos, set_comp_verts);
+			construct_rob_sub_sequences_with_iterators(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path, vec_start_end_itr_start_pos, set_comp_HD);
 		}
 
-		check_ifsub_seq_construction_correct(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, vec_state_path);
+		check_ifsub_seq_construction_correct(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path);
 
-		compute_enabled_holes_for_rob_sub_seq(rob_sub_seq, set_comp_verts, set_enabled_verts);
+		compute_enabled_holes_for_rob_sub_seq(rob_sub_seq, set_comp_HD, set_enabled_verts);
 
 		//need to adjust start times to take into the fact that some portion of the work for the hole must have been completed already
 		for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 		{
-			int iRemTime = (int)vec_state_path[uiLeftPathIndex].m_uiTime - (int)vec_rob_sch[uiRobot][std::get<2>(vec_start_end_itr_start_pos[uiRobot])].m_uiStart;
-			uiRemTime = (size_t)std::max(0, (int)m_graph.getTime(*std::get<0>(vec_start_end_itr_start_pos[uiRobot])) - iRemTime);
-			vec_start_times_first_vertex[uiRobot] = uiRemTime;
+			int iRemTime = (int)m_graph.getTime(*std::get<0>(vec_start_end_itr_start_pos[uiRobot])) + (int)m_vec_full_rob_sch[uiRobot][std::get<2>(vec_start_end_itr_start_pos[uiRobot])].m_uiStart - (int)m_vec_state_path[uiLeftPathIndex].m_uiTime;
+			//note iRemTime can be negative, this occurs when the robot is waiting at a vertex
+			vec_start_times_first_vertex[uiRobot] = (size_t)std::max(0, iRemTime);		
 		}
 
 		int iRetVal = m_ls_heur.compute_greedy_sol(rob_sub_seq, vec_start_times_first_vertex, set_enabled_verts, new_vec_rob_sub_seq_sch, "");
 		if (1 == iRetVal) bFeasible = true;
 
-		if (uiRightPathIndex - uiLeftPathIndex>= std::min(c_uiHoleExchMaxLen, vec_state_path.size() - 1)) break;
+		if (uiRightPathIndex - uiLeftPathIndex>= std::min(c_uiHoleExchMaxLen, m_vec_state_path.size() - 1)) break;
 	}
 	return bFeasible;
 }

@@ -1,6 +1,6 @@
 #include "Hole_exchanges.h"
 
-bool isWorthInserting(const std::tuple<size_t, size_t, size_t> &curr_choice, const std::tuple<size_t, size_t, size_t> &new_choice)
+bool isWorthInserting(const std::tuple<N_Ind, size_t, size_t> &curr_choice, const std::tuple<size_t, size_t, size_t> &new_choice)
 {
 	int iSlackCurr = (int)std::get<2>(curr_choice) - (int)std::get<1>(curr_choice);
 	int iNewSlack = (int)std::get<2>(new_choice) - (int)std::get<1>(new_choice);
@@ -9,7 +9,7 @@ bool isWorthInserting(const std::tuple<size_t, size_t, size_t> &curr_choice, con
 	return false;
 }
 																	                                           //<vtx, min time, max time>
-void Hole_Exchange::get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<std::tuple<size_t, size_t, size_t>> &list_best_cand)
+void Hole_Exchange::get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<std::tuple<N_Ind, size_t, size_t>> &list_best_cand)
 {
 	critical_path.clear();
 	list_best_cand.clear();
@@ -49,6 +49,54 @@ void Hole_Exchange::get_cand_vertex_critical_path(size_t uiChoice, std::list<siz
 		}
 	}	
 }
+
+void Hole_Exchange::get_cand_for_insertion(const size_t c_uiHole, const size_t c_uiMinTime, const size_t c_uiMaxTime, std::list<Cand_for_insertion> &list_cand_insertion, const std::pair<size_t, size_t> &taboo_hole_pair)
+{
+	assert(0 == list_cand_insertion.size());
+	int iVal;
+	bool bInsert;
+	
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		bool bEnd = false;
+		auto it_HD = m_rob_seq[uiRobot].begin();
+		auto it_next_HD = it_HD;
+		it_next_HD++;
+		while ("IV" == m_graph.getType(*it_next_HD)) it_next_HD++;
+
+		while(1)
+		{
+			if (m_map_start_times.at(*it_HD) >= c_uiMinTime)
+			{
+				if (m_map_start_times.at(*it_next_HD) <= c_uiMaxTime)
+				{
+					iVal = compute_desirability_of_insertion(*it_HD, *it_next_HD, uiRobot, c_uiHole);
+					
+					if ((*it_HD == taboo_hole_pair.first) && (*it_next_HD == taboo_hole_pair.second)) bInsert = false;
+					else bInsert = true;
+
+					if (true == bInsert) list_cand_insertion.emplace_back(Cand_for_insertion(*it_HD, *it_next_HD, uiRobot, iVal));
+				}
+			}
+
+			it_HD = it_next_HD;
+			it_next_HD++;
+			while ("IV" == m_graph.getType(*it_next_HD))
+			{
+				it_next_HD++;
+				if (m_rob_seq[uiRobot].end() == it_next_HD)
+				{
+					bEnd = true;
+					break;
+				}
+				if (bEnd) break;
+			}
+		}
+	}
+	
+	list_cand_insertion.sort();	
+}
+
 
 // computes the earliest time c_uiVtx is enabled
 size_t Hole_Exchange::compute_min_time(const size_t c_uiVtx)

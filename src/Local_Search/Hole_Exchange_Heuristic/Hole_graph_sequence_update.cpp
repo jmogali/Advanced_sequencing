@@ -1,41 +1,38 @@
 #include "Hole_exchanges.h"
 
-bool Hole_Exchange::update_sequence_graphs(const size_t c_uiHole, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq)
+bool Hole_Exchange::update_sequence_graphs_for_removal(const size_t c_uiHole, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq, std::pair<size_t, size_t> &taboo_hole_pair)
 {
 	// it is required that m_rob_seq is not updated with the removed hole at this step
-	update_out_in_graphs(c_uiHole, c_uiRobot, rob_sub_seq);
+	update_out_in_graphs_for_removal(c_uiHole, c_uiRobot, rob_sub_seq);
 	//update m_rob_seq
-	remove_hole_update_rob_sequence(c_uiHole, c_uiRobot);
+	auto res = remove_hole_update_rob_sequence(c_uiHole, c_uiRobot);
+	taboo_hole_pair = res;
+
 	//resolve collisions and enablers by adding arcs
 	bool bFeasible = make_solution_feasible(rob_sub_seq);
 	return bFeasible;
 }
 
-void Hole_Exchange::remove_hole_update_rob_sequence(const size_t c_uiHole, const size_t c_uiRobot)
+bool Hole_Exchange::update_sequence_graphs_for_insertion(const size_t c_uiHole, const std::pair<size_t, size_t> pr_hole_pair, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq)
 {
-	size_t uiPrevHole;
-	auto it = std::find(m_rob_seq[c_uiRobot].begin(), m_rob_seq[c_uiRobot].end(), c_uiHole);
-	
-	auto it_prev_HD = it;
-	it_prev_HD--;
-	while ("IV" == m_graph.getType(*it_prev_HD)) it_prev_HD--;
-	uiPrevHole = *it_prev_HD;
-	
-	auto it_prev_IV = it_prev_HD;
-	it_prev_IV++;	
+	// it is required that m_rob_seq is not updated with the removed hole at this step
+	update_out_in_graphs_for_insertion(c_uiHole, pr_hole_pair, c_uiRobot, rob_sub_seq);
+	//update m_rob_seq
+	insert_hole_update_rob_sequence(c_uiHole, pr_hole_pair, c_uiRobot);
 
-	auto it_next_HD = it;
-	it_next_HD++;
-	while ("IV" == m_graph.getType(*it_next_HD)) it_next_HD++;
+	//resolve collisions and enablers by adding arcs
+	bool bFeasible = make_solution_feasible(rob_sub_seq);
+	return bFeasible;
+}
 
-	m_rob_seq[c_uiRobot].erase(it_prev_IV, it_next_HD);
+std::pair<size_t, size_t> Hole_Exchange::remove_hole_update_rob_sequence(const size_t c_uiHole, const size_t c_uiRobot)
+{
+	return remove_INP_HOLE_in_rob_sub_seq(c_uiHole, c_uiRobot, m_rob_seq, m_graph);	
+}
 
-	const auto &vec_rob_iv = m_graph.get_IV_Vec();
-	const auto &vec_iv = vec_rob_iv[c_uiRobot].map.at(uiPrevHole).map.at(*it_next_HD).vec;
-	for (auto it_iv = vec_iv.begin(); it_iv != vec_iv.end(); it_iv++)
-	{
-		m_rob_seq[c_uiRobot].insert(it_next_HD, it_iv->getInd());
-	}
+void Hole_Exchange::insert_hole_update_rob_sequence(const size_t c_uiHole, const std::pair<size_t, size_t> pr_hole_pair, const size_t c_uiRobot)
+{
+	insert_INP_HOLE_in_rob_seq(c_uiHole, c_uiRobot, pr_hole_pair, m_rob_seq, m_graph);
 }
 
 void Hole_Exchange::populate_removed_hole_prev_next_iv(const size_t c_uiHole, const size_t c_uiRobot, std::set<size_t> &set_vts)
@@ -59,7 +56,18 @@ void Hole_Exchange::populate_removed_hole_prev_next_iv(const size_t c_uiHole, co
 	}
 }
 
-void Hole_Exchange::update_out_in_graphs(const size_t c_uiHole, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq)
+void Hole_Exchange::populate_IV_insertion_betw_holes(const std::pair<size_t, size_t> pr_hole_pair, const size_t c_uiRobot, std::set<size_t> &set_vts)
+{
+	assert(0 == set_vts.size());
+	const auto &vec_rob_iv = m_graph.get_IV_Vec();
+	const auto &vec_iv = vec_rob_iv[c_uiRobot].map.at(pr_hole_pair.first).map.at(pr_hole_pair.second).vec;
+	for (auto it_iv = vec_iv.begin(); it_iv != vec_iv.end(); it_iv++)
+	{
+		set_vts.emplace(it_iv->getInd());
+	}
+}
+
+void Hole_Exchange::update_out_in_graphs_for_removal(const size_t c_uiHole, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq)
 {
 	std::set<size_t> set_rob_sub_seq_vts;
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
@@ -70,15 +78,40 @@ void Hole_Exchange::update_out_in_graphs(const size_t c_uiHole, const size_t c_u
 	// rob_sub_seq does not contain IV - c_uiHole- IV, bur m_rob_seq does and by extension the graph also does.
 	std::set<size_t> set_addtl_vts_to_remove;
 	populate_removed_hole_prev_next_iv(c_uiHole, c_uiRobot, set_addtl_vts_to_remove);
+
 	//copy the removed holes and its imeediate predecessor sucessor IVs into set_rob_sub_seq verts
 	//the basic function of set_rob_sub_seq is to identify those vertices that need to be first removed
-	//fromt he original graph.
+	//fromt the original graph.
 	std::copy(set_addtl_vts_to_remove.begin(), set_addtl_vts_to_remove.end(), std::inserter(set_rob_sub_seq_vts, set_rob_sub_seq_vts.end()));
 
+	perform_out_in_graph_modifications(set_rob_sub_seq_vts, rob_sub_seq);
+}
+
+void Hole_Exchange::update_out_in_graphs_for_insertion(const size_t c_uiHole, const std::pair<size_t, size_t> pr_hole_pair, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq)
+{
+	std::set<size_t> set_rob_sub_seq_vts;
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		std::copy(rob_sub_seq[uiRobot].begin(), rob_sub_seq[uiRobot].end(), std::inserter(set_rob_sub_seq_vts, set_rob_sub_seq_vts.end()));
+	}
+
+	// rob_sub_seq does not contain IV - c_uiHole- IV, bur m_rob_seq does and by extension the graph also does.
+	std::set<size_t> set_addtl_vts_to_remove;
+	populate_IV_insertion_betw_holes(pr_hole_pair, c_uiRobot, set_addtl_vts_to_remove);
+	
+	//copy the removed holes and its imeediate predecessor sucessor IVs into set_rob_sub_seq verts
+	//the basic function of set_rob_sub_seq is to identify those vertices that need to be first removed
+	//fromt the original graph.
+	std::copy(set_addtl_vts_to_remove.begin(), set_addtl_vts_to_remove.end(), std::inserter(set_rob_sub_seq_vts, set_rob_sub_seq_vts.end()));
+	perform_out_in_graph_modifications(set_rob_sub_seq_vts, rob_sub_seq);
+}
+
+void Hole_Exchange::perform_out_in_graph_modifications(const std::set<size_t> &set_rob_sub_seq_vts, const std::vector<std::list<size_t>> &rob_sub_seq)
+{
 	//gather arcs between start vertices. These need to be put back when constructing the new graph
 	std::vector<arc> vec_arcs_betw_rob_sub_seq_start_vtcs;
 	gather_arcs_betw_rob_sub_seq_start_vtcs(vec_arcs_betw_rob_sub_seq_start_vtcs, rob_sub_seq);
-	perform_del_vtx_arcs_in_update(c_uiHole, c_uiRobot, set_rob_sub_seq_vts);
+	perform_del_vtx_arcs_in_update(set_rob_sub_seq_vts);
 	int iConstructionOption = 3;
 	perform_patch_rob_sub_seq_graph(iConstructionOption, rob_sub_seq, vec_arcs_betw_rob_sub_seq_start_vtcs);
 }
@@ -105,7 +138,7 @@ void Hole_Exchange::gather_arcs_betw_rob_sub_seq_start_vtcs(std::vector<arc> &ve
 	}
 }
 
-void Hole_Exchange::perform_del_vtx_arcs_in_update(const size_t c_uiHole, const size_t c_uiRobot, const std::set<size_t> &set_rob_sub_seq_vts)
+void Hole_Exchange::perform_del_vtx_arcs_in_update(const std::set<size_t> &set_rob_sub_seq_vts)
 {
 	//remove arcs that need to be removed
 	for (auto it_sub_seq_verts = set_rob_sub_seq_vts.begin(); it_sub_seq_verts != set_rob_sub_seq_vts.end(); it_sub_seq_verts++)
@@ -175,7 +208,7 @@ void Hole_Exchange::perform_patch_rob_sub_seq_graph(int iOption, const std::vect
 		}
 	}
 
-	//add arcs between start vertices of rob_sub_seq. Note all the arcs between rob_sub_seq end already exists because of alt_graph.getGraph()
+	//add arcs between start vertices of rob_sub_seq. Note all the arcs between rob_sub_seq END already exists because of alt_graph.getGraph()
 	size_t uiTail, uiHead;
 	for (auto it_start_arcs = vec_arcs.begin(); it_start_arcs != vec_arcs.end(); it_start_arcs++)
 	{
@@ -208,6 +241,9 @@ bool Hole_Exchange::make_solution_feasible(const std::vector<std::list<size_t>> 
 		if (uiIters > c_uiMaxInfeasibleIters) break;
 		
 		m_map_start_times.clear();
+
+		//if for any reason we decide to remove this step here, take care that vertex slack occuring later 
+		//needs it. Currently since we are computing topological ordering here, we do not repeat there
 		m_top_order_dist.construct_graph_populate_order_with_dist(m_alt_out_graph, m_alt_in_graph, m_map_start_times);
 		
 		m_map_completion_times.clear();
