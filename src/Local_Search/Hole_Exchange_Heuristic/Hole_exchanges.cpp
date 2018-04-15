@@ -40,7 +40,7 @@ void Hole_Exchange::populate_robot_owners(const std::vector<std::list<size_t>> &
 	}
 }
 
-void Hole_Exchange::perform_heuristic_moves(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, size_t uiTargetMakeSpan)
+bool Hole_Exchange::perform_heuristic_moves(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, size_t uiTargetMakeSpan)
 {
 	assert(rob_seq.size() == m_uiNumRobots);
 	clear_prev_info();
@@ -53,30 +53,35 @@ void Hole_Exchange::perform_heuristic_moves(const std::vector<std::list<size_t>>
 	populate_robot_owners(rob_seq);	
 	m_uiTargetMakeSpan = uiTargetMakeSpan;
 
-	perform_swap_operation();
+	return perform_swap_operation();
 }
 
-void Hole_Exchange::copy_to_temp_buffers(std::vector<std::list<size_t>> &rob_seq, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph, std::vector<State_vtx_time> &vec_state_path, std::vector<std::vector<Vertex_Schedule>> &vec_full_rob_sch)
+void Hole_Exchange::copy_to_temp_buffers(std::vector<std::list<size_t>> &rob_seq, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph, std::vector<State_vtx_time> &vec_state_path, 
+										std::vector<std::vector<Vertex_Schedule>> &vec_full_rob_sch, std::unordered_map<size_t, size_t> &map_start_times, std::unordered_map<size_t, size_t> &map_completion_times)
 {
 	rob_seq = m_rob_seq;
 	out_graph = m_alt_out_graph;
 	in_graph = m_alt_in_graph;
 	vec_state_path = m_vec_state_path;
 	vec_full_rob_sch = m_vec_full_rob_sch;
+	map_start_times = m_map_start_times;
+	map_completion_times = m_map_completion_times;
 }
 
-void Hole_Exchange::copy_from_temp_buffers(std::vector<std::list<size_t>> &rob_seq, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph, std::vector<State_vtx_time> &vec_state_path, std::vector<std::vector<Vertex_Schedule>> &vec_full_rob_sch)
+void Hole_Exchange::copy_from_temp_buffers(std::vector<std::list<size_t>> &rob_seq, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &out_graph, std::unordered_map<size_t, std::unordered_map<size_t, size_t>> &in_graph, std::vector<State_vtx_time> &vec_state_path, std::vector<std::vector<Vertex_Schedule>> &vec_full_rob_sch, std::unordered_map<size_t, size_t> &map_start_times, std::unordered_map<size_t, size_t> &map_completion_times)
 {
 	m_rob_seq = rob_seq;
 	m_alt_out_graph = out_graph;
 	m_alt_in_graph = in_graph;
 	m_vec_state_path = vec_state_path;
 	m_vec_full_rob_sch = vec_full_rob_sch;
+	m_map_start_times = map_start_times;
+	m_map_completion_times = map_completion_times;
 }
 
-void Hole_Exchange::perform_swap_operation()
+bool Hole_Exchange::perform_swap_operation()
 {
-	size_t uiIter = 0;
+	size_t uiIter = 0, uiRobotOwner;
 	bool bImproving;
 
 	std::vector<std::list<size_t>> rob_seq_temp;
@@ -84,13 +89,15 @@ void Hole_Exchange::perform_swap_operation()
 	std::vector<std::vector<Vertex_Schedule>> vec_full_rob_sch_temp;
 	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> alt_out_graph_temp;   // <vtx, <out_vtx, arc cost>>
 	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> alt_in_graph_temp;	//  <vtx, <in_vtx, arc cost>> 
+	std::unordered_map<size_t, size_t> map_start_times; 
+	std::unordered_map<size_t, size_t> map_completion_times; 
 
 	std::list<size_t> critical_path;
 	std::list<std::tuple<N_Ind, size_t, size_t>> list_best_cand;
 
 	while (uiIter < c_uiMaxNumSwaps)
 	{
-		copy_to_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp);
+		copy_to_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp, map_start_times, map_completion_times);
 
 		compute_start_completion_times_from_schedule();
 		compute_critical_path(critical_path);
@@ -98,15 +105,18 @@ void Hole_Exchange::perform_swap_operation()
 
 		for (auto it_cand = list_best_cand.begin(); it_cand != list_best_cand.end(); it_cand++)
 		{
+			uiRobotOwner = m_hole_rob_owner.at(std::get<0>(*it_cand).getInd());
 			bImproving = check_if_candidate_improving(std::get<0>(*it_cand).getInd(), std::get<1>(*it_cand), std::get<2>(*it_cand));
 			if (bImproving) break;
 
-			copy_from_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp);			
+			copy_from_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp, map_start_times, map_completion_times);
+			assign_robo_hole_owner(std::get<0>(*it_cand).getInd(), uiRobotOwner);
 		}
 
 		if (false == bImproving) break;
 		uiIter++;
 	}
+	return bImproving;
 }
 
 bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiHole, const size_t c_uiMinTime, const size_t c_uiMaxTime)
@@ -128,6 +138,8 @@ bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiHole, const si
 	std::vector<std::vector<Vertex_Schedule>> vec_full_rob_sch_temp;
 	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> alt_out_graph_temp;   // <vtx, <out_vtx, arc cost>>
 	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> alt_in_graph_temp;	//  <vtx, <in_vtx, arc cost>> 
+	std::unordered_map<size_t, size_t> map_start_times;
+	std::unordered_map<size_t, size_t> map_completion_times;
 
 	std::list<Cand_for_insertion> list_cand_insertion;
 	get_cand_for_insertion(c_uiHole, c_uiMinTime, c_uiMaxTime, list_cand_insertion, taboo_hole_pair);
@@ -138,7 +150,7 @@ bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiHole, const si
 	size_t uiIter = 0;
 	bool bImproving = false;
 	
-	copy_to_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp);
+	copy_to_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp, map_start_times, map_completion_times);
 
 	for(auto it_cand = list_cand_insertion.begin(); it_cand != list_cand_insertion.end(); it_cand++)
 	{
@@ -152,13 +164,17 @@ bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiHole, const si
 			bFeasible = update_sequence_graphs_for_insertion(c_uiHole, std::make_pair(it_cand->m_uiHD1.getInd(), it_cand->m_uiHD2.getInd()), it_cand->m_uiRobot.getInd(), rob_sub_seq);
 			if (false == bFeasible) break;
 
-			if (m_uiTargetMakeSpan > m_top_order_dist.get_makespan()) return true;
+			if (m_uiTargetMakeSpan > m_top_order_dist.get_makespan())
+			{
+				assign_robo_hole_owner(c_uiHole, it_cand->m_uiRobot.getInd());
+				return true;
+			}
 			else bImproving = false;
 		}
 
 		if (!bFeasible || !bImproving)
 		{
-			copy_from_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp);			
+			copy_from_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp, map_start_times, map_completion_times);
 		}
 
 		if (uiIter > c_uiMaxNumInsertTries) break;
@@ -204,4 +220,15 @@ int Hole_Exchange::compute_desirability_of_insertion(const size_t c_uiHD1, const
 	iVal = (int)(m_map_vertex_slack.at(c_uiHD2) + uiOldPath) - (int)uiNewPath;
 
 	return iVal;
+}
+
+void Hole_Exchange::populate_new_sequence(std::vector<std::list<size_t>> &new_rob_sequence)
+{
+	assert(true == new_rob_sequence.empty());
+	new_rob_sequence.resize(m_uiNumRobots);
+
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		std::copy(m_rob_seq[uiRobot].begin(), m_rob_seq[uiRobot].end(), new_rob_sequence[uiRobot].begin());
+	}
 }

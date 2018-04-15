@@ -16,7 +16,7 @@ size_t getMakeSpan_From_Schedule(const std::vector<std::vector<Vertex_Schedule>>
 
 Local_Search::Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor) :m_rng(m_rd()) , m_node_data(node_data) , m_graph(graph), m_dWeight_Factor(dWeightFactor), m_en_graph(graph)
 {
-	srand(time(0));
+	srand(time(0));	
 }
 
 std::tuple<bool, size_t, size_t> Local_Search::inter_rand_oper(std::vector<std::list<size_t>> &rob_seq, std::string strType)
@@ -144,6 +144,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 {
 	std::vector<std::list<size_t>> rob_seq;
 	std::vector<std::list<size_t>> old_rob_seq;
+	bool bConservativeFound = false;
 
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_prev;
 	
@@ -171,8 +172,9 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 #endif
 #endif
 
-	//Greedy_Heuristic heur(m_node_data.m_uiNumRobots, m_graph, power);
-	LS_Greedy_Heuristic heur_LS(m_node_data.m_uiNumRobots, m_graph, power);
+	Greedy_Heuristic heur(m_node_data.m_uiNumRobots, m_graph, power);
+	//LS_Greedy_Heuristic heur_LS(m_node_data.m_uiNumRobots, m_graph, power);
+	Hole_Exchange hole_exchange(m_node_data.m_uiNumRobots, m_graph, power, m_en_graph);
 
 #ifdef ENABLE_LEGACY_CODE
 	Greedy_Heuristic_old heur_legacy(m_node_data.m_uiNumRobots, m_graph, power);
@@ -204,11 +206,10 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		std::vector<std::vector<Vertex_Schedule>> full_rob_sch;
 		std::vector<std::vector<Vertex_Schedule>> full_rob_sch_legacy;
 
-		//int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder);
-		int iRetVal = perform_greedy_scheduling(heur_LS, rob_seq, full_rob_sch, strPlotFolder, false);
-
+		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, bConservativeFound);
+		
 #ifdef ENABLE_LEGACY_CODE			
-		int iRetVal_legacy = perform_greedy_scheduling_old(heur_legacy, rob_seq, full_rob_sch_legacy);
+		int iRetVal_legacy = perform_greedy_scheduling_old(heur_legacy, rob_seq, full_rob_sch_legacy, bConservativeFound);
 #endif
 
 #ifdef ENABLE_LEGACY_CODE
@@ -307,7 +308,11 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		}
 		
 		//generate_new_sequence(full_rob_sch, heur.doRobotsWait(), rob_seq, bSuccess);
-		generate_new_sequence(full_rob_sch, false, rob_seq, bSuccess);
+		//generate_new_sequence(full_rob_sch, false, rob_seq, bSuccess);
+
+		bConservativeFound = generate_new_sequence_conservative(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
+
+		if(false == bConservativeFound) generate_new_sequence(full_rob_sch, heur.doRobotsWait(), rob_seq, bSuccess);
 		
 		uiIter++;	
 
@@ -449,7 +454,7 @@ void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Sc
 	} while (false == bChange);
 }
 
-int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder)
+int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder, bool bFullPath)
 {
 	std::vector<std::list<size_t>> full_rob_seq;
 	
@@ -457,12 +462,13 @@ int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, std::vector<
 	rob_seq.push_back({ 0,44,41,40,37,53,33,31,39,50,21,35,11,32,20,19,10,16,24,15,26,4,38,5,22,9,29,12,23,42,27,30,36,8,18,7,6,25,17,13,45,47,14,1 });
 	rob_seq.push_back({ 2,28,74,48,62,85,70,51,63,73,61,55,43,34,46,56,81,66,58,68,83,65,75,89,60,49,78,86,57,69,79,71,87,84,88,82,90,64,72,52,76,67,80,77,59,91,54,3 });*/
 	
-	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
+	if(false == bFullPath) convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
+	else full_rob_seq = rob_seq;
 	
 	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch, strPlotFolder);
 }
 
-int Local_Search::perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)
+int Local_Search::perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, bool bFullPath)
 {
 	std::vector<std::list<size_t>> full_rob_seq;
 
@@ -470,11 +476,13 @@ int Local_Search::perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, 
 	rob_seq.push_back({ 0,44,41,40,37,53,33,31,39,50,21,35,11,32,20,19,10,16,24,15,26,4,38,5,22,9,29,12,23,42,27,30,36,8,18,7,6,25,17,13,45,47,14,1 });
 	rob_seq.push_back({ 2,28,74,48,62,85,70,51,63,73,61,55,43,34,46,56,81,66,58,68,83,65,75,89,60,49,78,86,57,69,79,71,87,84,88,82,90,64,72,52,76,67,80,77,59,91,54,3 });*/
 
-	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
+	if(false == bFullPath) convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
+	else full_rob_seq = rob_seq;
+
 	return heur_old.compute_greedy_sol(full_rob_seq, full_rob_sch);
 }
 
-int Local_Search::perform_greedy_scheduling(LS_Greedy_Heuristic &ls_heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder, bool bDummy)
+int Local_Search::perform_greedy_scheduling_LS(LS_Greedy_Heuristic &ls_heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder, bool bDummy)
 {
 	std::vector<std::list<size_t>> full_rob_seq;
 	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);

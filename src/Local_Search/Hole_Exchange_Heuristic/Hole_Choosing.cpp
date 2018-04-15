@@ -11,7 +11,6 @@ bool isWorthInserting(const std::tuple<N_Ind, size_t, size_t> &curr_choice, cons
 																	                                           //<vtx, min time, max time>
 void Hole_Exchange::get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<std::tuple<N_Ind, size_t, size_t>> &list_best_cand)
 {
-	critical_path.clear();
 	list_best_cand.clear();
 
 	size_t uiVtx;
@@ -70,17 +69,22 @@ void Hole_Exchange::get_cand_for_insertion(const size_t c_uiHole, const size_t c
 			{
 				if (m_map_start_times.at(*it_next_HD) <= c_uiMaxTime)
 				{
-					iVal = compute_desirability_of_insertion(*it_HD, *it_next_HD, uiRobot, c_uiHole);
-					
+					bInsert = true;
 					if ((*it_HD == taboo_hole_pair.first) && (*it_next_HD == taboo_hole_pair.second)) bInsert = false;
-					else bInsert = true;
+					if (false == m_graph.doesEdgeExist(uiRobot, *it_HD, c_uiHole)) bInsert = false;
+					if (false == m_graph.doesEdgeExist(uiRobot, c_uiHole, *it_next_HD)) bInsert = false;
 
-					if (true == bInsert) list_cand_insertion.emplace_back(Cand_for_insertion(*it_HD, *it_next_HD, uiRobot, iVal));
+					if (false == bInsert) continue;
+
+					iVal = compute_desirability_of_insertion(*it_HD, *it_next_HD, uiRobot, c_uiHole);
+					list_cand_insertion.emplace_back(Cand_for_insertion(*it_HD, *it_next_HD, uiRobot, iVal));
 				}
 			}
 
 			it_HD = it_next_HD;
 			it_next_HD++;
+			if (m_rob_seq[uiRobot].end() == it_next_HD) break;
+
 			while ("IV" == m_graph.getType(*it_next_HD))
 			{
 				it_next_HD++;

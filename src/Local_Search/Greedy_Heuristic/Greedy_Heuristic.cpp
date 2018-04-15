@@ -732,3 +732,8 @@ bool Greedy_Heuristic::sanity_check_schedule(const std::vector<std::list<size_t>
 
 	return true;
 }
+
+bool Greedy_Heuristic::isVtxPreEnabled(size_t uiVtx)
+{ 
+	return false; 
+}

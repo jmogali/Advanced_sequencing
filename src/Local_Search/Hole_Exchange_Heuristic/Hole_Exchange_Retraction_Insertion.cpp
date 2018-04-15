@@ -1,5 +1,28 @@
 #include "Hole_exchanges.h"
 
+void modify_to_add_end_depot_sub_seq(std::vector<bool> &vec_end_depot, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph)
+{
+	const auto &map_depo = graph.getDepotMap();
+	for (size_t uiRobot = 0; uiRobot < rob_sub_seq.size(); uiRobot++)
+	{
+		size_t uiToDepot = map_depo.at(uiRobot).getToInd();
+		if (*rob_sub_seq[uiRobot].rbegin() != uiToDepot)
+		{
+			rob_sub_seq[uiRobot].emplace_back(uiToDepot);
+			vec_end_depot[uiRobot] = false;
+		}
+		else vec_end_depot[uiRobot] = true;
+	}
+}
+
+void remove_pseudo_end_depot_sub_seq(const std::vector<bool> &vec_end_depot, std::vector<std::list<size_t>> &rob_sub_seq)
+{
+	for (size_t uiRobot = 0; uiRobot < rob_sub_seq.size(); uiRobot++)
+	{
+		if (false == vec_end_depot[uiRobot]) rob_sub_seq[uiRobot].pop_back();
+	}
+}
+
 size_t get_first_occurence_index(size_t uiVtx, size_t uiRobot, const std::vector<State_vtx_time> &vec_state_path)
 {
 	for (size_t uiIndex = 0; uiIndex < vec_state_path.size(); uiIndex++)
@@ -49,8 +72,8 @@ void Hole_Exchange::check_ifsub_seq_construction_correct(std::vector<std::list<s
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
 #ifdef WINDOWS
-		assert(*rob_sub_seq[uiRobot].begin() == vec_state_path[c_uiLeft].m_vec_rob_vtx[uiRobot]);
-		assert(*rob_sub_seq[uiRobot].rbegin() == vec_state_path[c_uiRight].m_vec_rob_vtx[uiRobot]);
+		//assert(*rob_sub_seq[uiRobot].begin() == vec_state_path[c_uiLeft].m_vec_rob_vtx[uiRobot]);
+		//assert(*rob_sub_seq[uiRobot].rbegin() == vec_state_path[c_uiRight].m_vec_rob_vtx[uiRobot]);
 #else
 		if (*rob_sub_seq[uiRobot].begin() != vec_state_path[c_uiLeft].m_vec_rob_vtx[uiRobot])
 		{
@@ -68,6 +91,8 @@ void Hole_Exchange::check_ifsub_seq_construction_correct(std::vector<std::list<s
 		it_next++;
 		for (; it_curr != rob_sub_seq[uiRobot].end(); it_curr++, it_next++)
 		{
+			if (it_next == rob_sub_seq[uiRobot].end()) break;
+
 			if (*it_curr == *it_next)
 			{
 #ifdef WINDOWS
@@ -76,8 +101,7 @@ void Hole_Exchange::check_ifsub_seq_construction_correct(std::vector<std::list<s
 				cout << "Construction incorrect";
 				exit(-1);
 #endif
-			}
-			if (it_next == rob_sub_seq[uiRobot].end()) break;
+			}			
 		}
 	}
 }
@@ -176,12 +200,14 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 	std::unordered_set<size_t> set_enabled_holes;
 	std::vector<size_t> vec_start_times_first_vertex; 
 	std::vector<std::vector<Vertex_Schedule>> new_vec_rob_sub_seq_sch;
+	std::vector<bool> vec_end_depot;
 	
 	size_t uiIndex = get_first_occurence_index(c_uiHole, c_uiRobot, m_vec_state_path);
 	size_t uiLeftPathIndex = uiIndex, uiRightPathIndex = uiIndex;	
 
 	rob_sub_seq.resize(m_uiNumRobots);
 	vec_start_times_first_vertex.resize(m_uiNumRobots);
+	vec_end_depot.resize(m_uiNumRobots, false);
 
 	while (!bFeasible)
 	{
@@ -198,6 +224,8 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 		{
 			construct_rob_sub_sequences_with_iterators(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path, vec_start_end_itr_start_pos, set_comp_HD);
 		}
+
+		modify_to_add_end_depot_sub_seq(vec_end_depot, rob_sub_seq, m_graph);
 		
 		check_ifsub_seq_construction_correct(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path);
 
@@ -213,7 +241,14 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 		}
 
 		int iRetVal = m_ls_heur.compute_greedy_sol(rob_sub_seq, vec_start_times_first_vertex, set_enabled_holes, new_vec_rob_sub_seq_sch, "");
-		if (1 == iRetVal) bFeasible = true;	
+		
+		remove_pseudo_end_depot_sub_seq(vec_end_depot, rob_sub_seq);
+		
+		if (1 == iRetVal)
+		{
+			m_ls_heur.minimally_purge_end_depot_info(vec_end_depot);
+			bFeasible = true;
+		}
 	}
 	return bFeasible;
 }
@@ -229,12 +264,14 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 	std::vector<size_t> vec_start_times_first_vertex;
 	vec_start_times_first_vertex.resize(m_uiNumRobots);
 	std::vector<std::vector<Vertex_Schedule>> new_vec_rob_sub_seq_sch;
+	std::vector<bool> vec_end_depot;
 
 	size_t uiLeftPathIndex = get_first_occurence_index(pr_hole_pair.first, c_uiRobot, m_vec_state_path);
 	size_t uiRightPathIndex = get_first_occurence_index(pr_hole_pair.second, c_uiRobot, m_vec_state_path);
 
 	rob_sub_seq.clear();
 	rob_sub_seq.resize(m_uiNumRobots);
+	vec_end_depot.resize(m_uiNumRobots, false);
 
 	while (!bFeasible)
 	{
@@ -251,6 +288,8 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 			construct_rob_sub_sequences_with_iterators(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path, vec_start_end_itr_start_pos, set_comp_HD);
 		}
 
+		modify_to_add_end_depot_sub_seq(vec_end_depot, rob_sub_seq, m_graph);
+
 		check_ifsub_seq_construction_correct(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path);
 
 		compute_enabled_holes_for_rob_sub_seq(rob_sub_seq, set_comp_HD, set_enabled_verts);
@@ -264,7 +303,14 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 		}
 
 		int iRetVal = m_ls_heur.compute_greedy_sol(rob_sub_seq, vec_start_times_first_vertex, set_enabled_verts, new_vec_rob_sub_seq_sch, "");
-		if (1 == iRetVal) bFeasible = true;
+		
+		remove_pseudo_end_depot_sub_seq(vec_end_depot, rob_sub_seq);
+
+		if (1 == iRetVal)
+		{
+			m_ls_heur.minimally_purge_end_depot_info(vec_end_depot);
+			bFeasible = true;
+		}
 
 		if (uiRightPathIndex - uiLeftPathIndex>= std::min(c_uiHoleExchMaxLen, m_vec_state_path.size() - 1)) break;
 	}

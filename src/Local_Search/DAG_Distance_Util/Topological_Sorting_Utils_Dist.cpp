@@ -21,19 +21,17 @@ size_t Topological_Sorting_Utils_Dist::Compute_FROM_costs_each_Vertex(std::unord
 		iVtx = *it_curr;
 		uiCost = std::numeric_limits<size_t>::min();
 
-		if (0 == m_in_graph.at(iVtx).size())
+		if (0 == m_in_graph.at(iVtx).size()) m_map_from_costs.emplace(iVtx, 0);
+		else
 		{
-			m_map_from_costs.emplace(iVtx, 0);
-			continue;
+			for (auto it_prev = m_in_graph.at(iVtx).begin(); it_prev != m_in_graph.at(iVtx).end(); it_prev++)
+			{
+				iPrev = it_prev->first;
+				assert(m_map_from_costs.end() != m_map_from_costs.find(iPrev));
+				uiCost = std::max(uiCost, m_map_from_costs[iPrev] + it_prev->second);
+			}
+			m_map_from_costs.emplace(iVtx, uiCost);
 		}
-
-		for (auto it_prev = m_in_graph.at(iVtx).begin(); it_prev != m_in_graph.at(iVtx).end(); it_prev++)
-		{
-			iPrev = it_prev->first;
-			assert(m_map_from_costs.end() != m_map_from_costs.find(iPrev));
-			uiCost = std::max(uiCost, m_map_from_costs[iPrev] + it_prev->second);
-		}
-		m_map_from_costs.emplace(iVtx, uiCost);
 
 		//fills the start_time costs as well
 		if (iVtx < 0)
@@ -146,7 +144,7 @@ void Topological_Sorting_Utils_Dist::compute_vertex_slack(std::unordered_map<siz
 			size_t uiComp = (size_t)(-1 * iVtx) - 1;
 			std::advance(it_comp, uiComp);
 
-			for (auto it_vtx = it_comp->begin(); it_vtx != it_comp->end(); it_vtx++) map_vtx_slacks.emplace(*it_vtx, m_map_vtx_slack.at(*it_vtx));
+			for (auto it_vtx = it_comp->begin(); it_vtx != it_comp->end(); it_vtx++) map_vtx_slacks.emplace(*it_vtx, m_map_vtx_slack.at(iVtx));
 		}
 	}
 }

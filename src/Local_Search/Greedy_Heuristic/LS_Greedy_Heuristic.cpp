@@ -89,3 +89,51 @@ int LS_Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>>
 
 	return iRetVal;
 }
+
+//not all info regarding the pseudo end depots are purged, just the ones necessary are purged (from rob_seq and alt graph (selective info))
+void LS_Greedy_Heuristic::minimally_purge_end_depot_info(const std::vector<bool> &vec_end_depot_psuedo)
+{
+	purge_pseudo_end_depots_from_alt_graphs(vec_end_depot_psuedo);
+
+	//this has to occur in the end of this function
+	purge_pseudo_end_depots_from_robot_sequence(vec_end_depot_psuedo);
+}
+
+void LS_Greedy_Heuristic::purge_pseudo_end_depots_from_robot_sequence(const std::vector<bool> &vec_end_depot_psuedo)
+{
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		if (true == vec_end_depot_psuedo[uiRobot]) continue;
+		m_rob_seq[uiRobot].pop_back();
+	}
+}
+
+//we are not however modifying m_alt_edges, m_vec_vtx_alt_edge_ind_in, m_vec_vtx_alt_edge_ind_out
+void LS_Greedy_Heuristic::purge_pseudo_end_depot_from_alt_graphs(size_t uiVtx)
+{
+	for (auto it_in = m_alt_graph.m_vec_adj_set_in.at(uiVtx).begin(); it_in != m_alt_graph.m_vec_adj_set_in.at(uiVtx).end(); )
+	{
+		size_t uiErase = m_alt_graph.m_vec_adj_set_out.at(it_in->first).erase(uiVtx);
+		assert(1 == uiErase);
+		it_in = m_alt_graph.m_vec_adj_set_in.at(uiVtx).erase(it_in);		
+	}
+
+	m_alt_graph.m_vec_adj_set_out.erase(uiVtx);
+	m_alt_graph.m_vec_adj_set_in.erase(uiVtx);
+	m_alt_graph.m_map_vertex_robot_pos_map.erase(uiVtx);
+}
+
+void LS_Greedy_Heuristic::purge_pseudo_end_depots_from_alt_graphs(const std::vector<bool> &vec_end_depot_psuedo)
+{
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		if (true == vec_end_depot_psuedo[uiRobot]) continue;
+		purge_pseudo_end_depot_from_alt_graphs(*m_rob_seq[uiRobot].rbegin());
+	}
+}
+
+bool LS_Greedy_Heuristic::isVtxPreEnabled(size_t uiVtx)
+{
+	if (m_set_skip_enabling.end() != m_set_skip_enabling.find(uiVtx)) return true;
+	return false;
+}

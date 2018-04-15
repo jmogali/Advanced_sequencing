@@ -115,6 +115,7 @@ class Alternative_Graph
 
 		bool check_if_all_collisions_backwards(size_t uiVtx1, size_t uiRobot1, const std::vector<size_t>& vec_rob_vertpos);  //vertex_position
 
+		friend class LS_Greedy_Heuristic;
 		friend class Sequence_Visualization;
 };
 

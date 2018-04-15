@@ -10,15 +10,22 @@ class LS_Greedy_Heuristic : public Greedy_Heuristic
 		std::unordered_map<size_t, size_t> m_map_rob_start_vtx_time; // <start vtx , time> //we are not storing the corresponding robot
 		std::unordered_set<size_t> m_set_skip_enabling; // vertices that are already enabled
 		
-		size_t getTime(size_t uiVert);
+		size_t getTime(size_t uiVert) override;
 		void clear_prev_info_buffers();
 		bool perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq, const size_t c_uiUpperBound, const std::vector<size_t>& vec_start_times, const std::unordered_set<size_t> &set_enabled_verts);
 		void populate_enabled_verts(const std::unordered_set<size_t> &set_enabled_vertices);
 		void populate_rob_start_times(const std::vector<std::list<size_t>> &rob_seq, const std::vector<size_t>& vec_start_times);
 		void get_verts_not_self_enabled(size_t uiRobot, const std::vector<std::list<size_t>> &rob_seq, std::list<size_t>& list_dep_vert) override;
 
+		void purge_pseudo_end_depots_from_robot_sequence(const std::vector<bool> &vec_end_depot_psuedo);
+		void purge_pseudo_end_depots_from_alt_graphs(const std::vector<bool> &vec_end_depot_psuedo);
+		void purge_pseudo_end_depot_from_alt_graphs(size_t uiVtx);	
+
+		bool isVtxPreEnabled(size_t uiVtx) override; 
+
 	public:
 		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, const std::vector<size_t>& vec_start_times, const std::unordered_set<size_t> &set_enabled_verts, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strPlotFolder, const size_t c_uiUpperBound = std::numeric_limits<size_t>::max());
+		void minimally_purge_end_depot_info(const std::vector<bool> &vec_end_depot_psuedo);
 		LS_Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power);
 };
 

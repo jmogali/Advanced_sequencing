@@ -81,12 +81,17 @@ void Greedy_Heuristic::insert_missing_enabling_arcs(const size_t c_uiGivenRobot)
 		uiMinVtx = std::numeric_limits<size_t>::max();
 		if ("H" != m_graph.getType(*it)) continue;
 		
+		if (true == isVtxPreEnabled(*it)) continue;
+
 		if (m_map_enabler_pos_vert.end() != m_map_enabler_pos_vert.find(*it))
 		{
 			for (size_t uiOtherRobot = 0; uiOtherRobot < m_uiNumRobots; uiOtherRobot++)
 			{
 				if (uiOtherRobot == c_uiGivenRobot) continue;
 				uiEnablerVtx = m_map_enabler_pos_vert.at(*it).at(uiOtherRobot).second;
+				
+				if (false == m_alt_graph.containsVertex(uiEnablerVtx)) continue;
+				
 				uiTime = m_rob_hole_times.at(uiOtherRobot).at(uiEnablerVtx).m_uiStartTime;
 				if (uiEarliestTime > uiTime)
 				{
@@ -100,6 +105,8 @@ void Greedy_Heuristic::insert_missing_enabling_arcs(const size_t c_uiGivenRobot)
 			for (auto it_enabler = vec_enablers.at(*it).set.begin(); it_enabler != vec_enablers.at(*it).set.end(); it_enabler++)
 			{
 				uiEnablerVtx = it_enabler->getInd();
+				if (false == m_alt_graph.containsVertex(uiEnablerVtx)) continue;
+
 				auto res = m_alt_graph.get_next_vtx_same_job(uiEnablerVtx);
 				if (false == res.first) continue;
 				uiEnablerVtx = res.second;
@@ -129,4 +136,3 @@ void Greedy_Heuristic::insert_missing_enabling_arcs(const size_t c_uiGivenRobot)
 		if (false == bArcExists) m_alt_graph.add_prec_arc(uiMinVtx, *it, 0);
 	}
 }
-

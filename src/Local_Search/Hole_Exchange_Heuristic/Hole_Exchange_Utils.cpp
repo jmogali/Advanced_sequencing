@@ -15,11 +15,13 @@ void Hole_Exchange::compute_start_completion_times_from_schedule()
 	}
 }
 
-void Hole_Exchange::compute_completion_times()
+void Hole_Exchange::compute_completion_times_from_start_times()
 {
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
 		auto it_next = m_rob_seq[uiRobot].begin();
+		it_next++;
+
 		for (auto it = m_rob_seq[uiRobot].begin(); it != m_rob_seq[uiRobot].end(); it++ , it_next++)
 		{
 			//note for last vertex we assume that the processing time is 0, even if that is not the case
@@ -248,7 +250,7 @@ void add_vtx_to_critical_path_time(size_t uiVtx, size_t uiTime, std::list<size_t
 
 void Hole_Exchange::compute_critical_path(std::list<size_t> &critical_path)
 {
-	assert(0 == critical_path.size());
+	critical_path.clear();
 	std::list<size_t> critical_path_times;
 	size_t uiVtx, uiPred, c_uiMakespan = std::numeric_limits<size_t>::min(), uiPredTime, uiCurrTime;
 
@@ -356,4 +358,11 @@ void Hole_Exchange::remove_robo_hole_owner(const size_t c_uiHole)
 {
 	size_t uiErase = m_hole_rob_owner.erase(c_uiHole);
 	assert(1 == uiErase);
+}
+
+void Hole_Exchange::assign_robo_hole_owner(const size_t c_uiHole, const size_t c_uiRobot)
+{
+	auto it_find = m_hole_rob_owner.find(c_uiHole);
+	assert(m_hole_rob_owner.end() == it_find);
+	m_hole_rob_owner.emplace(c_uiHole, c_uiRobot);
 }

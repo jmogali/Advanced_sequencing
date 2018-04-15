@@ -76,7 +76,7 @@ class Greedy_Heuristic
 		bool check_if_backwards_coll_state(const State& state);
 		bool check_if_coll_backwards_vtx(size_t uiVtx, size_t uiGivenRobot, const std::vector<size_t>& vec_rob_vertpos);
 		std::pair<size_t, size_t> compute_exp_Mkspn_delay(const size_t uiCurrTime, const State& state);
-		size_t getTime(size_t uiVert);
+		virtual size_t getTime(size_t uiVert);
 		size_t getTime(N_Ind Ind);
 
 		//Feasibility checks
@@ -104,6 +104,9 @@ class Greedy_Heuristic
 		void insert_missing_enabling_arcs();
 		void insert_missing_enabling_arcs(const size_t c_uiGivenRobot);
 
+		//dummy function, this makes sense only for LS_Greedy_Heur
+		virtual bool isVtxPreEnabled(size_t uiVtx);
+		
 	public:
 		Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power);
 		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strPlotFolder, const size_t c_uiUpperBound = std::numeric_limits<size_t>::max());
