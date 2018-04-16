@@ -104,8 +104,9 @@ class Greedy_Heuristic
 		void insert_missing_enabling_arcs();
 		void insert_missing_enabling_arcs(const size_t c_uiGivenRobot);
 
-		//dummy function, this makes sense only for LS_Greedy_Heur
+		//dummy functions, this makes sense only for LS_Greedy_Heur
 		virtual bool isVtxPreEnabled(size_t uiVtx);
+		virtual bool isEnablerHolePresent(size_t uiEnablerVtx);
 		
 	public:
 		Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power);

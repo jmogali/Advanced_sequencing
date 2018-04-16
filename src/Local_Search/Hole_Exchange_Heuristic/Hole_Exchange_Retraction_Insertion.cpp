@@ -199,7 +199,6 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 	std::unordered_set<size_t> set_comp_HD;
 	std::unordered_set<size_t> set_enabled_holes;
 	std::vector<size_t> vec_start_times_first_vertex; 
-	std::vector<std::vector<Vertex_Schedule>> new_vec_rob_sub_seq_sch;
 	std::vector<bool> vec_end_depot;
 	
 	size_t uiIndex = get_first_occurence_index(c_uiHole, c_uiRobot, m_vec_state_path);
@@ -240,6 +239,7 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 			vec_start_times_first_vertex[uiRobot] = (size_t)std::max(0, iRemTime);
 		}
 
+		std::vector<std::vector<Vertex_Schedule>> new_vec_rob_sub_seq_sch;
 		int iRetVal = m_ls_heur.compute_greedy_sol(rob_sub_seq, vec_start_times_first_vertex, set_enabled_holes, new_vec_rob_sub_seq_sch, "");
 		
 		remove_pseudo_end_depot_sub_seq(vec_end_depot, rob_sub_seq);
@@ -263,7 +263,6 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 	std::unordered_set<size_t> set_enabled_verts;
 	std::vector<size_t> vec_start_times_first_vertex;
 	vec_start_times_first_vertex.resize(m_uiNumRobots);
-	std::vector<std::vector<Vertex_Schedule>> new_vec_rob_sub_seq_sch;
 	std::vector<bool> vec_end_depot;
 
 	size_t uiLeftPathIndex = get_first_occurence_index(pr_hole_pair.first, c_uiRobot, m_vec_state_path);
@@ -302,6 +301,7 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 			vec_start_times_first_vertex[uiRobot] = (size_t)std::max(0, iRemTime);		
 		}
 
+		std::vector<std::vector<Vertex_Schedule>> new_vec_rob_sub_seq_sch;
 		int iRetVal = m_ls_heur.compute_greedy_sol(rob_sub_seq, vec_start_times_first_vertex, set_enabled_verts, new_vec_rob_sub_seq_sch, "");
 		
 		remove_pseudo_end_depot_sub_seq(vec_end_depot, rob_sub_seq);

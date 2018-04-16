@@ -290,8 +290,7 @@ void Alternative_Graph::clear_prev_info()
 	m_vec_adj_set_out.clear();
 	m_vec_adj_set_in.clear();
 	m_vec_vtx_alt_edge_ind_in.clear();
-	m_vec_vtx_alt_edge_ind_out.clear();
-	
+	m_vec_vtx_alt_edge_ind_out.clear();	
 	m_map_vertex_robot_pos_map.clear();
 	m_alt_edges.clear();
 }

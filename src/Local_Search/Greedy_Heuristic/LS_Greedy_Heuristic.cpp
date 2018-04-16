@@ -120,7 +120,7 @@ void LS_Greedy_Heuristic::purge_pseudo_end_depot_from_alt_graphs(size_t uiVtx)
 
 	m_alt_graph.m_vec_adj_set_out.erase(uiVtx);
 	m_alt_graph.m_vec_adj_set_in.erase(uiVtx);
-	m_alt_graph.m_map_vertex_robot_pos_map.erase(uiVtx);
+	m_alt_graph.m_map_vertex_robot_pos_map.erase(uiVtx);	
 }
 
 void LS_Greedy_Heuristic::purge_pseudo_end_depots_from_alt_graphs(const std::vector<bool> &vec_end_depot_psuedo)
@@ -135,5 +135,11 @@ void LS_Greedy_Heuristic::purge_pseudo_end_depots_from_alt_graphs(const std::vec
 bool LS_Greedy_Heuristic::isVtxPreEnabled(size_t uiVtx)
 {
 	if (m_set_skip_enabling.end() != m_set_skip_enabling.find(uiVtx)) return true;
+	return false;
+}
+
+bool LS_Greedy_Heuristic::isEnablerHolePresent(size_t uiEnablerVtx)
+{
+	if (true == m_alt_graph.containsVertex(uiEnablerVtx)) return true;
 	return false;
 }

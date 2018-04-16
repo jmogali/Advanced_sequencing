@@ -10,9 +10,7 @@ bool Greedy_Heuristic::construct_Alt_Graph_STN(const std::vector<std::list<size_
 
 void Greedy_Heuristic::construct_prec_graph_for_each_operation(const std::vector<std::list<size_t>> &rob_seq)
 {
-	size_t uiNumRobots = m_graph.get_num_robots();
-	
-	for (size_t uiRobot = 0; uiRobot < uiNumRobots; uiRobot++)
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
 		size_t uiInd = 0;
 		auto it_next = rob_seq[uiRobot].cbegin();
@@ -88,6 +86,8 @@ bool Greedy_Heuristic::add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, co
 		for (auto it_enabler = vec_enabler.at(uiVert).set.begin(); it_enabler != vec_enabler.at(uiVert).set.end(); it_enabler++)
 		{
 			uiEnablerVtx = it_enabler->getInd();
+			if (false == isEnablerHolePresent(uiEnablerVtx)) continue;
+
 			uiEnablerRobot = m_alt_graph.get_vertex_ownership(uiEnablerVtx);
 			if (uiGivenRobot == uiEnablerRobot) continue; 
 			uiEnablerPos = m_alt_graph.get_vertex_position(uiEnablerVtx);

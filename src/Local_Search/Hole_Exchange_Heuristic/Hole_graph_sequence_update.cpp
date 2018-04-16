@@ -246,6 +246,7 @@ bool Hole_Exchange::make_solution_feasible(const std::vector<std::list<size_t>> 
 		//needs it. Currently since we are computing topological ordering here, we do not repeat there
 		m_top_order_dist.construct_graph_populate_order_with_dist(m_alt_out_graph, m_alt_in_graph, m_map_start_times);
 		
+
 		m_map_completion_times.clear();
 		compute_completion_times_from_start_times();
 
@@ -298,30 +299,34 @@ void Hole_Exchange::check_and_resolve_collision(const std::vector<std::list<size
 
 			if ((map_old_start_times.end() != it_find1) && (map_old_start_times.end() != it_find2))
 			{
-				if (it_find1->second <= it_find2->second) bVtx1PrecVtx2 = true;
-				else if (it_find2->second <= it_find1->second) bVtx1PrecVtx2 = false;
+				if (it_find1->second < it_find2->second) bVtx1PrecVtx2 = true;
+				else if (it_find2->second < it_find1->second) bVtx1PrecVtx2 = false;
+				else assert(false);
 			}
 			else
 			{
 				bVtx1PrecVtx2 = check_if_vtx1_prec_vtx2_sequence_partition(uiVtx1, uiVtx2, set_vts_before_sub_seq, set_vts_sub_seq, set_vts_after_sub_seq);
-			}
-			
+			}			
 
 			if (bVtx1PrecVtx2)
 			{
 				auto it_nxt1 = vec_rob_vtx_itr[uiRobot1];
 				it_nxt1++;
 				uiVtx1Next = *it_nxt1;
-				m_alt_out_graph.at(uiVtx1Next).emplace(uiVtx2, 0);
-				m_alt_in_graph.at(uiVtx2).emplace(uiVtx1Next, 0);
+				
+				//m_alt_out_graph.at(uiVtx1Next).emplace(uiVtx2, 0);
+				//m_alt_in_graph.at(uiVtx2).emplace(uiVtx1Next, 0);
+				add_edge_to_out_in_graphs(uiVtx1Next, uiVtx2, 0);
 			}
 			else
 			{
 				auto it_nxt2 = vec_rob_vtx_itr[uiRobot2];
 				it_nxt2++;
 				uiVtx2Next = *it_nxt2;
-				m_alt_out_graph.at(uiVtx2Next).emplace(uiVtx1, 0);
-				m_alt_in_graph.at(uiVtx1).emplace(uiVtx2Next, 0);
+
+				//m_alt_out_graph.at(uiVtx2Next).emplace(uiVtx1, 0);
+				//m_alt_in_graph.at(uiVtx1).emplace(uiVtx2Next, 0);
+				add_edge_to_out_in_graphs(uiVtx2Next, uiVtx1, 0);
 			}
 		}		
 	}
@@ -391,8 +396,10 @@ bool Hole_Exchange::check_and_resolve_enablers(const std::vector<std::list<size_
 				auto it_next = it_find;
 				it_next++;
 				if (m_rob_seq[uiOtherRobot].end() == it_next) return false;
-				m_alt_out_graph.at(*it_next).emplace(uiVtx, 0);
-				m_alt_in_graph.at(uiVtx).emplace(*it_next, 0);
+
+				//m_alt_out_graph.at(*it_next).emplace(uiVtx, 0);
+				//m_alt_in_graph.at(uiVtx).emplace(*it_next, 0);
+				add_edge_to_out_in_graphs(*it_next, uiVtx, 0);
 			}
 		}
 	}

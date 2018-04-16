@@ -22,6 +22,7 @@ class LS_Greedy_Heuristic : public Greedy_Heuristic
 		void purge_pseudo_end_depot_from_alt_graphs(size_t uiVtx);	
 
 		bool isVtxPreEnabled(size_t uiVtx) override; 
+		bool isEnablerHolePresent(size_t uiEnablerVtx) override;
 
 	public:
 		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, const std::vector<size_t>& vec_start_times, const std::unordered_set<size_t> &set_enabled_verts, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strPlotFolder, const size_t c_uiUpperBound = std::numeric_limits<size_t>::max());

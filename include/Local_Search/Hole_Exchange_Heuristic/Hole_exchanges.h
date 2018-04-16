@@ -74,9 +74,9 @@ class Hole_Exchange
 		void compute_critical_path(std::list<size_t> &critical_path);
 		void get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<std::tuple<N_Ind, size_t, size_t>> &list_best_cand); //<vtx, min time, max time>
 		void get_cand_for_insertion(const size_t c_uiHole, const size_t c_uiMinTime, const size_t c_uiMaxTime, std::list<Cand_for_insertion> &list_cand_insertion, const std::pair<size_t, size_t> &taboo_hole_pair);
-		std::pair<size_t, size_t> compute_enabler_flexibility(const size_t uiVtx, const size_t c_uiMakeSpan);
+		std::tuple<bool, size_t, size_t> compute_enabler_flexibility(const size_t uiVtx, const size_t c_uiMakeSpan);
 		size_t compute_min_time(const size_t uiVtx);
-		size_t compute_max_time(const size_t uiVtx, const size_t c_uiMakeSpan);
+		std::pair<bool , size_t> compute_max_time(const size_t uiVtx, const size_t c_uiMakeSpan);
 
 		//heuristic operations
 		bool check_if_retraction_feasible(const size_t c_uiVtx, const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_sub_seq);
@@ -121,7 +121,8 @@ class Hole_Exchange
 		void gather_vertices_before_sub_seq_after(std::set<size_t> &set_vts_before_sub_seq, std::set<size_t> &set_vts_sub_seq, std::set<size_t> &set_vts_after_sub_seq, const std::vector<std::list<size_t>> &rob_sub_seq);
 		void remove_robo_hole_owner(const size_t c_uiHole);
 		void assign_robo_hole_owner(const size_t c_uiHole, const size_t c_uiRobot);
-
+		void add_edge_to_out_in_graphs(size_t uiTail, size_t uiHead, size_t uiCost);
+		
 		bool perform_swap_operation();
 
 	public:

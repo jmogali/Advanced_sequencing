@@ -592,6 +592,7 @@ void Greedy_Heuristic::safe_backtrack(size_t uiDepth, const State& state)
 
 void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &new_rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, const std::vector<std::list<size_t>> &rob_seq)
 {
+	assert(vec_rob_sch.empty());
 	vec_rob_sch.resize(m_uiNumRobots);
 	size_t uiStart, uiEnd, uiWait;
 	m_bVectorizeSchedule = true;
@@ -615,6 +616,7 @@ void Greedy_Heuristic::vectorize_schedule(const std::vector<std::list<size_t>> &
 		vec_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiStart, 0 );				
 	}
 
+	bool bValid = sanity_check_schedule(rob_seq, vec_rob_sch);
 #ifdef ENABLE_FULL_CHECKING
 	bool bValid = sanity_check_schedule(rob_seq, vec_rob_sch);
 	assert(true == bValid);
@@ -699,6 +701,7 @@ void Greedy_Heuristic::print_state(size_t uiDepth, size_t uiTime, const State &s
 
 bool Greedy_Heuristic::sanity_check_schedule(const std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
 {
+	size_t uiNxtVtx;
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
 		size_t uiCount = 0;
@@ -716,6 +719,8 @@ bool Greedy_Heuristic::sanity_check_schedule(const std::vector<std::list<size_t>
 
 		for (auto it = rob_seq[uiRobot].begin(); it != rob_seq[uiRobot].end(); it++ , uiCount++)
 		{
+			if (0 < uiCount) assert(*it == uiNxtVtx);
+
 			if (*it != vec_rob_sch[uiRobot][uiCount].m_uiInd)
 			{
 				cout << "Failed sequence: \n";
@@ -727,6 +732,8 @@ bool Greedy_Heuristic::sanity_check_schedule(const std::vector<std::list<size_t>
 				exit(1);
 #endif				
 			}
+			auto res = m_alt_graph.get_next_vtx_same_job(*it);
+			if (true == res.first) uiNxtVtx = res.second;
 		}
 	}
 
@@ -736,4 +743,9 @@ bool Greedy_Heuristic::sanity_check_schedule(const std::vector<std::list<size_t>
 bool Greedy_Heuristic::isVtxPreEnabled(size_t uiVtx)
 { 
 	return false; 
+}
+
+bool Greedy_Heuristic::isEnablerHolePresent(size_t uiEnablerVtx)
+{
+	return true;
 }

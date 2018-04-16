@@ -250,7 +250,6 @@ void add_vtx_to_critical_path_time(size_t uiVtx, size_t uiTime, std::list<size_t
 
 void Hole_Exchange::compute_critical_path(std::list<size_t> &critical_path)
 {
-	critical_path.clear();
 	std::list<size_t> critical_path_times;
 	size_t uiVtx, uiPred, c_uiMakespan = std::numeric_limits<size_t>::min(), uiPredTime, uiCurrTime;
 
@@ -280,7 +279,7 @@ void Hole_Exchange::compute_critical_path(std::list<size_t> &critical_path)
 		std::vector<size_t> vec_pred_0_vtx; //stores 0 tight predecessors i.e. uiPredTime = uiCurrTime
 		bool bTightPredecessor = false;
 
-		for (auto it_pred = m_alt_in_graph.at(uiVtx).begin(); it_pred != m_alt_in_graph.at(uiVtx).end(); it_pred++)
+		for (auto it_pred = m_alt_in_graph.at(uiVtx).cbegin(); it_pred != m_alt_in_graph.at(uiVtx).cend(); it_pred++)
 		{
 			uiPred = it_pred->first;
 			uiPredTime = m_map_start_times.at(uiPred);
@@ -365,4 +364,12 @@ void Hole_Exchange::assign_robo_hole_owner(const size_t c_uiHole, const size_t c
 	auto it_find = m_hole_rob_owner.find(c_uiHole);
 	assert(m_hole_rob_owner.end() == it_find);
 	m_hole_rob_owner.emplace(c_uiHole, c_uiRobot);
+}
+
+void Hole_Exchange::add_edge_to_out_in_graphs(size_t uiTail, size_t uiHead, size_t uiCost)
+{
+	auto res = m_alt_out_graph[uiTail].emplace(uiHead, uiCost);
+	assert(true == res.second);
+	res = m_alt_in_graph[uiHead].emplace(uiTail, 0);
+	assert(true == res.second);
 }

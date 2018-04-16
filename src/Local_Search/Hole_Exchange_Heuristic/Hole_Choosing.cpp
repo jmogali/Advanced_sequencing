@@ -11,8 +11,6 @@ bool isWorthInserting(const std::tuple<N_Ind, size_t, size_t> &curr_choice, cons
 																	                                           //<vtx, min time, max time>
 void Hole_Exchange::get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<std::tuple<N_Ind, size_t, size_t>> &list_best_cand)
 {
-	list_best_cand.clear();
-
 	size_t uiVtx;
 	std::tuple<size_t, size_t, size_t> val;
 	const size_t c_uiMakeSpan = m_map_completion_times.at(*critical_path.rbegin());
@@ -25,9 +23,10 @@ void Hole_Exchange::get_cand_vertex_critical_path(size_t uiChoice, std::list<siz
 		if (1 == uiChoice)
 		{
 			auto res = compute_enabler_flexibility(uiVtx, c_uiMakeSpan);
+			if (false == std::get<0>(res)) continue;
 			std::get<0>(val) = uiVtx;
-			std::get<1>(val) = res.first;
-			std::get<2>(val) = res.second;
+			std::get<1>(val) = std::get<1>(res);
+			std::get<2>(val) = std::get<2>(res);
 		}
 
 		if (0 == list_best_cand.size()) list_best_cand.emplace_back(val);
@@ -74,10 +73,11 @@ void Hole_Exchange::get_cand_for_insertion(const size_t c_uiHole, const size_t c
 					if (false == m_graph.doesEdgeExist(uiRobot, *it_HD, c_uiHole)) bInsert = false;
 					if (false == m_graph.doesEdgeExist(uiRobot, c_uiHole, *it_next_HD)) bInsert = false;
 
-					if (false == bInsert) continue;
-
-					iVal = compute_desirability_of_insertion(*it_HD, *it_next_HD, uiRobot, c_uiHole);
-					list_cand_insertion.emplace_back(Cand_for_insertion(*it_HD, *it_next_HD, uiRobot, iVal));
+					if (true == bInsert)
+					{
+						iVal = compute_desirability_of_insertion(*it_HD, *it_next_HD, uiRobot, c_uiHole);
+						list_cand_insertion.emplace_back(Cand_for_insertion(*it_HD, *it_next_HD, uiRobot, iVal));
+					}
 				}
 			}
 
@@ -118,7 +118,7 @@ size_t Hole_Exchange::compute_min_time(const size_t c_uiVtx)
 }
 
 //computes max time based on vertices enabled by c_uiVtx
-size_t Hole_Exchange::compute_max_time(const size_t c_uiVtx, const size_t c_uiMakeSpan)
+std::pair<bool, size_t> Hole_Exchange::compute_max_time(const size_t c_uiVtx, const size_t c_uiMakeSpan)
 {
 	size_t uiMaxTime = c_uiMakeSpan;
 	size_t uiEnabler;
@@ -146,19 +146,22 @@ size_t Hole_Exchange::compute_max_time(const size_t c_uiVtx, const size_t c_uiMa
 
 		if (1 == uiEnablingVts)
 		{
-			if (uiEnabledVtxStartTime > m_map_start_times.at(c_uiVtx) + m_graph.getTime(c_uiVtx))
+			return std::make_pair(false, std::numeric_limits<size_t>::min());
+			/*if (uiEnabledVtxStartTime > m_map_start_times.at(c_uiVtx) + m_graph.getTime(c_uiVtx))
 			{
 				uiMaxTime = std::min(uiMaxTime, uiEnabledVtxStartTime - m_graph.getTime(c_uiVtx));
-			}
+			}*/
 		}
 	}
-	return uiMaxTime;
+	return std::make_pair(true, uiMaxTime);
 }
 
-std::pair<size_t, size_t> Hole_Exchange::compute_enabler_flexibility(const size_t c_uiVtx, const size_t c_uiMakeSpan)
+std::tuple<bool, size_t, size_t> Hole_Exchange::compute_enabler_flexibility(const size_t c_uiVtx, const size_t c_uiMakeSpan)
 {
-	size_t uiMinTime = compute_min_time(c_uiVtx);
-	size_t uiMaxTime = compute_max_time(c_uiVtx, c_uiMakeSpan);
-	
-	return std::make_pair(uiMinTime, uiMaxTime);
+	size_t uiMinTime, uiMaxTime;
+	uiMinTime = compute_min_time(c_uiVtx);
+	auto res = compute_max_time(c_uiVtx, c_uiMakeSpan);
+	if (true == res.first) uiMaxTime = res.second;
+
+	return std::make_tuple(res.first, uiMinTime, uiMaxTime);
 }
