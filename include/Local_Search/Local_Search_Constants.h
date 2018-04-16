@@ -14,7 +14,7 @@ const size_t c_uiHoleExcStartOffset = 8;
 const size_t c_uiHoleExcOffsetJump = 2;
 const size_t c_uiMaxNumSwaps = 10;
 const size_t c_uiMaxNumInsertTries = 10;
-const size_t c_uiMaxCriticalPathCandidates = 3;
+const size_t c_uiMaxCriticalPathCandidates = 15;
 const size_t c_uiMaxInfeasibleIters = 10;
 
 //#define PRINT_LOCAL_OPERATOR_MESSAGES

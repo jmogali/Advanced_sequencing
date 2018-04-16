@@ -1,51 +1,35 @@
 #include "Hole_exchanges.h"
-
-bool isWorthInserting(const std::tuple<N_Ind, size_t, size_t> &curr_choice, const std::tuple<size_t, size_t, size_t> &new_choice)
-{
-	int iSlackCurr = (int)std::get<2>(curr_choice) - (int)std::get<1>(curr_choice);
-	int iNewSlack = (int)std::get<2>(new_choice) - (int)std::get<1>(new_choice);
-
-	if (iSlackCurr < iNewSlack) return true;
-	return false;
-}
-																	                                           //<vtx, min time, max time>
-void Hole_Exchange::get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<std::tuple<N_Ind, size_t, size_t>> &list_best_cand)
+																	                                           
+void Hole_Exchange::get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<Cand_for_picking> &list_best_cand)
 {
 	size_t uiVtx;
-	std::tuple<size_t, size_t, size_t> val;
 	const size_t c_uiMakeSpan = m_map_completion_times.at(*critical_path.rbegin());
 	
 	for (auto it_vtx = critical_path.begin(); it_vtx != critical_path.end(); it_vtx++)
 	{
 		uiVtx = *it_vtx;
 		if ("H" != m_graph.getType(uiVtx)) continue;
+		if (m_set_taboo_holes.end() != m_set_taboo_holes.find(uiVtx)) continue;
 		
 		if (1 == uiChoice)
 		{
 			auto res = compute_enabler_flexibility(uiVtx, c_uiMakeSpan);
 			if (false == std::get<0>(res)) continue;
-			std::get<0>(val) = uiVtx;
-			std::get<1>(val) = std::get<1>(res);
-			std::get<2>(val) = std::get<2>(res);
-		}
-
-		if (0 == list_best_cand.size()) list_best_cand.emplace_back(val);
-		else
-		{
-			bool bInsert = false;
-			for (auto it_cand = list_best_cand.begin(); it_cand != list_best_cand.end(); it_cand++)
-			{
-				bInsert = isWorthInserting(*it_cand, val);
-				if (true == bInsert)
-				{
-					list_best_cand.insert(it_cand, val);
-					break;
-				}
-			}
-			if ( (false == bInsert) && (list_best_cand.size() < c_uiMaxCriticalPathCandidates)) list_best_cand.emplace_back(val);			
-			if (list_best_cand.size() > c_uiMaxCriticalPathCandidates) list_best_cand.pop_back();
-		}
+			list_best_cand.emplace_back(Cand_for_picking(uiVtx));
+			list_best_cand.rbegin()->m_uiMinTime = std::get<1>(res);
+			list_best_cand.rbegin()->m_uiMaxTime = std::get<2>(res);
+			list_best_cand.rbegin()->m_uiDist = compute_hole_dist_from_to_neigh_holes(uiVtx);
+		}		
 	}	
+
+	list_best_cand.sort(sort_by_distance);
+	if (list_best_cand.size() > c_uiMaxCriticalPathCandidates)
+	{
+		auto it_last = list_best_cand.begin();
+		std::advance(it_last, c_uiMaxCriticalPathCandidates);
+		list_best_cand.erase(it_last, list_best_cand.end());
+	}
+	list_best_cand.sort(sort_by_flexbility);
 }
 
 void Hole_Exchange::get_cand_for_insertion(const size_t c_uiHole, const size_t c_uiMinTime, const size_t c_uiMaxTime, std::list<Cand_for_insertion> &list_cand_insertion, const std::pair<size_t, size_t> &taboo_hole_pair)
@@ -164,4 +148,26 @@ std::tuple<bool, size_t, size_t> Hole_Exchange::compute_enabler_flexibility(cons
 	if (true == res.first) uiMaxTime = res.second;
 
 	return std::make_tuple(res.first, uiMinTime, uiMaxTime);
+}
+
+size_t Hole_Exchange::compute_hole_dist_from_to_neigh_holes(const size_t c_uiHole)
+{
+	const size_t c_uiRobot = m_hole_rob_owner.at(c_uiHole);
+	auto it = std::find(m_rob_seq[c_uiRobot].begin(), m_rob_seq[c_uiRobot].end(), c_uiHole);
+	size_t uiDist = m_graph.getTime(c_uiHole);
+	auto it_prev = it;
+	it_prev--;
+	while ("IV" == m_graph.getType(*it_prev))
+	{
+		uiDist += m_graph.getTime(*it_prev);
+		it_prev--;
+	}
+	auto it_next = it;
+	it_next++;
+	while ("IV" == m_graph.getType(*it_next))
+	{
+		uiDist += m_graph.getTime(*it_next);
+		it_next++;
+	}
+	return uiDist;
 }

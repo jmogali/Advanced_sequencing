@@ -20,11 +20,11 @@ void Greedy_Heuristic::construct_prec_graph_for_each_operation(const std::vector
 			if (it_next == rob_seq[uiRobot].cend())
 			{
 				m_alt_graph.add_vertex_ownership_pos(*it, uiRobot , uiInd);
-				//assert(DEPOT_TIME == layout_graph.getTime(*it));
+				//assert(DEPOT_TIME == getTime(*it));
 				break;
 			}
 
-			m_alt_graph.add_prec_arc(*it, *it_next, m_graph.getTime(*it));
+			m_alt_graph.add_prec_arc(*it, *it_next, getTime(*it));
 			m_alt_graph.add_vertex_ownership_pos(*it, uiRobot, uiInd);
 			uiInd++;
 		}		

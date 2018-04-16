@@ -32,7 +32,7 @@ class Local_Search
 		
 		//local search section
 		void generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, const bool c_bWait, std::vector<std::list<size_t>> &rob_seq, bool bSuccess);
-		bool generate_new_sequence_conservative(Hole_Exchange &hole_exchange, Greedy_Heuristic &heur, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch,std::vector<std::list<size_t>> &rob_seq, size_t c_uiTargetMakeSpan);
+		bool generate_new_sequence_conservative(Hole_Exchange &hole_exchange, Greedy_Heuristic &heur, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch,std::vector<std::list<size_t>> &rob_seq, size_t &c_uiTargetMakeSpan);
 
 		//local search operators section
 		//random operators section

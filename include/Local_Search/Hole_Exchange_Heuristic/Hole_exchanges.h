@@ -28,9 +28,9 @@ struct Cand_for_insertion
 
 		bool operator< (const Cand_for_insertion &val) const
 		{
-			// the more m_iVal the better
-			if (m_iVal > val.m_iVal) return true;
-			else if (m_iVal < val.m_iVal) return false;
+			// the less m_iVal the better
+			if (m_iVal < val.m_iVal) return true;
+			else if (m_iVal > val.m_iVal) return false;
 
 			//to resolve ties
 			if (m_uiHD1.getInd() < val.m_uiHD1.getInd()) return true;
@@ -46,6 +46,16 @@ struct Cand_for_insertion
 		}
 };
 
+struct Cand_for_picking
+{
+	N_Ind m_uiHole;
+	size_t m_uiMinTime, m_uiMaxTime;
+	size_t m_uiDist;
+	Cand_for_picking(size_t c_uiHole) :m_uiHole(c_uiHole) {};
+};
+
+bool sort_by_distance(const Cand_for_picking& lhs, const Cand_for_picking &rhs);
+bool sort_by_flexbility(const Cand_for_picking& lhs, const Cand_for_picking &rhs);
 
 class Hole_Exchange
 {
@@ -64,7 +74,8 @@ class Hole_Exchange
 		std::unordered_map<size_t, size_t> m_hole_rob_owner; //<vtx, robot>
 		Topological_Sorting_Utils_Dist m_top_order_dist;
 		std::unordered_map<size_t, size_t> m_map_vertex_slack;
-		size_t m_uiTargetMakeSpan;
+		size_t m_uiTargetMakeSpan , m_uiBestMakeSpan;
+		std::set<size_t> m_set_taboo_holes;
 
 		void clear_prev_info();
 		void populate_robot_owners(const std::vector<std::list<size_t>> &rob_seq);
@@ -72,9 +83,10 @@ class Hole_Exchange
 
 		//picking hole function
 		void compute_critical_path(std::list<size_t> &critical_path);
-		void get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<std::tuple<N_Ind, size_t, size_t>> &list_best_cand); //<vtx, min time, max time>
+		void get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<Cand_for_picking> &list_best_cand); //<vtx, min time, max time>
 		void get_cand_for_insertion(const size_t c_uiHole, const size_t c_uiMinTime, const size_t c_uiMaxTime, std::list<Cand_for_insertion> &list_cand_insertion, const std::pair<size_t, size_t> &taboo_hole_pair);
 		std::tuple<bool, size_t, size_t> compute_enabler_flexibility(const size_t uiVtx, const size_t c_uiMakeSpan);
+		size_t compute_hole_dist_from_to_neigh_holes(const size_t c_uiHole);
 		size_t compute_min_time(const size_t uiVtx);
 		std::pair<bool , size_t> compute_max_time(const size_t uiVtx, const size_t c_uiMakeSpan);
 
@@ -104,6 +116,7 @@ class Hole_Exchange
 		void check_and_resolve_collision(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq, const std::unordered_map<size_t, size_t> &map_old_start_times);
 		bool check_if_vtx1_prec_vtx2_sequence_partition(const size_t c_uiVtx1, const size_t c_uiVtx2, const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq);
 		bool check_and_resolve_enablers(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::unordered_map<size_t, size_t> &map_old_completion_times, const size_t c_uiHole);
+		bool examine_super_comps_for_infeasibility();
 
 		//heuristic utilities
 		void compute_start_completion_times_from_schedule();
@@ -122,6 +135,8 @@ class Hole_Exchange
 		void remove_robo_hole_owner(const size_t c_uiHole);
 		void assign_robo_hole_owner(const size_t c_uiHole, const size_t c_uiRobot);
 		void add_edge_to_out_in_graphs(size_t uiTail, size_t uiHead, size_t uiCost);
+		void modify_arc_cost(size_t uiTail, size_t uiHead, size_t uiNewCost);
+		size_t find_vtx_owner(size_t uiVtx);
 		
 		bool perform_swap_operation();
 
@@ -129,6 +144,7 @@ class Hole_Exchange
 		Hole_Exchange(size_t uiNumRobots, const Layout_LS &graph, Power_Set &power, const Enabling_Graph &en_graph);
 		bool perform_heuristic_moves(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, size_t uiTargetMakeSpan);
 		void populate_new_sequence(std::vector<std::list<size_t>> &new_rob_sequence);
+		inline size_t get_best_makespan_found() { return m_uiBestMakeSpan; };
 };
 
 std::pair<size_t, size_t> remove_INP_HOLE_in_rob_sub_seq(size_t c_uiHole, const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph);

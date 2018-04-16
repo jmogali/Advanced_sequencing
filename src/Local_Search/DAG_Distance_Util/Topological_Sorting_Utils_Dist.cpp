@@ -50,7 +50,6 @@ size_t Topological_Sorting_Utils_Dist::Compute_FROM_costs_each_Vertex(std::unord
 			m_iLastVtx = iVtx;
 		}
 	}
-	
 	return uiMakeSpan;
 }
 

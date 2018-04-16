@@ -30,7 +30,6 @@ void Hole_Exchange::compute_completion_times_from_start_times()
 				m_map_completion_times.emplace(*it, m_map_start_times.at(*it));
 				break;
 			}
-
 			m_map_completion_times.emplace(*it, m_map_start_times.at(*it_next));			
 		}
 	}
@@ -52,7 +51,7 @@ void Hole_Exchange::construct_vertex_schedule()
 		{
 			uiEnd = m_map_start_times.at(*it2);
 			assert(uiEnd == m_map_completion_times.at(*it1));
-			uiWait = uiEnd - m_graph.getTime(*it1) - uiStart;
+			uiWait = (size_t) ((int)uiEnd - (int)m_graph.getTime(*it1) - (int)uiStart);
 			assert((int)uiEnd - (int)m_graph.getTime(*it1) - (int)uiStart >= 0);
 			m_vec_full_rob_sch[uiRobot].emplace_back(*it1, uiStart, uiEnd, uiWait);
 			uiStart = uiEnd;
@@ -175,15 +174,14 @@ void Hole_Exchange::construct_rob_sub_sequences_with_iterators(std::vector<std::
 		{
 			set_comp_HD.erase(*(std::get<0>(vec_start_end_itr_start_pos[uiRobot])));
 
-			if (uiStartVtx == *(std::get<0>(vec_start_end_itr_start_pos[uiRobot])))
+			if (uiStartVtx != *(std::get<0>(vec_start_end_itr_start_pos[uiRobot])))
 			{
-				if (*rob_sub_seq[uiRobot].begin() != uiStartVtx) rob_sub_seq[uiRobot].emplace_front(uiStartVtx);
-				break;
-			}
-			else rob_sub_seq[uiRobot].emplace_front(*(std::get<0>(vec_start_end_itr_start_pos[uiRobot])));
+				std::get<0>(vec_start_end_itr_start_pos[uiRobot])--;
+				std::get<2>(vec_start_end_itr_start_pos[uiRobot])--;
 
-			std::get<0>(vec_start_end_itr_start_pos[uiRobot])--;
-			std::get<2>(vec_start_end_itr_start_pos[uiRobot])--;
+				rob_sub_seq[uiRobot].emplace_front(*(std::get<0>(vec_start_end_itr_start_pos[uiRobot])));
+			}
+			else break;			
 		}
 
 		while (uiEndVtx != *(std::get<1>(vec_start_end_itr_start_pos[uiRobot])))
@@ -370,6 +368,61 @@ void Hole_Exchange::add_edge_to_out_in_graphs(size_t uiTail, size_t uiHead, size
 {
 	auto res = m_alt_out_graph[uiTail].emplace(uiHead, uiCost);
 	assert(true == res.second);
-	res = m_alt_in_graph[uiHead].emplace(uiTail, 0);
+	res = m_alt_in_graph[uiHead].emplace(uiTail, uiCost);	
 	assert(true == res.second);
+}
+
+void Hole_Exchange::modify_arc_cost(size_t uiTail, size_t uiHead, size_t uiNewCost)
+{
+	m_alt_out_graph[uiTail].at(uiHead) = uiNewCost;
+	m_alt_in_graph[uiHead].at(uiTail) = uiNewCost;
+}
+
+size_t Hole_Exchange::find_vtx_owner(size_t uiVtx)
+{
+	if ("H" == m_graph.getType(uiVtx)) return m_hole_rob_owner.at(uiVtx);
+	else if ("D" == m_graph.getType(uiVtx))
+	{
+		const auto& vec_depo = m_graph.getDepotMap();
+		for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+		{
+			if (vec_depo.at(uiRobot).getFromInd() == uiVtx) return uiRobot;
+			else if (vec_depo.at(uiRobot).getToInd() == uiVtx) return uiRobot;
+		}
+	}
+	else
+	{
+		for (auto it = m_alt_out_graph[uiVtx].begin(); it != m_alt_out_graph[uiVtx].end(); it++)
+		{
+			if (it->second > 0) return find_vtx_owner(it->first);
+		}		
+	}
+	assert(false); 
+	return std::numeric_limits<size_t>::max(); //should never occur
+}
+
+bool sort_by_distance(const Cand_for_picking& lhs, const Cand_for_picking &rhs)
+{
+	if (lhs.m_uiDist > rhs.m_uiDist) return true;
+	else if(lhs.m_uiDist < rhs.m_uiDist) return false;
+	else if (lhs.m_uiDist == rhs.m_uiDist)
+	{
+		int iFlex1 = (int)lhs.m_uiMaxTime - (int)lhs.m_uiMinTime;
+		int iFlex2 = (int)rhs.m_uiMaxTime - (int)rhs.m_uiMinTime;
+		
+		if (iFlex1 > iFlex2) return true;
+		else if (iFlex1 < iFlex2) return false;
+		else return lhs.m_uiHole.getInd() < rhs.m_uiHole.getInd();
+	}
+	else return lhs.m_uiHole.getInd() < rhs.m_uiHole.getInd(); //dummy
+}
+
+bool sort_by_flexbility(const Cand_for_picking& lhs, const Cand_for_picking &rhs)
+{
+	int iFlex1 = (int)lhs.m_uiMaxTime - (int)lhs.m_uiMinTime;
+	int iFlex2 = (int)rhs.m_uiMaxTime - (int)rhs.m_uiMinTime;
+	
+	if (iFlex1 > iFlex2) return true;
+	else if (iFlex1 < iFlex2) return false;
+	else return lhs.m_uiHole.getInd() < rhs.m_uiHole.getInd();
 }

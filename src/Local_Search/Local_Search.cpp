@@ -144,7 +144,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 {
 	std::vector<std::list<size_t>> rob_seq;
 	std::vector<std::list<size_t>> old_rob_seq;
-	
+	bool bConservativeFound;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_prev;
 	
 	generate_constructive_sequence_VBSS(rob_seq);
@@ -184,12 +184,12 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	
 	std::clock_t start_time;
 	start_time = std::clock();
-	bool bReplace;
-	
+		
 	while (uiIter < 5000000)
 	{
 		uiMakeSpan = std::numeric_limits<size_t>::max();
 		uiMakeSpan_legacy = std::numeric_limits<size_t>::max();
+		bConservativeFound = false;
 		
 		bValid = check_validity_of_sequence(rob_seq);
 #ifdef WINDOWS		
@@ -207,8 +207,8 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		std::vector<std::vector<Vertex_Schedule>> full_rob_sch_legacy;
 
 		/*rob_seq.clear();
-		rob_seq.push_back({ 0,15,48,18,9,30,37,39,19,12,27,56,21,51,13,31,11,32,20,44,45,22,34,41,26,25,10,42,28,17,43,46,35,16,7,8,6,14,24,58,29,33,40,36,23,5,4,1 });
-		rob_seq.push_back({ 2,63,60,64,88,70,72,59,89,52,66,53,54,91,50,84,90,86,81,74,73,68,69,78,57,67,85,61,79,83,71,62,49,75,76,80,77,82,65,47,38,55,87,3 });*/
+		rob_seq.push_back({ 0,7,26,8,5,6,48,10,27,50,19,56,17,39,41,16,15,33,28,9,31,20,29,18,40,13,34,37,22,45,4,42,25,24,44,30,32,35,23,12,11,14,38,43,47,54,46,21,1 });
+		rob_seq.push_back({ 2,83,73,52,53,55,71,65,88,85,51,76,66,62,58,77,67,63,84,82,79,75,59,49,57,89,69,74,68,81,86,87,64,78,90,61,60,72,36,91,80,70,3 });*/
 
 		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder);
 		
@@ -292,18 +292,22 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 
 		if (true == bSuccess)
 		{
+			print_sequence(rob_seq);
+			bConservativeFound = generate_new_sequence_conservative(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);			
+		}
+
+		if (true == bSuccess)
+		{
 			if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 			{
 				rob_seq = old_rob_seq;
-				full_rob_sch = full_rob_sch_prev;
-				bReplace = false;
+				full_rob_sch = full_rob_sch_prev;				
 			}
 			else
 			{
 				vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
 				old_rob_seq = rob_seq;
-				full_rob_sch_prev = full_rob_sch;
-				bReplace = true;
+				full_rob_sch_prev = full_rob_sch;				
 			}
 			uiSuccesFullIter++;
 		}
@@ -313,13 +317,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			full_rob_sch = full_rob_sch_prev;
 		}
 		
-		if ( (true == bSuccess) && (true == bReplace))
-		{
-			print_sequence(rob_seq);
-			bool bConservativeFound = generate_new_sequence_conservative(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
-			if (false == bConservativeFound) generate_new_sequence(full_rob_sch, heur.doRobotsWait(), rob_seq, bSuccess);
-		}
-		else generate_new_sequence(full_rob_sch, heur.doRobotsWait(), rob_seq, false);
+		if(false == bConservativeFound) generate_new_sequence(full_rob_sch, heur.doRobotsWait(), rob_seq, false);
 		
 		uiIter++;	
 

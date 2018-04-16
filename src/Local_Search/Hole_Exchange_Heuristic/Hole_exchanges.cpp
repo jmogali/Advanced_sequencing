@@ -20,6 +20,7 @@ void Hole_Exchange::clear_prev_info()
 	m_map_start_times.clear();
 	m_map_completion_times.clear();
 	m_map_vertex_slack.clear();
+	m_set_taboo_holes.clear();
 }
 
 void Hole_Exchange::populate_rob_graphs(const Alternative_Graph &alt_graph)
@@ -52,6 +53,7 @@ bool Hole_Exchange::perform_heuristic_moves(const std::vector<std::list<size_t>>
 	populate_rob_graphs(alt_graph);
 	populate_robot_owners(rob_seq);	
 	m_uiTargetMakeSpan = uiTargetMakeSpan;
+	m_uiBestMakeSpan = std::numeric_limits<size_t>::max();
 
 	return perform_swap_operation();
 }
@@ -93,7 +95,7 @@ bool Hole_Exchange::perform_swap_operation()
 	std::unordered_map<size_t, size_t> map_completion_times; 
 
 	std::list<size_t> critical_path;
-	std::list<std::tuple<N_Ind, size_t, size_t>> list_best_cand;
+	std::list<Cand_for_picking> list_best_cand;
 
 	while (uiIter < c_uiMaxNumSwaps)
 	{
@@ -106,14 +108,21 @@ bool Hole_Exchange::perform_swap_operation()
 
 		for (auto it_cand = list_best_cand.begin(); it_cand != list_best_cand.end(); it_cand++)
 		{
-			uiRobotOwner = m_hole_rob_owner.at(std::get<0>(*it_cand).getInd());
-			bImproving = check_if_candidate_improving(std::get<0>(*it_cand).getInd(), std::get<1>(*it_cand), std::get<2>(*it_cand));
+			m_set_taboo_holes.emplace(it_cand->m_uiHole.getInd());
+			uiRobotOwner = m_hole_rob_owner.at(it_cand->m_uiHole.getInd());
+			bImproving = check_if_candidate_improving(it_cand->m_uiHole.getInd(), it_cand->m_uiMinTime, it_cand->m_uiMaxTime);
 			if (bImproving) break;
 
 			copy_from_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp, map_start_times, map_completion_times);			
 		}
 
 		if (false == bImproving) break;
+		else
+		{
+			cout << "New Makespan: " << m_top_order_dist.get_makespan() << " , Target Makespan: " << m_uiTargetMakeSpan << endl;
+			if (m_uiBestMakeSpan > m_top_order_dist.get_makespan()) m_uiBestMakeSpan = m_top_order_dist.get_makespan();
+		}
+
 		uiIter++;
 		list_best_cand.clear();
 		critical_path.clear();
@@ -160,27 +169,29 @@ bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiHole, const si
 
 	for(auto it_cand = list_cand_insertion.begin(); it_cand != list_cand_insertion.end(); it_cand++)
 	{
-		if (c_uiDeletionMakeSpan + it_cand->m_iVal > m_uiTargetMakeSpan) break;
+		if (c_uiDeletionMakeSpan + std::max(0 , it_cand->m_iVal) > m_uiTargetMakeSpan) break;
 		
 		bFeasible = check_if_insertion_feasible(c_uiHole, it_cand->m_uiRobot.getInd(), std::make_pair(it_cand->m_uiHD1.getInd(), it_cand->m_uiHD2.getInd()), rob_sub_seq);
 
 		if (bFeasible)
 		{
+			assign_robo_hole_owner(c_uiHole, it_cand->m_uiRobot.getInd());
 			//need to update graphs and then check whether it_cand improves
 			bFeasible = update_sequence_graphs_for_insertion(c_uiHole, std::make_pair(it_cand->m_uiHD1.getInd(), it_cand->m_uiHD2.getInd()), it_cand->m_uiRobot.getInd(), rob_sub_seq);
-			if (false == bFeasible) break;
-
-			if (m_uiTargetMakeSpan > m_top_order_dist.get_makespan())
+			if (false == bFeasible)
 			{
-				assign_robo_hole_owner(c_uiHole, it_cand->m_uiRobot.getInd());
-				return true;
+				remove_robo_hole_owner(c_uiHole);
+				break;
 			}
+
+			if (m_uiTargetMakeSpan > m_top_order_dist.get_makespan()) return true;
 			else bImproving = false;
 		}
 
 		if (!bFeasible || !bImproving)
 		{
 			copy_from_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp, map_start_times, map_completion_times);
+			remove_robo_hole_owner(c_uiHole);
 		}
 
 		if (uiIter > c_uiMaxNumInsertTries) break;
@@ -224,7 +235,7 @@ int Hole_Exchange::compute_desirability_of_insertion(const size_t c_uiHD1, const
 		uiNewPath += m_graph.getTime(*it_iv);
 	}
 
-	iVal = (int)(m_map_vertex_slack.at(c_uiHD2) + uiOldPath) - (int)uiNewPath;
+	iVal = (int)uiNewPath - ((int)(m_map_vertex_slack.at(c_uiHD2) + uiOldPath));
 
 	return iVal;
 }

@@ -188,10 +188,7 @@ void Hole_Exchange::perform_patch_rob_sub_seq_graph(int iOption, const std::vect
 			auto it_prev = it_find;
 			std::advance(it_prev, -1);
 			uiTime = m_graph.getTime(*it_prev);
-			auto res = m_alt_out_graph.at(*it_prev).emplace(uiStart, uiTime);
-			assert(true == res.second);
-			res = m_alt_in_graph.at(uiStart).emplace(*it_prev, uiTime);
-			assert(true == res.second);
+			add_edge_to_out_in_graphs(*it_prev, uiStart, uiTime);			
 		}
 
 		uiEnd = *rob_sub_seq[uiRobot].rbegin();
@@ -201,10 +198,7 @@ void Hole_Exchange::perform_patch_rob_sub_seq_graph(int iOption, const std::vect
 			auto it_next = it_find;
 			std::advance(it_next, 1);
 			uiTime = m_graph.getTime(uiEnd);
-			auto res = m_alt_out_graph.at(uiEnd).emplace(*it_next, uiTime);
-			assert(true == res.second);
-			res = m_alt_in_graph.at(*it_next).emplace(uiEnd, uiTime);
-			assert(true == res.second);
+			add_edge_to_out_in_graphs(uiEnd, *it_next, uiTime);			
 		}
 	}
 
@@ -214,12 +208,18 @@ void Hole_Exchange::perform_patch_rob_sub_seq_graph(int iOption, const std::vect
 	{
 		uiTail = it_start_arcs->first;
 		uiHead = it_start_arcs->second;
+		add_edge_to_out_in_graphs(uiTail, uiHead, 0);		
+	}
 
-		auto it_insert = m_alt_out_graph.at(uiTail).emplace(uiHead, 0);
-		assert(true == it_insert.second);
-
-		it_insert = m_alt_in_graph.at(uiHead).emplace(uiTail, 0);
-		assert(true == it_insert.second);
+	//adjust arc lengths of rob_sub_seq start vertices, this value from m_heur_ls was modified earlier
+	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
+	{
+		auto it = rob_sub_seq[uiRobot].begin();
+		uiTail = *it;
+		it++;
+		if (rob_sub_seq[uiRobot].end() == it) continue;
+		uiHead = *it;
+		modify_arc_cost(uiTail, uiHead, m_graph.getTime(uiTail));
 	}
 }
 
@@ -245,7 +245,8 @@ bool Hole_Exchange::make_solution_feasible(const std::vector<std::list<size_t>> 
 		//if for any reason we decide to remove this step here, take care that vertex slack occuring later 
 		//needs it. Currently since we are computing topological ordering here, we do not repeat there
 		m_top_order_dist.construct_graph_populate_order_with_dist(m_alt_out_graph, m_alt_in_graph, m_map_start_times);
-		
+		bFeasible = examine_super_comps_for_infeasibility();
+		if (false == bFeasible) break;
 
 		m_map_completion_times.clear();
 		compute_completion_times_from_start_times();
@@ -312,10 +313,7 @@ void Hole_Exchange::check_and_resolve_collision(const std::vector<std::list<size
 			{
 				auto it_nxt1 = vec_rob_vtx_itr[uiRobot1];
 				it_nxt1++;
-				uiVtx1Next = *it_nxt1;
-				
-				//m_alt_out_graph.at(uiVtx1Next).emplace(uiVtx2, 0);
-				//m_alt_in_graph.at(uiVtx2).emplace(uiVtx1Next, 0);
+				uiVtx1Next = *it_nxt1;				
 				add_edge_to_out_in_graphs(uiVtx1Next, uiVtx2, 0);
 			}
 			else
@@ -323,9 +321,6 @@ void Hole_Exchange::check_and_resolve_collision(const std::vector<std::list<size
 				auto it_nxt2 = vec_rob_vtx_itr[uiRobot2];
 				it_nxt2++;
 				uiVtx2Next = *it_nxt2;
-
-				//m_alt_out_graph.at(uiVtx2Next).emplace(uiVtx1, 0);
-				//m_alt_in_graph.at(uiVtx1).emplace(uiVtx2Next, 0);
 				add_edge_to_out_in_graphs(uiVtx2Next, uiVtx1, 0);
 			}
 		}		
@@ -352,7 +347,7 @@ bool Hole_Exchange::check_if_vtx1_prec_vtx2_sequence_partition(const size_t c_ui
 bool Hole_Exchange::check_and_resolve_enablers(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::unordered_map<size_t, size_t> &map_old_completion_times, const size_t c_uiHole)
 {
 	bool bEnabled = false, bFound;
-	size_t uiVtx, uiEnabler, uiMinTime, uiOldTime;
+	size_t uiVtx, uiEnabler, uiMinTime, uiOldTime, uiEnablerRobot;
 	const auto &vec_enablers = m_graph.get_Enablers();
 
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
@@ -385,22 +380,36 @@ bool Hole_Exchange::check_and_resolve_enablers(const std::vector<std::list<size_
 			}
 			
 			if (m_alt_out_graph.end() == m_alt_out_graph.find(uiEnabler)) return false;
-
+			
+			uiEnablerRobot = m_hole_rob_owner.at(uiEnabler);
 			bFound = false;
-			for (size_t uiOtherRobot = 0; uiOtherRobot < m_uiNumRobots; uiOtherRobot++)
-			{
-				if (uiOtherRobot == uiRobot) continue;
-				auto it_find = std::find(m_rob_seq[uiOtherRobot].begin(), m_rob_seq[uiOtherRobot].end(), uiEnabler);
-				if (m_rob_seq[uiOtherRobot].end() == it_find) continue;
-				bFound = true;
-				auto it_next = it_find;
-				it_next++;
-				if (m_rob_seq[uiOtherRobot].end() == it_next) return false;
+			
+			assert (uiEnablerRobot != uiRobot);
+			auto it_find = std::find(m_rob_seq[uiEnablerRobot].begin(), m_rob_seq[uiEnablerRobot].end(), uiEnabler);
+			if (m_rob_seq[uiEnablerRobot].end() == it_find) continue;
+			bFound = true;
+			auto it_next = it_find;
+			it_next++;
+			if (m_rob_seq[uiEnablerRobot].end() == it_next) return false;
+			add_edge_to_out_in_graphs(*it_next, uiVtx, 0);			
+		}
+	}
+	return true;
+}
 
-				//m_alt_out_graph.at(*it_next).emplace(uiVtx, 0);
-				//m_alt_in_graph.at(uiVtx).emplace(*it_next, 0);
-				add_edge_to_out_in_graphs(*it_next, uiVtx, 0);
-			}
+bool Hole_Exchange::examine_super_comps_for_infeasibility()
+{
+	size_t uiRobot;
+	const auto& list_super_comp = m_top_order_dist.get_super_comp();
+
+	for (auto it_comp = list_super_comp.begin(); it_comp != list_super_comp.end(); it_comp++)
+	{
+		std::set<size_t> set_robots_in_comp;
+		for (auto it_vtx = it_comp->begin(); it_vtx != it_comp->end(); it_vtx++)
+		{
+			uiRobot = find_vtx_owner(*it_vtx);
+			if (set_robots_in_comp.end() != set_robots_in_comp.find(uiRobot)) return false;
+			else set_robots_in_comp.emplace(uiRobot);
 		}
 	}
 	return true;
