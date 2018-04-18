@@ -65,18 +65,18 @@ void Topological_Sorting_Utils::construct_out_graph(const std::unordered_map<siz
 				if (iVtx == it_neigh->second) continue;
 
 				// doing it this way to prevent creation of multigraph
-				auto it_find = m_out_graph.at(iVtx).find(it_neigh->second);
+				auto it_find_1 = m_out_graph.at(iVtx).find(it_neigh->second);
 
-				if (m_out_graph.at(iVtx).end() == it_find) m_out_graph.at(iVtx).emplace(it_neigh->second, it_succ->second);
-				else it_find->second = std::max(it_find->second, it_succ->second);
+				if (m_out_graph.at(iVtx).end() == it_find_1) m_out_graph.at(iVtx).emplace(it_neigh->second, it_succ->second);
+				else it_find_1->second = std::max(it_find_1->second, it_succ->second);
 			}
 			else
 			{
 				// doing it this way to prevent creation of multigraph
-				auto it_find = m_out_graph.at(iVtx).find((int)it_succ->first);
+				auto it_find_1 = m_out_graph.at(iVtx).find((int)it_succ->first);
 
-				if (m_out_graph.at(iVtx).end() == it_find) m_out_graph.at(iVtx).emplace((int)it_succ->first, it_succ->second);
-				else it_find->second = std::max(it_find->second, it_succ->second);
+				if (m_out_graph.at(iVtx).end() == it_find_1) m_out_graph.at(iVtx).emplace((int)it_succ->first, it_succ->second);
+				else it_find_1->second = std::max(it_find_1->second, it_succ->second);
 			}
 		}
 	}

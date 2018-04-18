@@ -171,12 +171,19 @@ void Hole_Exchange::perform_del_vtx_arcs_in_update(const std::set<size_t> &set_r
 
 void Hole_Exchange::perform_patch_rob_sub_seq_graph(int iOption, const std::vector<std::list<size_t>> &rob_sub_seq, const std::vector<arc> &vec_arcs)
 {
-	const auto& alt_graph = m_ls_heur.get_complete_alt_graph(iOption);
+	//const auto& alt_graph = m_ls_heur.get_complete_alt_graph(iOption);
+	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> out_graph;
+	std::unordered_map<size_t, std::unordered_map<size_t, size_t>> in_graph;
+	m_ls_heur_old.populate_graphs(out_graph, in_graph);
+
 	//append alternative graph to out graph
-	std::copy(alt_graph.getGraph().begin(), alt_graph.getGraph().end(), std::inserter(m_alt_out_graph, m_alt_out_graph.end()));
+	//std::copy(alt_graph.getGraph().begin(), alt_graph.getGraph().end(), std::inserter(m_alt_out_graph, m_alt_out_graph.end()));
+	std::copy(out_graph.begin(), out_graph.end(), std::inserter(m_alt_out_graph, m_alt_out_graph.end()));
+
 	// append reverse alternative graph to in graph
-	std::copy(alt_graph.getReverseGraph().begin(), alt_graph.getReverseGraph().end(), std::inserter(m_alt_in_graph, m_alt_in_graph.end()));
-	
+	//std::copy(alt_graph.getReverseGraph().begin(), alt_graph.getReverseGraph().end(), std::inserter(m_alt_in_graph, m_alt_in_graph.end()));
+	std::copy(in_graph.begin(), in_graph.end(), std::inserter(m_alt_in_graph, m_alt_in_graph.end()));
+
 	// add connectors between rob_sub_seq to old graph
 	size_t uiStart, uiEnd, uiTime;
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
@@ -233,20 +240,20 @@ bool Hole_Exchange::make_solution_feasible(const std::vector<std::list<size_t>> 
 	std::unordered_map<size_t, size_t> map_old_start_times = m_map_start_times;
 	std::unordered_map<size_t, size_t> map_old_completion_times = m_map_completion_times;
 
-	bool bFeasible = false;
+	bool bNoChange = false;
 	size_t uiIters = 0;
 
-	while (!bFeasible)
+	while (!bNoChange)
 	{
-		if (uiIters > c_uiMaxInfeasibleIters) break;
+		if (uiIters > c_uiMaxInfeasibleIters) return false;
 		
 		m_map_start_times.clear();
 
 		//if for any reason we decide to remove this step here, take care that vertex slack occuring later 
 		//needs it. Currently since we are computing topological ordering here, we do not repeat there
 		m_top_order_dist.construct_graph_populate_order_with_dist(m_alt_out_graph, m_alt_in_graph, m_map_start_times);
-		bFeasible = examine_super_comps_for_infeasibility();
-		if (false == bFeasible) break;
+		bool bFeasible = examine_super_comps_for_infeasibility();
+		//if (false == bFeasible) break;
 
 		m_map_completion_times.clear();
 		compute_completion_times_from_start_times();
@@ -254,16 +261,19 @@ bool Hole_Exchange::make_solution_feasible(const std::vector<std::list<size_t>> 
 		construct_vertex_schedule();
 		construct_state_transition_path();
 
-		bFeasible = resolve_collisions_unenabled_vts_dynamically(set_vts_before_sub_seq, set_vts_sub_seq, set_vts_after_sub_seq, map_old_start_times, map_old_completion_times, c_uiHole);
+		auto pr = resolve_collisions_unenabled_vts_dynamically(set_vts_before_sub_seq, set_vts_sub_seq, set_vts_after_sub_seq, map_old_start_times, map_old_completion_times, c_uiHole);
+		if (false == pr.first) return false; // infeasible
+		bNoChange = !(pr.second);
+
 		uiIters++;
 	}
-	return bFeasible;
+	return true;
 }
 
-bool Hole_Exchange::resolve_collisions_unenabled_vts_dynamically(const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq, const std::unordered_map<size_t, size_t> &map_old_start_times, const std::unordered_map<size_t, size_t> &map_old_completion_times, const size_t c_uiHole)
+std::pair<bool, bool> Hole_Exchange::resolve_collisions_unenabled_vts_dynamically(const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq, const std::unordered_map<size_t, size_t> &map_old_start_times, const std::unordered_map<size_t, size_t> &map_old_completion_times, const size_t c_uiHole)
 {
 	std::vector<std::list<size_t>::iterator> vec_rob_vtx_itr;
-	bool bFeasible;
+	bool bArcsAdded = false;
 
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++) vec_rob_vtx_itr.emplace_back(m_rob_seq[uiRobot].begin());
 
@@ -276,17 +286,17 @@ bool Hole_Exchange::resolve_collisions_unenabled_vts_dynamically(const std::set<
 			while (*vec_rob_vtx_itr[uiRobot] != vec_vtx_in_state[uiRobot]) vec_rob_vtx_itr[uiRobot]++;
 		}
 
-		check_and_resolve_collision(vec_rob_vtx_itr, set_vts_before_sub_seq, set_vts_sub_seq, set_vts_after_sub_seq, map_old_start_times);
-		bFeasible = check_and_resolve_enablers(vec_rob_vtx_itr, map_old_completion_times, c_uiHole);
-		if (false == bFeasible) return false;
+		bArcsAdded = bArcsAdded | check_and_resolve_collision(vec_rob_vtx_itr, set_vts_before_sub_seq, set_vts_sub_seq, set_vts_after_sub_seq, map_old_start_times);
+		auto pr  = check_and_resolve_enablers(vec_rob_vtx_itr, map_old_completion_times, c_uiHole);
+		if (false == pr.first) return pr;
 	}
-	return true;
+	return std::make_pair(true, bArcsAdded);
 }
 
-void Hole_Exchange::check_and_resolve_collision(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq, const std::unordered_map<size_t, size_t> &map_old_start_times)
+bool Hole_Exchange::check_and_resolve_collision(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq, const std::unordered_map<size_t, size_t> &map_old_start_times)
 {
 	size_t uiVtx1, uiVtx2, uiVtx1Next, uiVtx2Next;
-	bool bVtx1PrecVtx2;
+	bool bVtx1PrecVtx2, bArcsAdded = false;
 	for (size_t uiRobot1 = 0; uiRobot1 < m_uiNumRobots; uiRobot1++)
 	{
 		uiVtx1 = *vec_rob_vtx_itr[uiRobot1];
@@ -295,6 +305,8 @@ void Hole_Exchange::check_and_resolve_collision(const std::vector<std::list<size
 			uiVtx2 = *vec_rob_vtx_itr[uiRobot2];
 			if (false == m_graph.areColliding(Coll_Pair(uiVtx1, uiRobot1, uiVtx2, uiRobot2))) continue;			
 			
+			bArcsAdded = true;
+
 			auto it_find1 = map_old_start_times.find(uiVtx1);
 			auto it_find2 = map_old_start_times.find(uiVtx2);
 
@@ -325,28 +337,41 @@ void Hole_Exchange::check_and_resolve_collision(const std::vector<std::list<size
 			}
 		}		
 	}
+	return bArcsAdded;
 }
 
 bool Hole_Exchange::check_if_vtx1_prec_vtx2_sequence_partition(const size_t c_uiVtx1, const size_t c_uiVtx2, const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq)
 {
-	if (set_vts_sub_seq.end() != set_vts_sub_seq.find(c_uiVtx1))
-	{
-		if (set_vts_after_sub_seq.end() != set_vts_after_sub_seq.find(c_uiVtx2)) return true;
-		if (set_vts_sub_seq.end() != set_vts_sub_seq.find(c_uiVtx2)) assert(false); //m_ls_heur should have resolved this collision
-	}
-	else if (set_vts_sub_seq.end() != set_vts_sub_seq.find(c_uiVtx2))
-	{
-		if (set_vts_after_sub_seq.end() != set_vts_after_sub_seq.find(c_uiVtx1)) return false;
-		if (set_vts_sub_seq.end() != set_vts_sub_seq.find(c_uiVtx1)) assert(false); //m_ls_heur should have resolved this collision
-	}
-	
+	bool bVtx1BeforeSubSeq = false;
+	if (set_vts_before_sub_seq.end() != set_vts_before_sub_seq.find(c_uiVtx1)) bVtx1BeforeSubSeq = true;
+
+	bool bVtx2BeforeSubSeq = false;
+	if (set_vts_before_sub_seq.end() != set_vts_before_sub_seq.find(c_uiVtx2)) bVtx2BeforeSubSeq = true;
+
+	bool bVtx1SubSeq = false;
+	if (set_vts_sub_seq.end() != set_vts_sub_seq.find(c_uiVtx1)) bVtx1SubSeq = true;
+
+	bool bVtx2SubSeq = false;
+	if (set_vts_sub_seq.end() != set_vts_sub_seq.find(c_uiVtx2)) bVtx2SubSeq = true;
+
+	bool bVtx1AfterSeq = false;
+	if (set_vts_after_sub_seq.end() != set_vts_after_sub_seq.find(c_uiVtx1)) bVtx1AfterSeq = true;
+
+	bool bVtx2AfterSeq = false;
+	if (set_vts_after_sub_seq.end() != set_vts_after_sub_seq.find(c_uiVtx2)) bVtx2AfterSeq = true;
+
+	if (bVtx1BeforeSubSeq & (bVtx2SubSeq | bVtx2AfterSeq)) return true;
+	if (bVtx1SubSeq & bVtx2AfterSeq) return true;
+	if (bVtx2BeforeSubSeq & (bVtx1SubSeq | bVtx1AfterSeq)) return false;
+	if (bVtx2SubSeq & bVtx1AfterSeq) return false;	
+
 	assert(false); // this case should never occur 
 	return false;
 }
 
-bool Hole_Exchange::check_and_resolve_enablers(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::unordered_map<size_t, size_t> &map_old_completion_times, const size_t c_uiHole)
+std::pair<bool, bool> Hole_Exchange::check_and_resolve_enablers(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::unordered_map<size_t, size_t> &map_old_completion_times, const size_t c_uiHole)
 {
-	bool bEnabled = false, bFound;
+	bool bEnabled = false, bFound, bArcsAdded = false;
 	size_t uiVtx, uiEnabler, uiMinTime, uiOldTime, uiEnablerRobot;
 	const auto &vec_enablers = m_graph.get_Enablers();
 
@@ -379,7 +404,7 @@ bool Hole_Exchange::check_and_resolve_enablers(const std::vector<std::list<size_
 				}
 			}
 			
-			if (m_alt_out_graph.end() == m_alt_out_graph.find(uiEnabler)) return false;
+			if (m_alt_out_graph.end() == m_alt_out_graph.find(uiEnabler)) return std::make_pair(false, bArcsAdded);
 			
 			uiEnablerRobot = m_hole_rob_owner.at(uiEnabler);
 			bFound = false;
@@ -390,11 +415,12 @@ bool Hole_Exchange::check_and_resolve_enablers(const std::vector<std::list<size_
 			bFound = true;
 			auto it_next = it_find;
 			it_next++;
-			if (m_rob_seq[uiEnablerRobot].end() == it_next) return false;
-			add_edge_to_out_in_graphs(*it_next, uiVtx, 0);			
+			if (m_rob_seq[uiEnablerRobot].end() == it_next) return std::make_pair(false, bArcsAdded);
+			add_edge_to_out_in_graphs(*it_next, uiVtx, 0);		
+			bArcsAdded = true;
 		}
 	}
-	return true;
+	return std::make_pair(true, bArcsAdded);
 }
 
 bool Hole_Exchange::examine_super_comps_for_infeasibility()

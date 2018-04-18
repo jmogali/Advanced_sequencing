@@ -3,7 +3,7 @@
 Cand_for_insertion::Cand_for_insertion(size_t uiHD1, size_t uiHD2, size_t uiRobot, int iVal) :m_uiHD1(uiHD1), m_uiHD2(uiHD2), m_uiRobot(uiRobot), m_iVal(iVal)
 {}
 
-Hole_Exchange::Hole_Exchange(size_t uiNumRobots, const Layout_LS &graph, Power_Set &power, const Enabling_Graph &en_graph) : m_uiNumRobots(uiNumRobots), m_graph(graph), m_ls_heur(uiNumRobots, graph, power), m_en_graph(en_graph)
+Hole_Exchange::Hole_Exchange(size_t uiNumRobots, const Layout_LS &graph, Power_Set &power, const Enabling_Graph &en_graph) : m_uiNumRobots(uiNumRobots), m_graph(graph), m_ls_heur_old(uiNumRobots, graph, power), m_en_graph(en_graph)
 {
 	m_rob_seq.resize(m_uiNumRobots);
 	m_vec_full_rob_sch.resize(m_uiNumRobots);
@@ -51,6 +51,7 @@ bool Hole_Exchange::perform_heuristic_moves(const std::vector<std::list<size_t>>
 	m_vec_full_rob_sch = full_rob_sch;
 	construct_state_transition_path(full_rob_sch);
 	populate_rob_graphs(alt_graph);
+
 	populate_robot_owners(rob_seq);	
 	m_uiTargetMakeSpan = uiTargetMakeSpan;
 	m_uiBestMakeSpan = std::numeric_limits<size_t>::max();
@@ -96,13 +97,12 @@ bool Hole_Exchange::perform_swap_operation()
 
 	std::list<size_t> critical_path;
 	std::list<Cand_for_picking> list_best_cand;
+	compute_start_completion_times_from_schedule();
 
 	while (uiIter < c_uiMaxNumSwaps)
 	{
 		bImproving = false;
-		copy_to_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp, map_start_times, map_completion_times);
-
-		compute_start_completion_times_from_schedule();
+		copy_to_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp, map_start_times, map_completion_times);		
 		compute_critical_path(critical_path);
 		get_cand_vertex_critical_path(1, critical_path, list_best_cand);
 
@@ -139,11 +139,10 @@ bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiHole, const si
 	bool bFeasible = check_if_retraction_feasible(c_uiHole, c_uiRobot, rob_sub_seq);
 	if (false == bFeasible) return false;
 
-	if (m_top_order_dist.get_makespan() > m_uiTargetMakeSpan) return false;
-
 	std::pair<size_t, size_t> taboo_hole_pair; //should not insert new hole between the taboo hole pair
 	bFeasible = update_sequence_graphs_for_removal(c_uiHole, c_uiRobot, rob_sub_seq, taboo_hole_pair);
 	if (false == bFeasible) return false;
+	if (m_top_order_dist.get_makespan() > m_uiTargetMakeSpan) return false;
 
 	remove_robo_hole_owner(c_uiHole);
 	compute_vertex_slack();
@@ -163,8 +162,7 @@ bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiHole, const si
 	//will add insertion of hole code here
 
 	size_t uiIter = 0;
-	bool bImproving = false;
-	
+		
 	copy_to_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp, map_start_times, map_completion_times);
 
 	for(auto it_cand = list_cand_insertion.begin(); it_cand != list_cand_insertion.end(); it_cand++)
@@ -172,7 +170,7 @@ bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiHole, const si
 		if (c_uiDeletionMakeSpan + std::max(0 , it_cand->m_iVal) > m_uiTargetMakeSpan) break;
 		
 		bFeasible = check_if_insertion_feasible(c_uiHole, it_cand->m_uiRobot.getInd(), std::make_pair(it_cand->m_uiHD1.getInd(), it_cand->m_uiHD2.getInd()), rob_sub_seq);
-
+		
 		if (bFeasible)
 		{
 			assign_robo_hole_owner(c_uiHole, it_cand->m_uiRobot.getInd());
@@ -183,17 +181,11 @@ bool Hole_Exchange::check_if_candidate_improving(const size_t c_uiHole, const si
 				remove_robo_hole_owner(c_uiHole);
 				break;
 			}
-
 			if (m_uiTargetMakeSpan > m_top_order_dist.get_makespan()) return true;
-			else bImproving = false;
-		}
-
-		if (!bFeasible || !bImproving)
-		{
+			
 			copy_from_temp_buffers(rob_seq_temp, alt_out_graph_temp, alt_in_graph_temp, vec_state_path_temp, vec_full_rob_sch_temp, map_start_times, map_completion_times);
-			remove_robo_hole_owner(c_uiHole);
-		}
-
+			remove_robo_hole_owner(c_uiHole);			
+		}		
 		if (uiIter > c_uiMaxNumInsertTries) break;
 		uiIter++;
 	}

@@ -199,14 +199,14 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 	std::unordered_set<size_t> set_comp_HD;
 	std::unordered_set<size_t> set_enabled_holes;
 	std::vector<size_t> vec_start_times_first_vertex; 
-	std::vector<bool> vec_end_depot;
+	//std::vector<bool> vec_end_depot;
 	
 	size_t uiIndex = get_first_occurence_index(c_uiHole, c_uiRobot, m_vec_state_path);
 	size_t uiLeftPathIndex = uiIndex, uiRightPathIndex = uiIndex;	
 
 	rob_sub_seq.resize(m_uiNumRobots);
 	vec_start_times_first_vertex.resize(m_uiNumRobots);
-	vec_end_depot.resize(m_uiNumRobots, false);
+	//vec_end_depot.resize(m_uiNumRobots, false);
 
 	while (!bFeasible)
 	{
@@ -224,7 +224,7 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 			construct_rob_sub_sequences_with_iterators(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path, vec_start_end_itr_start_pos, set_comp_HD);
 		}
 
-		modify_to_add_end_depot_sub_seq(vec_end_depot, rob_sub_seq, m_graph);
+		//modify_to_add_end_depot_sub_seq(vec_end_depot, rob_sub_seq, m_graph);
 		
 		check_ifsub_seq_construction_correct(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path);
 
@@ -236,17 +236,17 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 		{
 			int iRemTime = (int)m_graph.getTime(*std::get<0>(vec_start_end_itr_start_pos[uiRobot]))+ (int)m_vec_full_rob_sch[uiRobot][std::get<2>(vec_start_end_itr_start_pos[uiRobot])].m_uiStart - (int)m_vec_state_path[uiLeftPathIndex].m_uiTime;
 			//note iRemTime can be negative, this occurs when the robot is waiting at a vertex
-			vec_start_times_first_vertex[uiRobot] = (size_t)std::max(0, iRemTime);
+			vec_start_times_first_vertex[uiRobot] = 1 + (size_t)std::max(0, iRemTime);
 		}
 
 		std::vector<std::vector<Vertex_Schedule>> new_vec_rob_sub_seq_sch;
-		int iRetVal = m_ls_heur.compute_greedy_sol(rob_sub_seq, vec_start_times_first_vertex, set_enabled_holes, new_vec_rob_sub_seq_sch, "");
+		int iRetVal = m_ls_heur_old.compute_greedy_sol(rob_sub_seq, vec_start_times_first_vertex, set_enabled_holes, new_vec_rob_sub_seq_sch);
 		
-		remove_pseudo_end_depot_sub_seq(vec_end_depot, rob_sub_seq);
+		//remove_pseudo_end_depot_sub_seq(vec_end_depot, rob_sub_seq);
 		
 		if (1 == iRetVal)
 		{
-			m_ls_heur.minimally_purge_end_depot_info(vec_end_depot);
+			//m_ls_heur.minimally_purge_end_depot_info(vec_end_depot);
 			bFeasible = true;
 		}
 	}
@@ -263,14 +263,14 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 	std::unordered_set<size_t> set_enabled_verts;
 	std::vector<size_t> vec_start_times_first_vertex;
 	vec_start_times_first_vertex.resize(m_uiNumRobots);
-	std::vector<bool> vec_end_depot;
+	//std::vector<bool> vec_end_depot;
 
 	size_t uiLeftPathIndex = get_first_occurence_index(pr_hole_pair.first, c_uiRobot, m_vec_state_path);
 	size_t uiRightPathIndex = get_first_occurence_index(pr_hole_pair.second, c_uiRobot, m_vec_state_path);
 
 	rob_sub_seq.clear();
 	rob_sub_seq.resize(m_uiNumRobots);
-	vec_end_depot.resize(m_uiNumRobots, false);
+	//vec_end_depot.resize(m_uiNumRobots, false);
 
 	while (!bFeasible)
 	{
@@ -287,7 +287,7 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 			construct_rob_sub_sequences_with_iterators(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path, vec_start_end_itr_start_pos, set_comp_HD);
 		}
 
-		modify_to_add_end_depot_sub_seq(vec_end_depot, rob_sub_seq, m_graph);
+		//modify_to_add_end_depot_sub_seq(vec_end_depot, rob_sub_seq, m_graph);
 
 		check_ifsub_seq_construction_correct(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path);
 
@@ -298,17 +298,17 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 		{
 			int iRemTime = (int)m_graph.getTime(*std::get<0>(vec_start_end_itr_start_pos[uiRobot])) + (int)m_vec_full_rob_sch[uiRobot][std::get<2>(vec_start_end_itr_start_pos[uiRobot])].m_uiStart - (int)m_vec_state_path[uiLeftPathIndex].m_uiTime;
 			//note iRemTime can be negative, this occurs when the robot is waiting at a vertex
-			vec_start_times_first_vertex[uiRobot] = (size_t)std::max(0, iRemTime);		
+			vec_start_times_first_vertex[uiRobot] = 1 + (size_t)std::max(0, iRemTime);		
 		}
 
 		std::vector<std::vector<Vertex_Schedule>> new_vec_rob_sub_seq_sch;
-		int iRetVal = m_ls_heur.compute_greedy_sol(rob_sub_seq, vec_start_times_first_vertex, set_enabled_verts, new_vec_rob_sub_seq_sch, "");
+		int iRetVal = m_ls_heur_old.compute_greedy_sol(rob_sub_seq, vec_start_times_first_vertex, set_enabled_verts, new_vec_rob_sub_seq_sch);
 		
-		remove_pseudo_end_depot_sub_seq(vec_end_depot, rob_sub_seq);
+		//remove_pseudo_end_depot_sub_seq(vec_end_depot, rob_sub_seq);
 
 		if (1 == iRetVal)
 		{
-			m_ls_heur.minimally_purge_end_depot_info(vec_end_depot);
+			//m_ls_heur.minimally_purge_end_depot_info(vec_end_depot);
 			bFeasible = true;
 		}
 

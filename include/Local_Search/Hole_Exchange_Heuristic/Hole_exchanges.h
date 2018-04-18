@@ -6,7 +6,7 @@
 #include <list>
 #include <vector>
 #include "Greedy_Heuristic_Utils.h"
-#include "LS_Greedy_Heuristic.h"
+#include "LS_Greedy_Heuristic_Old.h"
 #include "Local_Search_Constants.h"
 #include "Topological_Sorting_Utils_Dist.h"
 #include "Enabling_Graph.h"
@@ -62,7 +62,8 @@ class Hole_Exchange
 	private:
 		const size_t m_uiNumRobots;
 		std::vector<std::list<size_t>> m_rob_seq;
-		LS_Greedy_Heuristic m_ls_heur;
+		//LS_Greedy_Heuristic m_ls_heur;
+		LS_Greedy_Heuristic_Old m_ls_heur_old;
 		std::vector<State_vtx_time> m_vec_state_path;
 		std::vector<std::vector<Vertex_Schedule>> m_vec_full_rob_sch;
 		const Layout_LS &m_graph;	
@@ -112,10 +113,10 @@ class Hole_Exchange
 		void populate_removed_hole_prev_next_iv(const size_t c_uiHole, const size_t c_uiRobot, std::set<size_t> &set_vts);
 		void populate_IV_insertion_betw_holes(const std::pair<size_t, size_t> pr_hole_pair, const size_t c_uiRobot, std::set<size_t> &set_vts);
 		bool make_solution_feasible(const std::vector<std::list<size_t>> &rob_sub_seq, const size_t c_uiHole = std::numeric_limits<size_t>::max());
-		bool resolve_collisions_unenabled_vts_dynamically(const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq, const std::unordered_map<size_t, size_t> &map_old_start_times, const std::unordered_map<size_t, size_t> &map_old_completion_times, const size_t c_uiHole);
-		void check_and_resolve_collision(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq, const std::unordered_map<size_t, size_t> &map_old_start_times);
+		std::pair<bool, bool> resolve_collisions_unenabled_vts_dynamically(const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq, const std::unordered_map<size_t, size_t> &map_old_start_times, const std::unordered_map<size_t, size_t> &map_old_completion_times, const size_t c_uiHole);
+		bool check_and_resolve_collision(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq, const std::unordered_map<size_t, size_t> &map_old_start_times);
 		bool check_if_vtx1_prec_vtx2_sequence_partition(const size_t c_uiVtx1, const size_t c_uiVtx2, const std::set<size_t> &set_vts_before_sub_seq, const std::set<size_t> &set_vts_sub_seq, const std::set<size_t> &set_vts_after_sub_seq);
-		bool check_and_resolve_enablers(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::unordered_map<size_t, size_t> &map_old_completion_times, const size_t c_uiHole);
+		std::pair<bool, bool> check_and_resolve_enablers(const std::vector<std::list<size_t>::iterator>& vec_rob_vtx_itr, const std::unordered_map<size_t, size_t> &map_old_completion_times, const size_t c_uiHole);
 		bool examine_super_comps_for_infeasibility();
 
 		//heuristic utilities

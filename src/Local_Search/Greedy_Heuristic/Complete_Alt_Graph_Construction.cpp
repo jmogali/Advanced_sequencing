@@ -2,7 +2,8 @@
 
 const Alternative_Graph& Greedy_Heuristic::get_complete_alt_graph(int iOption)
 {
-	assert(0 <= iOption <= 3);
+	assert(0 <= iOption);
+	assert(iOption <= 3);
 	if (false == m_bComplete_Graph)
 	{
 		if ((1 == iOption) || (3 == iOption)) insert_missing_enabling_arcs();

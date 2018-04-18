@@ -153,6 +153,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	
 	std::string strType;
 	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan;
+	size_t uiStaleCounter; //records number of non improving moves in objective
 	Power_Set power;
 	bool bFirst_Feasible_Sequence = false;
 
@@ -207,8 +208,8 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		std::vector<std::vector<Vertex_Schedule>> full_rob_sch_legacy;
 
 		/*rob_seq.clear();
-		rob_seq.push_back({ 0,7,26,8,5,6,48,10,27,50,19,56,17,39,41,16,15,33,28,9,31,20,29,18,40,13,34,37,22,45,4,42,25,24,44,30,32,35,23,12,11,14,38,43,47,54,46,21,1 });
-		rob_seq.push_back({ 2,83,73,52,53,55,71,65,88,85,51,76,66,62,58,77,67,63,84,82,79,75,59,49,57,89,69,74,68,81,86,87,64,78,90,61,60,72,36,91,80,70,3 });*/
+		rob_seq.push_back({ 0,37,44,53,38,40,10,12,14,20,33,39,6,35,23,11,34,5,36,28,17,9,56,31,7,25,21,19,47,29,22,27,13,43,16,46,26,41,15,24,32,18,8,4,30,1 });
+		rob_seq.push_back({ 2,61,77,42,66,64,80,59,81,78,60,74,62,87,83,82,72,69,45,84,50,52,55,89,71,67,86,73,85,76,51,48,65,57,91,49,68,54,75,88,70,79,63,58,90,3 });*/
 
 		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder);
 		
@@ -301,13 +302,15 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 			{
 				rob_seq = old_rob_seq;
-				full_rob_sch = full_rob_sch_prev;				
+				full_rob_sch = full_rob_sch_prev;
+				uiStaleCounter++;
 			}
 			else
 			{
 				vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
 				old_rob_seq = rob_seq;
-				full_rob_sch_prev = full_rob_sch;				
+				full_rob_sch_prev = full_rob_sch;	
+				uiStaleCounter = 0;
 			}
 			uiSuccesFullIter++;
 		}
@@ -317,7 +320,11 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			full_rob_sch = full_rob_sch_prev;
 		}
 		
-		if(false == bConservativeFound) generate_new_sequence(full_rob_sch, heur.doRobotsWait(), rob_seq, false);
+		if ( (false == bConservativeFound) ||(uiStaleCounter > 5))
+		{
+			generate_new_sequence(full_rob_sch, heur.doRobotsWait(), rob_seq, false);
+			uiStaleCounter = 0;
+		}
 		
 		uiIter++;	
 

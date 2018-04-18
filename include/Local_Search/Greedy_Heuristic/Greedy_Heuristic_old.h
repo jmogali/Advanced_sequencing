@@ -51,7 +51,7 @@ class Greedy_Heuristic_old
 		void vectorize_schedule(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
 
 		void print_state(size_t uiDepth, size_t uiTime, const State &state);
-		size_t getTime(size_t uiVert);
+		virtual size_t getTime(size_t uiVert);
 	public:
 		Greedy_Heuristic_old(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power);
 		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);

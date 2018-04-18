@@ -40,9 +40,17 @@ size_t Topological_Sorting_Utils_Dist::Compute_FROM_costs_each_Vertex(std::unord
 			size_t uiComp = (size_t)(-1 * iVtx) - 1;
 			std::advance(it_comp, uiComp);
 
-			for (auto it_vtx = it_comp->begin(); it_vtx != it_comp->end(); it_vtx++) start_times.emplace(*it_vtx, uiCost);
+			for (auto it_vtx = it_comp->begin(); it_vtx != it_comp->end(); it_vtx++)
+			{
+				auto it_insert = start_times.emplace(*it_vtx, uiCost);
+				assert(true == it_insert.second);
+			}
 		}
-		else start_times.emplace((size_t) iVtx, uiCost);
+		else
+		{
+			auto it_insert = start_times.emplace((size_t)iVtx, uiCost);
+			assert(true == it_insert.second);
+		}
 
 		if (uiMakeSpan < uiCost)
 		{

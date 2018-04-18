@@ -17,6 +17,7 @@ void Hole_Exchange::compute_start_completion_times_from_schedule()
 
 void Hole_Exchange::compute_completion_times_from_start_times()
 {
+	size_t uiStartTime, uiCompTime;
 	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
 	{
 		auto it_next = m_rob_seq[uiRobot].begin();
@@ -30,7 +31,10 @@ void Hole_Exchange::compute_completion_times_from_start_times()
 				m_map_completion_times.emplace(*it, m_map_start_times.at(*it));
 				break;
 			}
-			m_map_completion_times.emplace(*it, m_map_start_times.at(*it_next));			
+			m_map_completion_times.emplace(*it, m_map_start_times.at(*it_next));	
+			uiStartTime = m_map_start_times.at(*it);
+			uiCompTime = m_map_start_times.at(*it_next);
+			assert(uiCompTime >= uiStartTime + m_graph.getTime(*it));
 		}
 	}
 }
@@ -366,10 +370,13 @@ void Hole_Exchange::assign_robo_hole_owner(const size_t c_uiHole, const size_t c
 
 void Hole_Exchange::add_edge_to_out_in_graphs(size_t uiTail, size_t uiHead, size_t uiCost)
 {
-	auto res = m_alt_out_graph[uiTail].emplace(uiHead, uiCost);
-	assert(true == res.second);
-	res = m_alt_in_graph[uiHead].emplace(uiTail, uiCost);	
-	assert(true == res.second);
+	auto it_find = m_alt_out_graph[uiTail].find(uiHead);
+	if(m_alt_out_graph[uiTail].end() == it_find) m_alt_out_graph[uiTail].emplace(uiHead, uiCost);
+	else  m_alt_out_graph[uiTail].at(uiHead) = std::max(uiCost , it_find->second);
+
+	it_find = m_alt_in_graph[uiHead].find(uiTail);
+	if(m_alt_in_graph[uiHead].end() == it_find) m_alt_in_graph[uiHead].emplace(uiTail, uiCost);
+	else m_alt_in_graph[uiHead].at(uiTail) = std::max(uiCost , it_find->second);	
 }
 
 void Hole_Exchange::modify_arc_cost(size_t uiTail, size_t uiHead, size_t uiNewCost)
