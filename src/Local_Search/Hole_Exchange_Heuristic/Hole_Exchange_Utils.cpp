@@ -34,7 +34,16 @@ void Hole_Exchange::compute_completion_times_from_start_times()
 			m_map_completion_times.emplace(*it, m_map_start_times.at(*it_next));	
 			uiStartTime = m_map_start_times.at(*it);
 			uiCompTime = m_map_start_times.at(*it_next);
+			
+#ifdef WINDOWS
 			assert(uiCompTime >= uiStartTime + m_graph.getTime(*it));
+#else
+			if (uiCompTime < uiStartTime + m_graph.getTime(*it))
+			{
+				cout << "Error in computation of completion times. Might be indicative of an earlier error \n";
+				exit(-1);
+			}
+#endif
 		}
 	}
 }
@@ -404,7 +413,12 @@ size_t Hole_Exchange::find_vtx_owner(size_t uiVtx)
 			if (it->second > 0) return find_vtx_owner(it->first);
 		}		
 	}
+#ifdef WINDOWS	
 	assert(false); 
+#else
+	cout << "Bug in determining nearest hole, indicative of sequence generation error \n";
+	exit(-1);
+#endif
 	return std::numeric_limits<size_t>::max(); //should never occur
 }
 

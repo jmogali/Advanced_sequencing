@@ -1,4 +1,4 @@
-#include "LS_Greedy_Heuristic_old.h"
+#include "LS_Greedy_Heuristic_Old.h"
 
 size_t LS_Greedy_Heuristic_Old::getTime(size_t uiVert)
 {

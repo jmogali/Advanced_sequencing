@@ -314,7 +314,15 @@ bool Hole_Exchange::check_and_resolve_collision(const std::vector<std::list<size
 			{
 				if (it_find1->second < it_find2->second) bVtx1PrecVtx2 = true;
 				else if (it_find2->second < it_find1->second) bVtx1PrecVtx2 = false;
-				else assert(false);
+				else
+				{
+#ifdef WINDOWS					
+					assert(false);
+#else
+					cout << "Collision resolution previously was incorrect \n";
+					exit(-1);
+#endif
+				}
 			}
 			else
 			{
@@ -365,7 +373,13 @@ bool Hole_Exchange::check_if_vtx1_prec_vtx2_sequence_partition(const size_t c_ui
 	if (bVtx2BeforeSubSeq & (bVtx1SubSeq | bVtx1AfterSeq)) return false;
 	if (bVtx2SubSeq & bVtx1AfterSeq) return false;	
 
+#ifdef WINDOWS
 	assert(false); // this case should never occur 
+#else
+	cout << "Situation Vtx1: " << bVtx1BeforeSubSeq << " , " << bVtx1SubSeq << " " << bVtx1AfterSeq << endl;
+	cout << "Situation Vtx2: " << bVtx2BeforeSubSeq << " , " << bVtx2SubSeq << " " << bVtx2AfterSeq << endl;
+	exit(-1);
+#endif
 	return false;
 }
 
