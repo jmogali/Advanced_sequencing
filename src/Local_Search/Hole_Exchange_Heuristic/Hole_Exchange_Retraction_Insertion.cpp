@@ -303,6 +303,7 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 
 		check_ifsub_seq_construction_correct(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_vec_state_path);
 
+		set_enabled_verts.clear();
 		compute_enabled_holes_for_rob_sub_seq(rob_sub_seq, set_comp_HD, set_enabled_verts);
 
 		//need to adjust start times to take into the fact that some portion of the work for the hole must have been completed already
