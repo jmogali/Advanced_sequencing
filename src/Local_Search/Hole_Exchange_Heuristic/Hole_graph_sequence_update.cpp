@@ -270,7 +270,7 @@ bool Hole_Exchange::make_solution_feasible(const std::vector<std::list<size_t>> 
 		auto pr = resolve_collisions_unenabled_vts_dynamically(set_vts_before_sub_seq, set_vts_sub_seq, set_vts_after_sub_seq, map_old_start_times, map_old_completion_times, c_uiHole);
 		if (false == pr.first) return false; // infeasible
 		bNoChange = !(pr.second);
-
+		
 		uiIters++;
 	}
 	return true;
@@ -295,6 +295,7 @@ std::pair<bool, bool> Hole_Exchange::resolve_collisions_unenabled_vts_dynamicall
 		bArcsAdded = bArcsAdded | check_and_resolve_collision(vec_rob_vtx_itr, set_vts_before_sub_seq, set_vts_sub_seq, set_vts_after_sub_seq, map_old_start_times);
 		auto pr  = check_and_resolve_enablers(vec_rob_vtx_itr, map_old_completion_times, c_uiHole);
 		if (false == pr.first) return pr;
+		bArcsAdded = bArcsAdded | pr.second;
 	}
 	return std::make_pair(true, bArcsAdded);
 }
