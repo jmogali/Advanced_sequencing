@@ -4,9 +4,13 @@ bool Hole_Exchange::update_sequence_graphs_for_removal(const size_t c_uiHole, co
 {
 	// it is required that m_rob_seq is not updated with the removed hole at this step
 	update_out_in_graphs_for_removal(c_uiHole, c_uiRobot, rob_sub_seq);
+	
 	//update m_rob_seq
 	auto res = remove_hole_update_rob_sequence(c_uiHole, c_uiRobot);
-	taboo_hole_pair = res;
+	assert(true == std::get<2>(res)); // SANITY CHECK, the test for removal was already done in rob_sub_seq construction
+	if (false == std::get<2>(res)) return false;
+	taboo_hole_pair.first = std::get<0>(res);
+	taboo_hole_pair.second = std::get<1>(res);
 
 	//resolve collisions and enablers by adding arcs
 	bool bFeasible = make_solution_feasible(rob_sub_seq, c_uiHole);
@@ -18,21 +22,23 @@ bool Hole_Exchange::update_sequence_graphs_for_insertion(const size_t c_uiHole, 
 	// it is required that m_rob_seq is not updated with the removed hole at this step
 	update_out_in_graphs_for_insertion(c_uiHole, pr_hole_pair, c_uiRobot, rob_sub_seq);
 	//update m_rob_seq
-	insert_hole_update_rob_sequence(c_uiHole, pr_hole_pair, c_uiRobot);
+	bool bFeasible = insert_hole_update_rob_sequence(c_uiHole, pr_hole_pair, c_uiRobot);
+	assert(true == bFeasible); //SANITY CHECK, the check for insertion was already done in rob_sub_Seq insertion
+	if (false == bFeasible) return false;
 
 	//resolve collisions and enablers by adding arcs
-	bool bFeasible = make_solution_feasible(rob_sub_seq);
+	bFeasible = make_solution_feasible(rob_sub_seq);
 	return bFeasible;
 }
 
-std::pair<size_t, size_t> Hole_Exchange::remove_hole_update_rob_sequence(const size_t c_uiHole, const size_t c_uiRobot)
+std::tuple<size_t, size_t, bool> Hole_Exchange::remove_hole_update_rob_sequence(const size_t c_uiHole, const size_t c_uiRobot)
 {
 	return remove_INP_HOLE_in_rob_sub_seq(c_uiHole, c_uiRobot, m_rob_seq, m_graph);	
 }
 
-void Hole_Exchange::insert_hole_update_rob_sequence(const size_t c_uiHole, const std::pair<size_t, size_t> pr_hole_pair, const size_t c_uiRobot)
+bool Hole_Exchange::insert_hole_update_rob_sequence(const size_t c_uiHole, const std::pair<size_t, size_t> pr_hole_pair, const size_t c_uiRobot)
 {
-	insert_INP_HOLE_in_rob_seq(c_uiHole, c_uiRobot, pr_hole_pair, m_rob_seq, m_graph);
+	return insert_INP_HOLE_in_rob_seq(c_uiHole, c_uiRobot, pr_hole_pair, m_rob_seq, m_graph);
 }
 
 void Hole_Exchange::populate_removed_hole_prev_next_iv(const size_t c_uiHole, const size_t c_uiRobot, std::set<size_t> &set_vts)

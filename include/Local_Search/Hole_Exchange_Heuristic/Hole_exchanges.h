@@ -102,8 +102,8 @@ class Hole_Exchange
 		//heuristic graph and sequence updates
 		bool update_sequence_graphs_for_removal(const size_t c_uiHole, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq, std::pair<size_t, size_t> &taboo_hole_pair);
 		bool update_sequence_graphs_for_insertion(const size_t c_uiHole, const std::pair<size_t, size_t> pr_hole_pair, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq);
-		std::pair<size_t, size_t> remove_hole_update_rob_sequence(const size_t c_uiHole, const size_t c_uiRobot);
-		void insert_hole_update_rob_sequence(const size_t c_uiHole, const std::pair<size_t, size_t> pr_hole_pair, const size_t c_uiRobot);
+		std::tuple<size_t, size_t, bool> remove_hole_update_rob_sequence(const size_t c_uiHole, const size_t c_uiRobot);
+		bool insert_hole_update_rob_sequence(const size_t c_uiHole, const std::pair<size_t, size_t> pr_hole_pair, const size_t c_uiRobot);
 		void update_out_in_graphs_for_removal(const size_t c_uiHole, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq);
 		void update_out_in_graphs_for_insertion(const size_t c_uiHole, const std::pair<size_t, size_t> pr_hole_pair, const size_t c_uiRobot, const std::vector<std::list<size_t>> &rob_sub_seq);
 		void perform_out_in_graph_modifications(const std::set<size_t> &set_rob_sub_seq_vts, const std::vector<std::list<size_t>> &rob_sub_seq);
@@ -148,7 +148,7 @@ class Hole_Exchange
 		inline size_t get_best_makespan_found() { return m_uiBestMakeSpan; };
 };
 
-std::pair<size_t, size_t> remove_INP_HOLE_in_rob_sub_seq(size_t c_uiHole, const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph);
-void insert_INP_HOLE_in_rob_seq(size_t c_uiHole, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph);
+std::tuple<size_t, size_t, bool> remove_INP_HOLE_in_rob_sub_seq(size_t c_uiHole, const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph);
+bool insert_INP_HOLE_in_rob_seq(size_t c_uiHole, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph);
 
 #endif

@@ -106,7 +106,7 @@ void Hole_Exchange::check_ifsub_seq_construction_correct(std::vector<std::list<s
 	}
 }
 
-std::pair<size_t , size_t> remove_INP_HOLE_in_rob_sub_seq(size_t c_uiHole, const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph)
+std::tuple<size_t, size_t, bool> remove_INP_HOLE_in_rob_sub_seq(size_t c_uiHole, const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph)
 {
 	const size_t c_uiInitialSize = rob_sub_seq[c_uiRobot].size();
 	const auto &vec_rob_iv = graph.get_IV_Vec();
@@ -144,18 +144,22 @@ std::pair<size_t , size_t> remove_INP_HOLE_in_rob_sub_seq(size_t c_uiHole, const
 	rob_sub_seq[c_uiRobot].erase(it_IV_foll_PrevHD, it_next_HD); //note erase [begin, last)
 
 	//note at this this stage "it iterator" is perhaps invalidated
-	
+	if (vec_rob_iv[c_uiRobot].map.at(uiPrevHD).map.end() == vec_rob_iv[c_uiRobot].map.at(uiPrevHD).map.find(*it_next_HD))
+	{
+		return std::make_tuple(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max(), false);
+	}
+
 	const auto &vec_iv = vec_rob_iv[c_uiRobot].map.at(uiPrevHD).map.at(*it_next_HD).vec;
 	for (auto it_iv = vec_iv.begin(); it_iv != vec_iv.end(); it_iv++)
 	{
 		rob_sub_seq[c_uiRobot].insert(it_next_HD, it_iv->getInd());
 	}	
 	assert(c_uiInitialSize - rob_sub_seq[c_uiRobot].size() == 2);
-	return std::make_pair(uiPrevHD, *it_next_HD);
+	return std::make_tuple(uiPrevHD, *it_next_HD, true);
 }
 
 
-void insert_INP_HOLE_in_rob_seq(size_t c_uiHole, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph)
+bool insert_INP_HOLE_in_rob_seq(size_t c_uiHole, const size_t c_uiRobot, const std::pair<size_t, size_t> pr_hole_pair, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph)
 {
 	const size_t c_uiInitialSize = rob_sub_seq[c_uiRobot].size();
 	auto it_HD2 = std::find(rob_sub_seq[c_uiRobot].begin(), rob_sub_seq[c_uiRobot].end(), pr_hole_pair.second);
@@ -172,14 +176,18 @@ void insert_INP_HOLE_in_rob_seq(size_t c_uiHole, const size_t c_uiRobot, const s
 	
 	assert(pr_hole_pair.first == *it_HD1);
 	const auto &vec_rob_iv = graph.get_IV_Vec();
-	const auto &vec_iv_1 = vec_rob_iv[c_uiRobot].map.at(pr_hole_pair.first).map.at(c_uiHole).vec;
 
+	if (vec_rob_iv[c_uiRobot].map.at(pr_hole_pair.first).map.end() == vec_rob_iv[c_uiRobot].map.at(pr_hole_pair.first).map.find(c_uiHole)) return false;
+
+	const auto &vec_iv_1 = vec_rob_iv[c_uiRobot].map.at(pr_hole_pair.first).map.at(c_uiHole).vec;
 	for (auto it_iv = vec_iv_1.begin(); it_iv != vec_iv_1.end(); it_iv++)
 	{
 		rob_sub_seq[c_uiRobot].insert(it_HD2, it_iv->getInd());
 	}
 
 	rob_sub_seq[c_uiRobot].insert(it_HD2, c_uiHole);
+
+	if (vec_rob_iv[c_uiRobot].map.at(c_uiHole).map.end() == vec_rob_iv[c_uiRobot].map.at(c_uiHole).map.find(pr_hole_pair.second)) return false;
 
 	const auto &vec_iv_2 = vec_rob_iv[c_uiRobot].map.at(c_uiHole).map.at(pr_hole_pair.second).vec;
 	for (auto it_iv = vec_iv_2.begin(); it_iv != vec_iv_2.end(); it_iv++)
@@ -188,6 +196,7 @@ void insert_INP_HOLE_in_rob_seq(size_t c_uiHole, const size_t c_uiRobot, const s
 	}
 		
 	assert(rob_sub_seq[c_uiRobot].size() - c_uiInitialSize == 2);
+	return true;
 }
 
 //Here we assume inp_seq contains c_uiHole, so care must be taken to remove it when checking for feaibility
@@ -216,7 +225,8 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 		if (0 == uiIter)
 		{
 			construct_rob_sub_sequences(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_rob_seq, m_vec_state_path, vec_start_end_itr_start_pos, set_comp_HD);
-			remove_INP_HOLE_in_rob_sub_seq(c_uiHole, c_uiRobot, rob_sub_seq, m_graph);
+			auto res = remove_INP_HOLE_in_rob_sub_seq(c_uiHole, c_uiRobot, rob_sub_seq, m_graph);
+			if (false == std::get<2>(res)) return false;
 			uiIter++;
 		}		
 		else
@@ -249,6 +259,7 @@ bool Hole_Exchange::check_if_retraction_feasible(const size_t c_uiHole, const si
 			//m_ls_heur.minimally_purge_end_depot_info(vec_end_depot);
 			bFeasible = true;
 		}
+		else bFeasible = false;
 	}
 	return bFeasible;
 }
@@ -279,7 +290,8 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 		if (0 == uiIter)
 		{
 			construct_rob_sub_sequences(rob_sub_seq, uiLeftPathIndex, uiRightPathIndex, m_rob_seq, m_vec_state_path, vec_start_end_itr_start_pos, set_comp_HD);
-			insert_INP_HOLE_in_rob_seq(c_uiHole, c_uiRobot, pr_hole_pair, rob_sub_seq, m_graph);
+			bFeasible = insert_INP_HOLE_in_rob_seq(c_uiHole, c_uiRobot, pr_hole_pair, rob_sub_seq, m_graph);
+			if (false == bFeasible) return false;
 			uiIter++;
 		}
 		else
@@ -311,6 +323,7 @@ bool Hole_Exchange::check_if_insertion_feasible(const size_t c_uiHole, const siz
 			//m_ls_heur.minimally_purge_end_depot_info(vec_end_depot);
 			bFeasible = true;
 		}
+		else bFeasible = false;
 
 		if (uiRightPathIndex - uiLeftPathIndex>= std::min(c_uiHoleExchMaxLen, m_vec_state_path.size() - 1)) break;
 	}
