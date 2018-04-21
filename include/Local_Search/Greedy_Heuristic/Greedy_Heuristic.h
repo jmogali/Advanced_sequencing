@@ -26,7 +26,7 @@ class Greedy_Heuristic
 		bool m_bWait , m_bVectorizeSchedule;
 		std::vector<std::pair<size_t, size_t>> m_vec_rob_first_last_vtx;
 		std::vector<std::list<size_t>> m_rob_seq;
-		bool m_bComplete_Graph;
+		bool m_bComplete_Graph, m_bSolComputed;
 
 #ifdef ENABLE_FULL_CHECKING		
 		std::vector<std::unordered_map<N_Ind, size_t, IndHasher>> m_set_prev_HD_states;     //records the depth just before which the vertex was completed 
@@ -103,16 +103,14 @@ class Greedy_Heuristic
 		void fill_back_pruned_collision_arcs(size_t uiRobot1, size_t uiRobot2);
 		void insert_missing_enabling_arcs();
 		void insert_missing_enabling_arcs(const size_t c_uiGivenRobot);
-
-		//dummy functions, this makes sense only for LS_Greedy_Heur
-		virtual bool isVtxPreEnabled(size_t uiVtx);
-		virtual bool isEnablerHolePresent(size_t uiEnablerVtx);
 		
 	public:
 		Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &graph, Power_Set &power);
 		int compute_greedy_sol(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::string strPlotFolder, const size_t c_uiUpperBound = std::numeric_limits<size_t>::max());
 		inline bool doRobotsWait() const { assert(true == m_bVectorizeSchedule); return m_bWait; };
 		const Alternative_Graph& get_complete_alt_graph(int iOptions); //0 - none, 1 - only enabling, 2 - only collision, 3 - both
+		std::pair<bool, size_t> get_robot_owner(size_t uiVtx) const;
+		std::pair<bool, size_t> get_vtx_start_time(size_t uiVtx) const;
 };
 
 #endif

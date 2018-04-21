@@ -86,8 +86,7 @@ bool Greedy_Heuristic::add_prec_arcs_for_dep_vert_of_job(size_t uiGivenRobot, co
 		for (auto it_enabler = vec_enabler.at(uiVert).set.begin(); it_enabler != vec_enabler.at(uiVert).set.end(); it_enabler++)
 		{
 			uiEnablerVtx = it_enabler->getInd();
-			if (false == isEnablerHolePresent(uiEnablerVtx)) continue;
-
+			
 			uiEnablerRobot = m_alt_graph.get_vertex_ownership(uiEnablerVtx);
 			if (uiGivenRobot == uiEnablerRobot) continue; 
 			uiEnablerPos = m_alt_graph.get_vertex_position(uiEnablerVtx);

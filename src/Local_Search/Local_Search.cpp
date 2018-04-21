@@ -490,23 +490,5 @@ int Local_Search::perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, 
 	return heur_old.compute_greedy_sol(full_rob_seq, full_rob_sch);
 }
 
-int Local_Search::perform_greedy_scheduling_LS(LS_Greedy_Heuristic &ls_heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder, bool bDummy)
-{
-	std::vector<std::list<size_t>> full_rob_seq;
-	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
-
-	std::vector<size_t> vec_start_times;
-
-	for (size_t uiRobot = 0; uiRobot < rob_seq.size(); uiRobot++)
-	{
-		vec_start_times.push_back(DEPOT_TIME);
-	}
-
-	std::unordered_set<size_t> set_enabled_verts;
-
-	return ls_heur.compute_greedy_sol(full_rob_seq, vec_start_times, set_enabled_verts, full_rob_sch, strPlotFolder);
-}
-
-
 
 

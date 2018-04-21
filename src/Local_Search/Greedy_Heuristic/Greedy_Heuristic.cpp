@@ -36,6 +36,7 @@ Greedy_Heuristic::Greedy_Heuristic(const size_t uiRobotNum, const Layout_LS &gra
 	m_vec_rob_first_last_vtx.resize(uiRobotNum, std::make_pair(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()));
 	m_bWait = false;
 	m_bVectorizeSchedule = false;	
+	m_bSolComputed = false;
 }
 
 bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &new_rob_seq, const size_t c_uiUpperBound)
@@ -49,6 +50,7 @@ bool Greedy_Heuristic::perform_initializations(const std::vector<std::list<size_
 	compute_NC_makespan(new_rob_seq);
 	m_bWait = false;
 	m_bVectorizeSchedule = false;
+	m_bSolComputed = false;
 	return true;
 }
 
@@ -175,7 +177,7 @@ int Greedy_Heuristic::compute_greedy_sol(const std::vector<std::list<size_t>> &r
 		print_sequence(rob_seq);
 #endif
 	}
-
+	m_bSolComputed = true;
 	return iRetVal;
 }
 
@@ -740,12 +742,16 @@ bool Greedy_Heuristic::sanity_check_schedule(const std::vector<std::list<size_t>
 	return true;
 }
 
-bool Greedy_Heuristic::isVtxPreEnabled(size_t uiVtx)
-{ 
-	return false; 
+std::pair<bool, size_t> Greedy_Heuristic::get_robot_owner(size_t uiVtx) const
+{
+	if (false == m_bSolComputed) return std::make_pair(false, std::numeric_limits<size_t>::max());
+	if(false == m_alt_graph.containsVertex(uiVtx)) return std::make_pair(false, std::numeric_limits<size_t>::max());
+	else return std::make_pair(true, m_alt_graph.get_vertex_ownership(uiVtx));
 }
 
-bool Greedy_Heuristic::isEnablerHolePresent(size_t uiEnablerVtx)
+std::pair<bool, size_t> Greedy_Heuristic::get_vtx_start_time(size_t uiVtx) const
 {
-	return true;
+	if (false == m_bSolComputed) return std::make_pair(false, std::numeric_limits<size_t>::max());
+	if (false == m_alt_graph.containsVertex(uiVtx)) return std::make_pair(false, std::numeric_limits<size_t>::max());
+	else return std::make_pair(true, m_rob_hole_times[m_alt_graph.get_vertex_ownership(uiVtx)].at(uiVtx).m_uiStartTime);
 }

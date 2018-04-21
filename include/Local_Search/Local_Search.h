@@ -5,7 +5,6 @@
 #include "Node_Partitions.h"
 #include "Greedy_Heuristic.h"
 #include "Greedy_Heuristic_old.h"
-#include "LS_Greedy_Heuristic.h"
 #include "Enabling_Graph.h"
 #include "Hole_exchanges.h"
 #include <random>
@@ -56,8 +55,7 @@ class Local_Search
 
 		// scheduling section
 		int perform_greedy_scheduling(Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder);
-		int perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
-		int perform_greedy_scheduling_LS(LS_Greedy_Heuristic &ls_heur, const std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder, bool bDummy);
+		int perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);	
 
 	public:
 		Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor);

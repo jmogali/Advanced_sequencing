@@ -83,8 +83,6 @@ void Greedy_Heuristic::insert_missing_enabling_arcs(const size_t c_uiGivenRobot)
 		uiMinVtx = std::numeric_limits<size_t>::max();
 		if ("H" != m_graph.getType(*it)) continue;
 		
-		if (true == isVtxPreEnabled(*it)) continue;
-
 		if (m_map_enabler_pos_vert.end() != m_map_enabler_pos_vert.find(*it))
 		{
 			for (size_t uiOtherRobot = 0; uiOtherRobot < m_uiNumRobots; uiOtherRobot++)
