@@ -212,7 +212,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		rob_seq.push_back({ 0,11,4,5,41,20,42,14,15,13,10,23,34,6,7,26,28,39,19,17,18,24,35,8,45,40,25,38,21,31,32,29,22,12,46,30,58,36,43,44,16,9,47,37,27,1 });
 		rob_seq.push_back({ 2,86,66,69,89,84,82,90,33,64,73,59,87,71,48,49,74,51,52,70,91,81,68,56,67,77,79,55,83,63,85,50,53,88,57,78,80,65,76,62,61,75,72,60,54,3 });*/
 
-		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder);
+		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, (size_t)(1.25 * uiBestSol));
 		
 #ifdef ENABLE_LEGACY_CODE			
 		int iRetVal_legacy = perform_greedy_scheduling_old(heur_legacy, rob_seq, full_rob_sch_legacy);
