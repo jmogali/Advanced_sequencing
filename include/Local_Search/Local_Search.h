@@ -27,6 +27,7 @@ class Local_Search
 
 		//utility
 		void populate_new_sequence(const std::vector<std::list<size_t>> &rob_sequence_with_IV, std::vector<std::list<size_t>> &rob_sequence_without_IV);
+		void free_VLNS_buffers();
 
 		// validation section
 		bool check_validity_of_sequence(const std::vector<std::list<size_t>> &rob_seq);

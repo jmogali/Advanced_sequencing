@@ -137,7 +137,7 @@ void Local_Search::perform_VBSS_search(std::string strFolderPath)
 	cout << "Tag: Successfull iterations: " << uiSuccesFullIter << endl;
 	double dSuccPercent = (double)(100.0 * uiSuccesFullIter) / ((double)(uiIter * 1.0));
 	cout << "Tag: Success %: " << dSuccPercent << endl; 
-	cout << "Tag: Accumulated Results: " << uiBestSol << ","<< uiSuccesFullIter << ","<< dSuccPercent <<endl;
+	cout << "Tag: Accumulated Results: " << uiBestSol << ","<< uiSuccesFullIter << ","<< dSuccPercent <<endl;	
 }
 
 void Local_Search::perform_local_search(std::string strPlotFolder, std::string strDataDumpFolder, std::string strTSPFolder, size_t ui_KVal)
@@ -341,6 +341,8 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 
 		if (((std::clock() - start_time) / (double)CLOCKS_PER_SEC) > LS_SEARCH_TIME) break;
 	}
+
+	free_VLNS_buffers();
 	cout << "Tag: Best Makespan: " << uiBestSol << endl;
 	cout<< "Tag: Total Iterations: " << uiIter << endl;
 	cout << "Tag: Successfull iterations: " << uiSuccesFullIter << endl;

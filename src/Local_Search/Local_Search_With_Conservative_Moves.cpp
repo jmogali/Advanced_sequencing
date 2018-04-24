@@ -44,3 +44,8 @@ void Local_Search::gen_seq_TSP(std::string strTSPFolder, Greedy_Heuristic &heur,
 	rob_seq.clear();
 	populate_new_sequence(full_rob_seq, rob_seq);
 }
+
+void Local_Search::free_VLNS_buffers()
+{
+	free_TSP_buffers();
+}
