@@ -26,11 +26,11 @@ void free_cost_container();
 size_t populate_vtx_end_horizon(const size_t c_uiVtx, const size_t c_uiRobot, const Greedy_Heuristic &heur, unsigned int uiHole, const Enabling_Graph &en_graph, const Layout_LS &graph, const std::unordered_map<size_t, size_t> &map_hole_new_ind);
 void populate_enabler_info(const size_t c_uiVtx, const size_t c_uiRobot, const Greedy_Heuristic &heur, unsigned int uiHole, const Enabling_Graph &en_graph, const Layout_LS &graph, const std::unordered_map<size_t, size_t> &map_hole_new_ind, const std::unordered_set<size_t> &set_vts);
 void populate_TW_info(const size_t c_uiVtx, const size_t c_uiRobot, struct Interval stHorizon, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, unsigned int uiHole, const Layout_LS &graph);
-size_t populate_cost_container(const size_t c_uiRobot, size_t uiStartInd, size_t uiEndInd, std::vector<std::list<size_t>> &rob_seq, const Greedy_Heuristic &heur, const Layout_LS &graph, const Enabling_Graph &en_graph, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch);
+size_t populate_cost_container(const size_t c_uiRobot, size_t uiStartInd, size_t uiEndInd, std::vector<std::list<size_t>> &rob_seq, const Greedy_Heuristic &heur, const Layout_LS &graph, const Enabling_Graph &en_graph, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::unordered_map<size_t, size_t> &map_hole_new_ind);
 void populate_traversal_times(size_t uiStartVtx, size_t uiEndVtx, const size_t c_uiRobot, const std::unordered_map<size_t, size_t> &map_hole_new_ind, const Layout_LS &graph);
 void populate_enabler_time_window_for_vtx(const size_t c_uiStartTime, const size_t c_uiPlanEndTime, const size_t c_uiVtx, unsigned int uiHole, const Greedy_Heuristic &heur, const std::unordered_map<size_t, size_t> &map_hole_new_ind, const Layout_LS &graph, const Enabling_Graph &en_graph, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, const std::unordered_set<size_t> &set_vts);
 void select_sub_seq_for_opt(const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::tuple<size_t, size_t, size_t> &rob_start_end, const Layout_LS &graph);
-void generate_new_tour(const size_t c_uiRobot, const size_t c_uiStartInd, const size_t c_uiEndInd, std::list<size_t> &old_tour, int* new_tour, const size_t c_uiTour_Len, const Layout_LS &graph);
+void generate_new_tour(const size_t c_uiRobot, const size_t c_uiStartInd, const size_t c_uiEndInd, std::list<size_t> &old_tour, int* new_tour, const size_t c_uiTour_Len, const Layout_LS &graph, const std::unordered_map<size_t, size_t> &map_hole_new_ind);
 
 void parse_gen_TSP_node_desc(char const* const strFile)
 {
@@ -99,6 +99,7 @@ void parse_gen_TSP_node_desc(char const* const strFile)
 
 void assign_new_indices(const size_t c_uiRobot, size_t uiStart, size_t uiEnd, std::vector<std::list<size_t>> &rob_seq, const Layout_LS &graph, std::unordered_map<size_t, size_t> &map_hole_new_ind)
 {
+	assert(map_hole_new_ind.empty());
 	auto it_start = rob_seq[c_uiRobot].begin();
 	std::advance(it_start, uiStart);
 
@@ -226,9 +227,8 @@ void populate_traversal_times(size_t uiStartVtx, size_t uiEndVtx, const size_t c
 }
 
 //we assume that rob_seq does contain intermediate vertices
-size_t populate_cost_container(const size_t c_uiRobot, size_t uiStartInd, size_t uiEndInd, std::vector<std::list<size_t>> &rob_seq, const Greedy_Heuristic &heur, const Layout_LS &graph, const Enabling_Graph &en_graph, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch)
+size_t populate_cost_container(const size_t c_uiRobot, size_t uiStartInd, size_t uiEndInd, std::vector<std::list<size_t>> &rob_seq, const Greedy_Heuristic &heur, const Layout_LS &graph, const Enabling_Graph &en_graph, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, std::unordered_map<size_t, size_t> &map_hole_new_ind)
 {
-	std::unordered_map<size_t, size_t> map_hole_new_ind;
 	assign_new_indices(c_uiRobot, uiStartInd, uiEndInd, rob_seq, graph, map_hole_new_ind);
 		
 	auto it_start = rob_seq[c_uiRobot].begin();
@@ -244,7 +244,7 @@ size_t populate_cost_container(const size_t c_uiRobot, size_t uiStartInd, size_t
 	pstCosts->m_parTimeWindows = (struct Hole_Overlap_Enabler_Info*) malloc(pstCosts->m_iNumVtx * sizeof(Hole_Overlap_Enabler_Info));
 	pstCosts->m_parProcTime = (int*) malloc(pstCosts->m_iNumVtx * sizeof(int));
 
-	size_t uiStartTime = vec_rob_sch[c_uiRobot][uiStartInd].m_uiEnd;
+	size_t uiStartTime = vec_rob_sch[c_uiRobot][uiStartInd].m_uiStart;
 	size_t uiEndTime = vec_rob_sch[c_uiRobot][uiEndInd].m_uiEnd;
 
 	std::unordered_set<size_t> set_vts;
@@ -254,7 +254,7 @@ size_t populate_cost_container(const size_t c_uiRobot, size_t uiStartInd, size_t
 		if (it_end == it) break;
 	}
 
-	size_t uiHole = 0;
+	unsigned int uiHole = 0;
 	for (auto it = it_start; it != rob_seq[c_uiRobot].end(); it++)
 	{
 		if ("IV" == graph.getType(*it)) continue;
@@ -268,7 +268,7 @@ size_t populate_cost_container(const size_t c_uiRobot, size_t uiStartInd, size_t
 	}
 
 	pstCosts->m_pparTravTime = (int**)malloc(pstCosts->m_iNumVtx * sizeof(int*));
-	for (uiHole = 0; uiHole < pstCosts->m_iNumVtx; uiHole++)
+	for (uiHole = 0; uiHole < (unsigned int)pstCosts->m_iNumVtx; uiHole++)
 	{
 		pstCosts->m_pparTravTime[uiHole] = (int*)malloc(pstCosts->m_iNumVtx * sizeof(int));
 	}
@@ -292,7 +292,8 @@ void perform_TSP_Move(std::string strTSPFileFolder, std::vector<std::list<size_t
 	std::tuple<size_t, size_t, size_t> rob_start_end; 
 	select_sub_seq_for_opt(vec_rob_sch, rob_start_end, graph);
 	
-	const size_t c_uiStartTime = populate_cost_container(std::get<0>(rob_start_end), std::get<1>(rob_start_end), std::get<2>(rob_start_end), rob_seq, heur, graph, en_graph, vec_rob_sch);
+	std::unordered_map<size_t, size_t> map_hole_new_ind;
+	const size_t c_uiStartTime = populate_cost_container(std::get<0>(rob_start_end), std::get<1>(rob_start_end), std::get<2>(rob_start_end), rob_seq, heur, graph, en_graph, vec_rob_sch, map_hole_new_ind);
 	const int c_uiTourLen = pstCosts->m_iNumVtx;
 
 	int* new_tour;
@@ -301,7 +302,7 @@ void perform_TSP_Move(std::string strTSPFileFolder, std::vector<std::list<size_t
 	int iRetVal = optimize_tsp(pstAuxNodeInfo, pstCosts, c_uiTourLen, kVal, new_tour, iFirstIter, strTSPFileFolder.c_str(), (int)c_uiStartTime);
 	assert(0 == iRetVal);
 
-	generate_new_tour(std::get<0>(rob_start_end), std::get<1>(rob_start_end), std::get<2>(rob_start_end), rob_seq[std::get<0>(rob_start_end)], new_tour, c_uiTourLen, graph);
+	generate_new_tour(std::get<0>(rob_start_end), std::get<1>(rob_start_end), std::get<2>(rob_start_end), rob_seq[std::get<0>(rob_start_end)], new_tour, c_uiTourLen, graph, map_hole_new_ind);
 
 	free(new_tour);
 	new_tour = NULL;
@@ -391,20 +392,23 @@ void populate_enabler_info(const size_t c_uiVtx, const size_t c_uiRobot, const G
 {
 	const auto &vec_enablers = graph.get_Enablers();
 	std::set<size_t> set_enablers;
-	size_t uiEnablerCount = 0;
 	pstCosts->m_parTimeWindows[uiHole].m_uiOtherRobotEnableTime = inFinity;
+
+	if (0 == vec_enablers[c_uiVtx].set.size())
+	{
+		pstCosts->m_parTimeWindows[uiHole].m_uiOtherRobotEnableTime = 0;
+		pstCosts->m_parTimeWindows[uiHole].m_piEnablers = NULL;
+		pstCosts->m_parTimeWindows[uiHole].m_uiNumEnablers = 0;
+		return;
+	}
 
 	for (auto it = vec_enablers[c_uiVtx].set.begin(); it != vec_enablers[c_uiVtx].set.end(); it++)
 	{
 		auto pr = heur.get_robot_owner(it->getInd());
 		assert(true == pr.first);
-		if (c_uiRobot == pr.second)
+		if ( (c_uiRobot == pr.second) && (set_vts.end() != set_vts.find(it->getInd())))
 		{
-			if (set_vts.end() != set_vts.find(it->getInd()))
-			{
-				set_enablers.emplace(map_hole_new_ind.at(it->getInd()));
-				uiEnablerCount++;
-			}
+			set_enablers.emplace(map_hole_new_ind.at(it->getInd()));			
 		}
 		else
 		{
@@ -414,11 +418,11 @@ void populate_enabler_info(const size_t c_uiVtx, const size_t c_uiRobot, const G
 		}
 	}
 
-	pstCosts->m_parTimeWindows[uiHole].m_uiNumEnablers = (int)uiEnablerCount;
-	if(uiEnablerCount > 0)pstCosts->m_parTimeWindows[uiHole].m_piEnablers = (int*)malloc(uiEnablerCount * sizeof(int));
+	pstCosts->m_parTimeWindows[uiHole].m_uiNumEnablers = (unsigned int)set_enablers.size();
+	if(set_enablers.size() > 0)pstCosts->m_parTimeWindows[uiHole].m_piEnablers = (int*)malloc(set_enablers.size() * sizeof(int));
 	else pstCosts->m_parTimeWindows[uiHole].m_piEnablers = NULL;
 
-	uiEnablerCount = 0;
+	size_t uiEnablerCount = 0;
 	for (auto it = set_enablers.begin(); it != set_enablers.end(); it++)
 	{
 		pstCosts->m_parTimeWindows[uiHole].m_piEnablers[uiEnablerCount] = (int)(*it);
@@ -535,8 +539,11 @@ void select_sub_seq_for_opt(const std::vector<std::vector<Vertex_Schedule>> &vec
 	{
 		if (false == bStart)
 		{
-			if(0 == vec_rob_sch[ui_Bottleneck_robot][uiInd].m_uiWait) uiStart = uiInd;
-			bStart = true;
+			if (0 == vec_rob_sch[ui_Bottleneck_robot][uiInd].m_uiWait)
+			{
+				uiStart = uiInd;
+				bStart = true;
+			}
 		}
 		else if (bStart == true)
 		{
@@ -570,16 +577,21 @@ void select_sub_seq_for_opt(const std::vector<std::vector<Vertex_Schedule>> &vec
 	std::get<2>(rob_start_end) = pr_st_end.second;	
 }
 
-void generate_new_tour(const size_t c_uiRobot, const size_t c_uiStartInd, const size_t c_uiEndInd, std::list<size_t> &old_tour, int* new_tour, const size_t c_uiTour_Len, const Layout_LS &graph)
+//need to change this
+void generate_new_tour(const size_t c_uiRobot, const size_t c_uiStartInd, const size_t c_uiEndInd, std::list<size_t> &old_tour, int* new_tour, const size_t c_uiTour_Len, const Layout_LS &graph, const std::unordered_map<size_t, size_t> &map_hole_new_ind)
 {
+	size_t uiOldTourSize = old_tour.size(), uiNewTourSize;
+	std::unordered_map<size_t, size_t> map_hole_old_ind;
+	for (auto it = map_hole_new_ind.begin(); it != map_hole_new_ind.end(); it++) map_hole_old_ind.emplace(it->second, it->first);
+
 	auto it_start = old_tour.begin();
 	std::advance(it_start, c_uiStartInd);
 
 	auto it_end = it_start;
 	std::advance(it_end, c_uiEndInd - c_uiStartInd);
 
-	assert(*it_start == new_tour[0]);
-	assert(*it_end == new_tour[c_uiTour_Len-1]);
+	assert(*it_start == map_hole_old_ind.at(new_tour[0]));
+	assert(*it_end == map_hole_old_ind.at(new_tour[c_uiTour_Len-1]));
 
 	auto it_erase = it_start;
 	while (it_erase != it_end) it_erase = old_tour.erase(it_erase);
@@ -590,14 +602,16 @@ void generate_new_tour(const size_t c_uiRobot, const size_t c_uiStartInd, const 
 	
 	for (size_t uiCount = 0; uiCount < c_uiTour_Len - 1; uiCount++)
 	{
-		old_tour.insert(it_insert, new_tour[uiCount]);
-		const auto &vec_iv = vec_rob_iv[c_uiRobot].map.at(new_tour[uiCount]).map.at(new_tour[uiCount+1]).vec;
+		old_tour.insert(it_insert, map_hole_old_ind.at(new_tour[uiCount]));
+		const auto &vec_iv = vec_rob_iv[c_uiRobot].map.at(map_hole_old_ind.at(new_tour[uiCount])).map.at(map_hole_old_ind.at(new_tour[uiCount+1])).vec;
 		for (auto it_iv = vec_iv.cbegin(); it_iv != vec_iv.cend(); it_iv++)
 		{
 			old_tour.insert(it_insert, it_iv->getInd());
 		}
 	}
-	old_tour.insert(it_insert, new_tour[c_uiTour_Len-1]);
+	old_tour.insert(it_insert, map_hole_old_ind.at(new_tour[c_uiTour_Len-1]));
+	uiNewTourSize = old_tour.size();
+	assert(uiOldTourSize == uiNewTourSize);
 }
 
 void free_TSP_buffers()

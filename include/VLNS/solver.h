@@ -158,31 +158,9 @@ costtype DynOpt_NEW(signed char k, nodeXtype n, nodeXtype wn,
 	CalcDepths(kval, depth, levn);
 	printf("Optimizing with Dynamic subroutine (k=%d) over %d nodes:\n", k, levn);
 
-	/*costtype Fiddle(signed char k, nodeXtype n, costtype *shortMatrix,
-		signed char *j, signed char *minK, int *kval, int *depth,
-		nodeXtype *succs, unsigned int32 *succInx,
-		nodeXtype *preds, unsigned int32 *predInx,
-		signed char *predLoc, nodeXtype *posttour,
-		costtype *winBegin, costtype *winEnd, costtype *servTime,
-		costtype *costsNow, costtype *costsNext, unsigned char *prevs,
-		unsigned char *sublists, int worknodes)
-
-	mycost = Fiddle(localK, levn, shortMatrix[0], j, minK, kval, depth, succs, succInx,
-		preds, predInx, predLoc, tourOut, winBegin, winEnd,
-		servTime, costsNow, costsNext, workarea,
-		sublists, wn);*/
-
 	mycost = Fiddle_NEW(k, levn, pstCost, pstNodeInfo,j , minK, kval, depth, succs, succInx,
 		preds, predInx, predLoc, tourOut, costsNow, costsNext, workarea,
 		sublists, wn , uiStartTime);
-
-	/*costtype Fiddle_NEW(signed char k, nodeXtype n, struct Costs_Container* pstCost, struct Dyn_Node_Desc* pstAuxNodeInfo,
-		signed char *j, signed char *minK, int *kval, int *depth,
-		nodeXtype *succs, unsigned int32 *succInx,
-		nodeXtype *preds, unsigned int32 *predInx,
-		signed char *predLoc, nodeXtype *posttour,
-		costtype *costsNow, costtype *costsNext, unsigned char *prevs,
-		unsigned char *sublists, int worknodes, costtype uiStartTime)*/
 	
 	return (mycost);
 }

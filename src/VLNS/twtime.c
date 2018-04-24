@@ -359,7 +359,7 @@ int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *p
 	else
 	{
 		printf("Final Cost: %d\n", FinalCost);
-		printf("Sequence:\n");
+		printf("Sequence Length: %d\n", n);
 		if (tour2[0]<n)
 		{
 			for (c = 0; c<n; c++) 
@@ -448,7 +448,7 @@ void free_buffers()
 
 void reset_buffers(char k, int maxN, int workN, int maxQ)
 {
-	char c, cantpack = 0;
+	char cantpack = 0;
 
 	if (k >= _KMAX)
 	{
@@ -458,48 +458,12 @@ void reset_buffers(char k, int maxN, int workN, int maxQ)
 	{
 		cantpack++;
 	}
-	
-	for (int uiCount = 0; uiCount < maxN + 1; uiCount++) depth[uiCount] = 0;
-	for (unsigned int uiCount = 0; uiCount < bN[k]; uiCount++) j[uiCount] = 0;
-	for (unsigned int uiCount = 0; uiCount < bN[k]; uiCount++) minK[uiCount] = 0;
-	for (unsigned int uiCount = 0; uiCount < bA[k]; uiCount++) succs[uiCount] = 0;
-	for (unsigned int uiCount = 0; uiCount < bN[k]; uiCount++) succInx[uiCount] = 0;
-	for (unsigned int uiCount = 0; uiCount < bA[k]; uiCount++) preds[uiCount] = 0;
-	for (unsigned int uiCount = 0; uiCount < bN[k]+1; uiCount++) predInx[uiCount] = 0;
-	for (unsigned int uiCount = 0; uiCount < bN[k]; uiCount++) predLoc[uiCount] = 0;
-	for (int uiCount = 0; uiCount < maxN + 1; uiCount++) kval[uiCount] = 0;
-
-	
-	for (c = 0; c<1 + 3 * _enableshrink; c++)
-	{
-		for (int uiCount = 0; uiCount < maxN*(3 * k - 1); uiCount++)
-		{
-			shortMatrix[c][uiCount] = 0;
-		}		
-	}
-	if (_enableshrink)
-	{
-		for (int uiCount = 0; uiCount < (maxN + 7) / 8 + 1; uiCount++) orientA[uiCount] = 0;				
-	}
-	
-	for (int uiCount = 0; uiCount < maxN + 1; uiCount++) levtour[uiCount] = 0;
-
-	if (_timewindow)
-	{
-		for (int uiCount = 0; uiCount < maxN + 1; uiCount++) winBegin[uiCount] = 0;
-		for (int uiCount = 0; uiCount < maxN + 1; uiCount++) winEnd[uiCount] = 0;
-		for (int uiCount = 0; uiCount < maxN + 1; uiCount++) servTime[uiCount] = 0;		
-	}
 
 	for (unsigned int uiCount = 0; uiCount < maxQ*bN[k]; uiCount++) costsNow[uiCount] = 0;
 	for (unsigned int uiCount = 0; uiCount < maxQ*bN[k]; uiCount++) costsNext[uiCount] = 0;
 
-	if (_timewindow == 2)
-	{
-		for (unsigned int uiCount = 0; uiCount < maxQ*bN[k]; uiCount++) timeNow[uiCount] = 0;
-		for (unsigned int uiCount = 0; uiCount < maxQ*bN[k]; uiCount++) timeNext[uiCount] = 0;		
-	}
-
 	for (int uiCount = 0; uiCount < 2 * (workN + 1)*maxN; uiCount++) sublists[uiCount] = 0;
 	for (int uiCount = 0; uiCount < (int)_max((1 + cantpack)*maxQ*workN*bN[k] + ((maxN + 7) / 8), maxN * 80); uiCount++) workarea[uiCount] = 0;
+
+	for (int iCount = 0; iCount < maxN; iCount++) tour2[iCount] = 0;
 }

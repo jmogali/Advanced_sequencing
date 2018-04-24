@@ -35,18 +35,23 @@ unsigned int check_if_vtx_enabled(struct Hole_Overlap_Enabler_Info* pInfo, struc
 	//first check for S-
 	int iIndexEnabler = 0, iSminusIndex = 0 , iSplusIndex = 0;
 	
-	if (NULL == pInfo->m_piEnablers)
-	{
-		if (inFinity == pInfo->m_uiOtherRobotEnableTime) return 1;
-		else return 0;
-	}
-
+	if (NULL == pInfo->m_piEnablers) return 0;
+	
 	const int c_iEnablerSize = pInfo->m_uiNumEnablers;
 	const int c_iSplusSize = pstAuxNodeInfo->m_ui_S_Size;
 	const int c_iSminusSize = pstAuxNodeInfo->m_ui_S_Size;
 
 	int iCurrEnablerVtx, iSminusVtx, iSplusVtx;
 	
+	if (0 == c_iSplusSize)
+	{
+		for (int iCount = 0; iCount < c_iEnablerSize; iCount++)
+		{
+			if (pInfo->m_piEnablers[iCount] < c_iTourPos) return 1;
+		}
+		return 0;
+	}
+
 	//check for S+
 	while (1)
 	{
@@ -55,13 +60,6 @@ unsigned int check_if_vtx_enabled(struct Hole_Overlap_Enabler_Info* pInfo, struc
 
 		iCurrEnablerVtx = pInfo->m_piEnablers[iIndexEnabler];
 		iSplusVtx = c_iTourPos + pstAuxNodeInfo->m_Splus[iSplusIndex];
-
-		//check this
-		if (iSplusVtx < 0)
-		{
-			iSplusIndex++;
-			continue;
-		}
 
 		if (iCurrEnablerVtx < iSplusVtx) return 1;
 		else if (iCurrEnablerVtx >= c_iTourPos) break;  // iCurrEnablerVtx is guaranteed not to be present in Splus
@@ -88,9 +86,6 @@ unsigned int check_if_vtx_enabled(struct Hole_Overlap_Enabler_Info* pInfo, struc
 
 		iCurrEnablerVtx = pInfo->m_piEnablers[iIndexEnabler];
 		iSminusVtx = c_iTourPos + pstAuxNodeInfo->m_Sminus[iSminusIndex];
-
-		//check this
-		if (iSminusVtx > c_iTourLen) break;
 
 		if (iCurrEnablerVtx == iSminusVtx) return 1;
 		else if (iSminusVtx < iCurrEnablerVtx)

@@ -159,7 +159,7 @@ costtype Fiddle_NEW(signed char k, nodeXtype n, struct Costs_Container* pstCost,
 
 	//costsNow[0] = 0;
 	costsNow[0] = uiStartTime;
-	costtype iOptCost = inFinity;
+	costtype iOptCost;
 
 	for (n1 = n2 = 0; n1<n; n1++, n2++)
 	{
@@ -168,7 +168,7 @@ costtype Fiddle_NEW(signed char k, nodeXtype n, struct Costs_Container* pstCost,
 		{
 			costsNext[c1] = inFinity;
 		}
-
+		//printf("%d \n", n1);
 		uiEntered = 0;
 		for (c1 = 0; c1<bN[depth[n1]]; c1++)
 		{
@@ -181,10 +181,7 @@ costtype Fiddle_NEW(signed char k, nodeXtype n, struct Costs_Container* pstCost,
 					baseCost = getEST(pstCost, iVtx1, baseCost, &pstAuxNodeInfo[c1] , n1, n);
 					baseCost += getProcTime(pstCost, iVtx1);
 
-					uiEntered = 1;
-					/*if (baseCost < winBegin[j[c1] + n1]) { baseCost = winBegin[j[c1] + n1]; }
-					else if (baseCost > winEnd[j[c1] + n1]) { baseCost = inFinity; }
-					baseCost += servTime[j[c1] + n1];*/
+					uiEntered = 1;					
 				}
 				if (baseCost<inFinity)
 				{
@@ -195,6 +192,7 @@ costtype Fiddle_NEW(signed char k, nodeXtype n, struct Costs_Container* pstCost,
 					{
 						iVtx2 = j[succs[c2]] + n1 + 1;
 						iTravTime = getTravTime(pstCost, iVtx1, iVtx2, n);
+
 						//if ((h = baseCost + shortMatrix[smINX(j[c1] + n1, j[succs[c2]] + n1 + 1, k)]) < costsNext[succs[c2]])
 						if ((h = baseCost + iTravTime) < costsNext[succs[c2]])
 						{
@@ -202,12 +200,7 @@ costtype Fiddle_NEW(signed char k, nodeXtype n, struct Costs_Container* pstCost,
 							if (!_costonly)
 							{
 								prevs[n2*bN[k] + succs[c2]] = predLoc[c1];
-							}
-
-							if (n == n1 + 1) 
-							{
-								iOptCost = (h <= iOptCost) ? h : iOptCost;
-							}
+							}							
 						}
 					}
 				}
@@ -237,6 +230,8 @@ costtype Fiddle_NEW(signed char k, nodeXtype n, struct Costs_Container* pstCost,
 		}
 		else { sublists[n1*(worknodes + 1)] = 127; }
 	}
+
+	iOptCost = costsNow[0];
 
 	/* reconstruct tour */
 	if (!_costonly)

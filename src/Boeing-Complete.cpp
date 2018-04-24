@@ -20,6 +20,9 @@
 #include "Alternative_Graph.h"
 #include "Joris_Sequence_File_Parser.h"
 #include "Schedule_Validity_Check.h"
+extern "C" {
+#include "auxgraph.h"
+}
 
 using namespace boost;
 using namespace std;
@@ -79,7 +82,7 @@ int main(int argc, char** argv)
 	double dHorSpace = 0.1;
 	double dVertSpace = 1.0;
 	double dWeightFactor = 1;
-	size_t uikVal = 13;
+	unsigned int uikVal = 13;
 #else
 	size_t uiFrames = (size_t) atoi(argv[1]);
 	size_t uiRobots = (size_t)atoi(argv[2]);
@@ -88,7 +91,7 @@ int main(int argc, char** argv)
 	double dHorSpace = atof(argv[5]);
 	double dVertSpace = atof(argv[6]);
 	double dWeightFactor = atof(argv[7]);
-	size_t uikVal = (size_t)atoi(argv[8]);
+	unsigned int uikVal = (size_t)atoi(argv[8]);
 #endif
 
 	Boeing_Fuesalage obj(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace, "DEFAULT");
