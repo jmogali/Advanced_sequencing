@@ -56,47 +56,48 @@ signed char *j, *minK, *predLoc, *orientA;
 #include "Costs_Container.h"
 #include "Dyn_Node_Desc.h"
 
-void GetAuxgraph(char k, int maxN, int workN, int maxQ)
-{ char c, cantpack=0;
+void GetAuxgraph(char k, int maxN, int workN, int maxQ, const char* cFolderPath)
+{ 
+	char c, cantpack=0;
 
-  if (k>=_KMAX)
-  { fprintf(stderr,"k value is too high for this program.");}
-  if ((maxQ>15 || k>15) && (maxQ>32 || k>8) && (maxQ>8))
-  { cantpack++;}
-  fprintf(stderr,"Reading Auxgraph...\n");
-  makesure(depth = (int *)calloc(maxN+1,sizeof(int)),allocErr);
-  makesure(j = (char *)calloc(bN[k],sizeof(char)),allocErr);
-  makesure(minK = (char *)calloc(bN[k],sizeof(char)),allocErr);
-  makesure(succs  = (unsigned int32 *)calloc(bA[k], sizeof(int32)),allocErr);
-  makesure(succInx= (unsigned int32 *)calloc(bN[k]+1,sizeof(int32)),allocErr);
-  makesure(preds  = (unsigned int32 *)calloc(bA[k], sizeof(int32)),allocErr);
-  makesure(predInx= (unsigned int32 *)calloc(bN[k]+1,sizeof(int32)),allocErr);
-  makesure(predLoc= (char *)calloc(bN[k],sizeof(char)),allocErr);
-  succInx[bN[k]]=predInx[bN[k]]=bA[k];
-  ReadAuxgraph(k,j,minK,succs,succInx,preds,predInx,predLoc);
-  fprintf(stderr,"Allocating Memory...\n");
-  makesure(kval = (int *)calloc(maxN+1,sizeof(int)),allocErr);
-  for(c=0; c<1+3*_enableshrink; c++)
-  { makesure(shortMatrix[c] =
-              (costtype *)calloc(maxN*(3*k-1),sizeof(costtype)),allocErr);
-  }
-  if (_enableshrink)
-  { makesure(orientA=(signed char *)calloc((maxN+7)/8+1,sizeof(char)),allocErr);
-  }
-  makesure(levtour = (nodeXtype *)calloc(maxN+1,sizeof(nodeXtype)),allocErr);
-  if (_timewindow)
-  { makesure(winBegin=(costtype *)calloc(maxN+1,sizeof(costtype)),allocErr);
-    makesure(winEnd = (costtype *)calloc(maxN+1,sizeof(costtype)),allocErr);
-    makesure(servTime=(costtype *)calloc(maxN+1,sizeof(costtype)),allocErr);
-  }
-  makesure(costsNow = (costtype *)calloc(maxQ*bN[k],sizeof(costtype)),allocErr);
-  makesure(costsNext= (costtype *)calloc(maxQ*bN[k],sizeof(costtype)),allocErr);  if (_timewindow==2)
-  { makesure(timeNow = (costtype *)calloc(maxQ*bN[k],sizeof(costtype)),allocErr);
-    makesure(timeNext= (costtype *)calloc(maxQ*bN[k],sizeof(costtype)),allocErr);
-  }
-  makesure(sublists=(unsigned char *)calloc(2*(workN+1)*maxN,sizeof(char)),allocErr);
-  makesure(workarea = (char *)calloc(_max((1+cantpack)*maxQ*workN*bN[k]+((maxN+7)/8),maxN*80),
-                                       sizeof(char)),allocErr);
+	if (k>=_KMAX)
+	{ fprintf(stderr,"k value is too high for this program.");}
+	if ((maxQ>15 || k>15) && (maxQ>32 || k>8) && (maxQ>8))
+	{ cantpack++;}
+	fprintf(stderr,"Reading Auxgraph...\n");
+	makesure(depth = (int *)calloc(maxN+1,sizeof(int)),allocErr);
+	makesure(j = (char *)calloc(bN[k],sizeof(char)),allocErr);
+	makesure(minK = (char *)calloc(bN[k],sizeof(char)),allocErr);
+	makesure(succs  = (unsigned int32 *)calloc(bA[k], sizeof(int32)),allocErr);
+	makesure(succInx= (unsigned int32 *)calloc(bN[k]+1,sizeof(int32)),allocErr);
+	makesure(preds  = (unsigned int32 *)calloc(bA[k], sizeof(int32)),allocErr);
+	makesure(predInx= (unsigned int32 *)calloc(bN[k]+1,sizeof(int32)),allocErr);
+	makesure(predLoc= (char *)calloc(bN[k],sizeof(char)),allocErr);
+	succInx[bN[k]]=predInx[bN[k]]=bA[k];
+	ReadAuxgraph(k,j,minK,succs,succInx,preds,predInx,predLoc, cFolderPath);
+	fprintf(stderr,"Allocating Memory...\n");
+	makesure(kval = (int *)calloc(maxN+1,sizeof(int)),allocErr);
+	for(c=0; c<1+3*_enableshrink; c++)
+	{ makesure(shortMatrix[c] =
+				(costtype *)calloc(maxN*(3*k-1),sizeof(costtype)),allocErr);
+	}
+	if (_enableshrink)
+	{ makesure(orientA=(signed char *)calloc((maxN+7)/8+1,sizeof(char)),allocErr);
+	}
+	makesure(levtour = (nodeXtype *)calloc(maxN+1,sizeof(nodeXtype)),allocErr);
+	if (_timewindow)
+	{ makesure(winBegin=(costtype *)calloc(maxN+1,sizeof(costtype)),allocErr);
+	makesure(winEnd = (costtype *)calloc(maxN+1,sizeof(costtype)),allocErr);
+	makesure(servTime=(costtype *)calloc(maxN+1,sizeof(costtype)),allocErr);
+	}
+	makesure(costsNow = (costtype *)calloc(maxQ*bN[k],sizeof(costtype)),allocErr);
+	makesure(costsNext= (costtype *)calloc(maxQ*bN[k],sizeof(costtype)),allocErr);  if (_timewindow==2)
+	{ makesure(timeNow = (costtype *)calloc(maxQ*bN[k],sizeof(costtype)),allocErr);
+	makesure(timeNext= (costtype *)calloc(maxQ*bN[k],sizeof(costtype)),allocErr);
+	}
+	makesure(sublists=(unsigned char *)calloc(2*(workN+1)*maxN,sizeof(char)),allocErr);
+	makesure(workarea = (char *)calloc(_max((1+cantpack)*maxQ*workN*bN[k]+((maxN+7)/8),maxN*80),
+										sizeof(char)),allocErr);
 }
 
 #ifdef _twTime

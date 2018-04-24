@@ -7,6 +7,7 @@
 struct Dyn_Node_Desc
 {	
 	int m_iOffset;
+	int m_ui_S_Size;
 	int* m_Splus;
 	int* m_Sminus;	
 };

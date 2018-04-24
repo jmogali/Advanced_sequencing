@@ -755,3 +755,15 @@ std::pair<bool, size_t> Greedy_Heuristic::get_vtx_start_time(size_t uiVtx) const
 	if (false == m_alt_graph.containsVertex(uiVtx)) return std::make_pair(false, std::numeric_limits<size_t>::max());
 	else return std::make_pair(true, m_rob_hole_times[m_alt_graph.get_vertex_ownership(uiVtx)].at(uiVtx).m_uiStartTime);
 }
+
+std::pair<bool, size_t> Greedy_Heuristic::get_vtx_completion_time(size_t uiVtx) const
+{
+	if (false == m_bSolComputed) return std::make_pair(false, std::numeric_limits<size_t>::max());
+	if (false == m_alt_graph.containsVertex(uiVtx)) return std::make_pair(false, std::numeric_limits<size_t>::max());
+	else
+	{
+		auto res = m_alt_graph.get_next_vtx_same_job(uiVtx);
+		if(false == res.first) return std::make_pair(false, std::numeric_limits<size_t>::max());
+		return std::make_pair(true, m_rob_hole_times[m_alt_graph.get_vertex_ownership(uiVtx)].at(res.second).m_uiStartTime);
+	}
+}

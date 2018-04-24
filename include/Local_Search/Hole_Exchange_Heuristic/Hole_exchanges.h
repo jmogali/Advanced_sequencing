@@ -144,8 +144,8 @@ class Hole_Exchange
 	public:
 		Hole_Exchange(size_t uiNumRobots, const Layout_LS &graph, Power_Set &power, const Enabling_Graph &en_graph);
 		bool perform_heuristic_moves(const std::vector<std::list<size_t>> &rob_seq, const Alternative_Graph &alt_graph, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, size_t uiTargetMakeSpan);
-		void populate_new_sequence(std::vector<std::list<size_t>> &new_rob_sequence);
 		inline size_t get_best_makespan_found() { return m_uiBestMakeSpan; };
+		inline const std::vector<std::list<size_t>>& get_robot_sequence() { return m_rob_seq; };
 };
 
 std::tuple<size_t, size_t, bool> remove_INP_HOLE_in_rob_sub_seq(size_t c_uiHole, const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_sub_seq, const Layout_LS &graph);

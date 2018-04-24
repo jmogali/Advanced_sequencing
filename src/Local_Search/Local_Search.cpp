@@ -140,7 +140,7 @@ void Local_Search::perform_VBSS_search(std::string strFolderPath)
 	cout << "Tag: Accumulated Results: " << uiBestSol << ","<< uiSuccesFullIter << ","<< dSuccPercent <<endl;
 }
 
-void Local_Search::perform_local_search(std::string strPlotFolder, std::string strDataDumpFolder)
+void Local_Search::perform_local_search(std::string strPlotFolder, std::string strDataDumpFolder, std::string strTSPFolder, size_t ui_KVal)
 {
 	std::vector<std::list<size_t>> rob_seq;
 	std::vector<std::list<size_t>> old_rob_seq;
@@ -207,9 +207,9 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		std::vector<std::vector<Vertex_Schedule>> full_rob_sch;
 		std::vector<std::vector<Vertex_Schedule>> full_rob_sch_legacy;
 
-		/*rob_seq.clear();
-		rob_seq.push_back({ 0,33,30,44,45,19,29,37,38,27,26,18,17,10,32,31,21,20,22,25,23,40,35,46,14,13,11,12,9,28,41,16,36,15,39,50,47,24,8,7,6,5,4,1 });
-		rob_seq.push_back({ 2,53,64,65,75,76,74,85,83,84,34,86,87,89,88,78,77,43,67,91,90,80,68,57,58,63,48,49,51,42,55,56,69,79,66,54,52,61,62,59,60,71,70,73,72,81,82,3 });*/
+		rob_seq.clear();
+		rob_seq.push_back({ 0,18,42,15,43,41,21,28,31,33,19,22,7,39,37,32,34,9,38,36,20,47,23,8,16,17,6,26,25,35,30,13,5,10,29,14,27,4,24,12,55,40,11,1 });
+		rob_seq.push_back({ 2,87,84,88,65,46,63,61,82,69,50,59,75,51,89,85,60,91,45,67,81,70,83,62,78,64,54,72,86,52,71,77,79,49,48,53,76,57,66,56,68,90,73,44,80,58,74,3 });
 
 		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder);
 		
@@ -294,7 +294,16 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		if (true == bSuccess)
 		{
 			print_sequence(rob_seq);
-			bConservativeFound = generate_new_sequence_conservative(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);			
+			
+			if (uiIter % 3 == 0)
+			{
+				gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiMakeSpan, ui_KVal);
+				bConservativeFound = true;
+			}
+			else
+			{
+				bConservativeFound = gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
+			}
 		}
 
 		if (true == bSuccess)

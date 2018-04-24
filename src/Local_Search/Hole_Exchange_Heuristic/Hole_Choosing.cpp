@@ -131,7 +131,7 @@ std::pair<bool, size_t> Hole_Exchange::compute_max_time(const size_t c_uiVtx, co
 		if (1 == uiEnablingVts)
 		{
 			return std::make_pair(false, std::numeric_limits<size_t>::min());
-			/*if (uiEnabledVtxStartTime > m_map_start_times.at(c_uiVtx) + m_graph.getTime(c_uiVtx))
+			/*if (uiEnabledVtxStartTime >= m_map_start_times.at(c_uiVtx) + m_graph.getTime(c_uiVtx))
 			{
 				uiMaxTime = std::min(uiMaxTime, uiEnabledVtxStartTime - m_graph.getTime(c_uiVtx));
 			}*/

@@ -34,17 +34,16 @@ unsigned int check_if_vtx_enabled(struct Hole_Overlap_Enabler_Info* pInfo, struc
 {
 	//first check for S-
 	int iIndexEnabler = 0, iSminusIndex = 0 , iSplusIndex = 0;
-
+	
 	if (NULL == pInfo->m_piEnablers)
 	{
 		if (inFinity == pInfo->m_uiOtherRobotEnableTime) return 1;
 		else return 0;
 	}
 
-	//Need to change sizeof to determine size
-	const int c_iEnablerSize = sizeof(pInfo->m_piEnablers) / sizeof(int);
-	const int c_iSplusSize = sizeof(pstAuxNodeInfo->m_Splus) / sizeof(int);
-	const int c_iSminusSize = sizeof(pstAuxNodeInfo->m_Sminus) / sizeof(int);
+	const int c_iEnablerSize = pInfo->m_uiNumEnablers;
+	const int c_iSplusSize = pstAuxNodeInfo->m_ui_S_Size;
+	const int c_iSminusSize = pstAuxNodeInfo->m_ui_S_Size;
 
 	int iCurrEnablerVtx, iSminusVtx, iSplusVtx;
 	
@@ -107,11 +106,10 @@ unsigned int check_if_vtx_enabled(struct Hole_Overlap_Enabler_Info* pInfo, struc
 			while (pInfo->m_piEnablers[iIndexEnabler] < iSminusVtx)
 			{
 				iIndexEnabler++;
-				if (c_iEnablerSize == iIndexEnabler) break;		
+				if (c_iEnablerSize == iIndexEnabler) break;					
 			}
 		}
 	}
-
 	return 0;
 }
 

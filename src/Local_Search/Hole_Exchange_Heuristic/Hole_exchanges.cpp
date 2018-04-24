@@ -231,18 +231,3 @@ int Hole_Exchange::compute_desirability_of_insertion(const size_t c_uiHD1, const
 
 	return iVal;
 }
-
-void Hole_Exchange::populate_new_sequence(std::vector<std::list<size_t>> &new_rob_sequence)
-{
-	assert(true == new_rob_sequence.empty());
-	new_rob_sequence.resize(m_uiNumRobots);
-
-	for (size_t uiRobot = 0; uiRobot < m_uiNumRobots; uiRobot++)
-	{
-		for (auto it = m_rob_seq[uiRobot].begin(); it != m_rob_seq[uiRobot].end(); it++)
-		{
-			if ("IV" == m_graph.getType(*it)) continue;
-			new_rob_sequence[uiRobot].emplace_back(*it);
-		}
-	}
-}

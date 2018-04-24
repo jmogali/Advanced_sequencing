@@ -109,8 +109,8 @@ class Alternative_Graph
 		inline size_t get_vertex_ownership(size_t uiVtx) const { return m_map_vertex_robot_pos_map.at(uiVtx).first; };
 		inline size_t get_vertex_position(size_t uiVtx) const { return m_map_vertex_robot_pos_map.at(uiVtx).second; };
 		std::pair<bool, size_t> get_best_preceding_arc(size_t uiVtx, size_t uiOtherRobot) const; // bExists, Vtx
-		std::pair<bool, size_t> get_next_vtx_same_job(size_t uiVtx);
-		std::pair<bool, size_t> get_prec_vtx_same_job(size_t uiVtx);
+		std::pair<bool, size_t> get_next_vtx_same_job(size_t uiVtx) const;
+		std::pair<bool, size_t> get_prec_vtx_same_job(size_t uiVtx) const;
 		inline bool containsVertex(size_t uiVtx) const { return m_vec_adj_set_out.find(uiVtx) != m_vec_adj_set_out.end() ? true : false; };
 
 		bool check_if_all_collisions_backwards(size_t uiVtx1, size_t uiRobot1, const std::vector<size_t>& vec_rob_vertpos);  //vertex_position

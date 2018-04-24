@@ -25,13 +25,17 @@ class Local_Search
 		void gen_seq_VBSS_march_for_robot(std::vector<std::unordered_set<size_t>> &vec_com_hole_par, std::vector<std::list<size_t>> &rob_seq);
 		bool add_new_enabled_holes(const std::vector<size_t> &vec_rob_curr_node, std::unordered_set<size_t> &set_curr_enabled_holes, const std::unordered_set<size_t> &set_completed_verts);
 
+		//utility
+		void populate_new_sequence(const std::vector<std::list<size_t>> &rob_sequence_with_IV, std::vector<std::list<size_t>> &rob_sequence_without_IV);
+
 		// validation section
 		bool check_validity_of_sequence(const std::vector<std::list<size_t>> &rob_seq);
 		bool check_validity_of_schedule(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
 		
 		//local search section
 		void generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, const bool c_bWait, std::vector<std::list<size_t>> &rob_seq, bool bSuccess);
-		bool generate_new_sequence_conservative(Hole_Exchange &hole_exchange, Greedy_Heuristic &heur, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch,std::vector<std::list<size_t>> &rob_seq, size_t &c_uiTargetMakeSpan);
+		bool gen_seq_hole_exchange(Hole_Exchange &hole_exchange, Greedy_Heuristic &heur, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch,std::vector<std::list<size_t>> &rob_seq, size_t &c_uiTargetMakeSpan);
+		void gen_seq_TSP(std::string strTSPFolder, Greedy_Heuristic &heur, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::vector<std::list<size_t>> &rob_seq, size_t &c_uiTargetMakeSpan, const size_t c_uiKVal);
 
 		//local search operators section
 		//random operators section
@@ -59,7 +63,7 @@ class Local_Search
 
 	public:
 		Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor);
-		void perform_local_search(std::string strFolderPath, std::string strDataDumpFolder);
+		void perform_local_search(std::string strFolderPath, std::string strDataDumpFolder, std::string strTSPFolder, size_t ui_KVal);
 		void perform_VBSS_search(std::string strFolderPath);
 		inline const Enabling_Graph& get_Enabling_graph() { return m_en_graph; };
 };

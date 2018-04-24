@@ -79,6 +79,7 @@ int main(int argc, char** argv)
 	double dHorSpace = 0.1;
 	double dVertSpace = 1.0;
 	double dWeightFactor = 1;
+	size_t uikVal = 13;
 #else
 	size_t uiFrames = (size_t) atoi(argv[1]);
 	size_t uiRobots = (size_t)atoi(argv[2]);
@@ -87,6 +88,7 @@ int main(int argc, char** argv)
 	double dHorSpace = atof(argv[5]);
 	double dVertSpace = atof(argv[6]);
 	double dWeightFactor = atof(argv[7]);
+	size_t uikVal = (size_t)atoi(argv[8]);
 #endif
 
 	Boeing_Fuesalage obj(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace, "DEFAULT");
@@ -94,10 +96,12 @@ int main(int argc, char** argv)
 	std::string strDatasetFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Dataset/";
 	std::string strPlotFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Graphical_Plots/";
 	std::string strDataDumpFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Sequence_Info/";
+	std::string strTSPFolderPath = "G:/Visual_Studio_Projects/Boeing-Advanced/TSP_Aux/";
 #else
 	std::string strDatasetFolder = "Dataset/";
 	std::string strPlotFolder = "Graphical_Plots/";
 	std::string strDataDumpFolder = "Sequence_Info/";
+	std::string strTSPFolderPath = "TSP_Aux/";
 #endif	
 	
 	std::string strFolder = getFolderName(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace);
@@ -117,9 +121,13 @@ int main(int argc, char** argv)
 	cout << "Tag: Weight Factor: " << dWeightFactor << endl;
 
 	Node_Partitions partition(graph);
+	
+	//generating files for TSP heuristic
+	generate_TSP_files(uikVal, strTSPFolderPath.c_str());
+
 	Local_Search obj_ls(partition, graph, dWeightFactor);
-	obj_ls.perform_local_search(strPlotFolder, strDataDumpFolder);
-	//obj_ls.perform_VBSS_search(strPlotFolder);
+	obj_ls.perform_local_search(strPlotFolder, strDataDumpFolder, strTSPFolderPath, uikVal);
+	//obj_ls.perform_VBSS_search(strPlotFolder);	
 
 	cout << "Tag: \n\n\n";
 }

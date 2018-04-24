@@ -18,6 +18,7 @@ long int wB[MAXSIZE],                   /* release times */
 #include "Dyn_Node_Desc.h"
 
 void free_buffers();
+void reset_buffers(char k, int maxN, int workN, int maxQ);
 
 int ReadData(char *fname)
 { 
@@ -254,6 +255,7 @@ void restructure_cost_file(int n, int* temp_tour, struct Costs_Container *pstCos
 }
 
 //int compute_opt(long int* init_path, int N, long int K, struct Costs_Container *pstCosts, struct Dyn_Node_Desc *pstNodeInfo, unsigned int uiStartTime)
+/*
 int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo)
 {
 	costtype FinalCost;
@@ -320,7 +322,60 @@ int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo)
 	
 	return 0;
 }
+*/
 
+int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *pstCosts, int iNumVts, int kVal, int* new_tour, int bFirstIter, const char* cFolderPath, const int c_uiStartTime)
+{
+	costtype FinalCost;
+	nodeXtype c, n;
+	
+	n = iNumVts;
+	long int h = 10 * kVal, k = kVal;
+
+	if (n>MAXSIZE)
+	{
+		fprintf(stderr, "problem size too big.\n");
+		exit(1);
+	}
+
+	if(1 == bFirstIter) GetAuxgraph(k, MAXSIZE, h, 1, cFolderPath);
+	else reset_buffers(k, MAXSIZE, h, 1);
+
+	for (int iPos = 0; iPos < n; iPos++)
+	{
+		tour1[iPos] = iPos;
+	}
+	
+	tour1[n] = tour1[0];
+
+	FinalCost = DynOpt_NEW(k, n, h, tour1, tour2, pstCosts, pstAuxNodeInfo, c_uiStartTime);
+
+	if (FinalCost >= (1 << 30)) // no feasible solution found 
+	{
+		printf("Could not find a feasible solution.\n");
+		printf("Problem may or may not be feasible.\n");
+		return -1;
+	}
+	else
+	{
+		printf("Final Cost: %d\n", FinalCost);
+		printf("Sequence:\n");
+		if (tour2[0]<n)
+		{
+			for (c = 0; c<n; c++) 
+			{ 
+				//printf(" %d", tour2[c]); 
+				new_tour[c] = tour2[c];
+			}
+		}
+		else
+		{
+			printf("  A larger value of h must be used to recover the sequence.");
+		}
+	}
+
+	return 0;
+}
 
 void free_buffers()
 {
@@ -389,4 +444,62 @@ void free_buffers()
 
 	free(orientA);
 	orientA = NULL;
+}
+
+void reset_buffers(char k, int maxN, int workN, int maxQ)
+{
+	char c, cantpack = 0;
+
+	if (k >= _KMAX)
+	{
+		fprintf(stderr, "k value is too high for this program.");
+	}
+	if ((maxQ>15 || k>15) && (maxQ>32 || k>8) && (maxQ>8))
+	{
+		cantpack++;
+	}
+	
+	for (int uiCount = 0; uiCount < maxN + 1; uiCount++) depth[uiCount] = 0;
+	for (unsigned int uiCount = 0; uiCount < bN[k]; uiCount++) j[uiCount] = 0;
+	for (unsigned int uiCount = 0; uiCount < bN[k]; uiCount++) minK[uiCount] = 0;
+	for (unsigned int uiCount = 0; uiCount < bA[k]; uiCount++) succs[uiCount] = 0;
+	for (unsigned int uiCount = 0; uiCount < bN[k]; uiCount++) succInx[uiCount] = 0;
+	for (unsigned int uiCount = 0; uiCount < bA[k]; uiCount++) preds[uiCount] = 0;
+	for (unsigned int uiCount = 0; uiCount < bN[k]+1; uiCount++) predInx[uiCount] = 0;
+	for (unsigned int uiCount = 0; uiCount < bN[k]; uiCount++) predLoc[uiCount] = 0;
+	for (int uiCount = 0; uiCount < maxN + 1; uiCount++) kval[uiCount] = 0;
+
+	
+	for (c = 0; c<1 + 3 * _enableshrink; c++)
+	{
+		for (int uiCount = 0; uiCount < maxN*(3 * k - 1); uiCount++)
+		{
+			shortMatrix[c][uiCount] = 0;
+		}		
+	}
+	if (_enableshrink)
+	{
+		for (int uiCount = 0; uiCount < (maxN + 7) / 8 + 1; uiCount++) orientA[uiCount] = 0;				
+	}
+	
+	for (int uiCount = 0; uiCount < maxN + 1; uiCount++) levtour[uiCount] = 0;
+
+	if (_timewindow)
+	{
+		for (int uiCount = 0; uiCount < maxN + 1; uiCount++) winBegin[uiCount] = 0;
+		for (int uiCount = 0; uiCount < maxN + 1; uiCount++) winEnd[uiCount] = 0;
+		for (int uiCount = 0; uiCount < maxN + 1; uiCount++) servTime[uiCount] = 0;		
+	}
+
+	for (unsigned int uiCount = 0; uiCount < maxQ*bN[k]; uiCount++) costsNow[uiCount] = 0;
+	for (unsigned int uiCount = 0; uiCount < maxQ*bN[k]; uiCount++) costsNext[uiCount] = 0;
+
+	if (_timewindow == 2)
+	{
+		for (unsigned int uiCount = 0; uiCount < maxQ*bN[k]; uiCount++) timeNow[uiCount] = 0;
+		for (unsigned int uiCount = 0; uiCount < maxQ*bN[k]; uiCount++) timeNext[uiCount] = 0;		
+	}
+
+	for (int uiCount = 0; uiCount < 2 * (workN + 1)*maxN; uiCount++) sublists[uiCount] = 0;
+	for (int uiCount = 0; uiCount < (int)_max((1 + cantpack)*maxQ*workN*bN[k] + ((maxN + 7) / 8), maxN * 80); uiCount++) workarea[uiCount] = 0;
 }

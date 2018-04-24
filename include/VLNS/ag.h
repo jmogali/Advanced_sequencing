@@ -11,6 +11,7 @@
 #define _round(n) ((int)((n)+0.5))
 #include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #pragma warning( disable : 4996)
 
@@ -32,16 +33,21 @@ unsigned int32
 
 /* ------------------------------------------------------------------- */
 
+/* reads auxiliary graph for specific k, with the knowledge  */
+/* that the auxgraph files were built with equal or larger k */
+/*
 void ReadAuxgraph (signed char k, char *j, char *minK,
 		   nodeXtype *succs, unsigned int32 *succInx,
 		   nodeXtype *preds, unsigned int32 *predInx,
-		   char *predLoc)
-/* reads auxiliary graph for specific k, with the knowledge  */
-/* that the auxgraph files were built with equal or larger k */
+		   char *predLoc, const char* cFolderPath)
 { FILE *myfile;
   signed char *w1,h,lastinf,backup,limk;
   char d1[80], d2[100];
   unsigned int32 c, ninfs, *SclassMap;
+
+
+  char *cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.where"));
+  generate_new_file_path("auxgraph.lim", cFolderPath, cFilePath);
 
   if ((myfile = fopen("auxgraph.where", "r")) == NULL)
   { fprintf(stderr,"assuming auxiliary graph is in current directory...\n");
@@ -145,7 +151,193 @@ void ReadAuxgraph (signed char k, char *j, char *minK,
   fclose (myfile);
   //cfree(SclassMap);
   free(SclassMap);
+}*/
+
+void ReadAuxgraph(signed char k, char *j, char *minK,
+	nodeXtype *succs, unsigned int32 *succInx,
+	nodeXtype *preds, unsigned int32 *predInx,
+	char *predLoc, const char* cFolderPath)
+	/* reads auxiliary graph for specific k, with the knowledge  */
+	/* that the auxgraph files were built with equal or larger k */
+{
+	FILE *myfile;
+	signed char *w1, h, lastinf, backup, limk;
+	//char d1[80], d2[100];
+	unsigned int32 c, ninfs, *SclassMap;
+
+
+	/*******************  LIM FILE   ***********************/
+	char *cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.lim"));
+	generate_new_file_path("auxgraph.lim", cFolderPath, cFilePath);
+
+	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.lim"), "r")) == NULL)
+	if ((myfile = fopen(cFilePath, "r")) == NULL)
+	{
+		fprintf(stderr, "error with file auxgraph.lim\n");
+		exit(1);
+	}
+	fscanf(myfile, "%d", &c);
+	limk = c;
+	fclose(myfile);
+	free(cFilePath);
+	cFilePath = NULL;
+
+	if (k>limk)
+	{
+		fprintf(stderr, "k value selected is too large for this auxiliary graph\n");
+		exit(1);
+	}
+
+	makesure(SclassMap =
+		(unsigned int32 *)calloc((1 << (limk - 1)) + 1, sizeof(int32)),
+		allocErr);
+
+	/*******************  S ARC FILE   ***********************/
+
+	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.s.arc"));
+	generate_new_file_path("auxgraph.s.arc", cFolderPath, cFilePath);
+
+	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.s.arc"), "rb")) == NULL)
+	if ((myfile = fopen(cFilePath, "rb")) == NULL)
+	{
+		fprintf(stderr, "error with file auxgraph.s.arc\n");
+		exit(1);
+	}
+	for (w1 = (char *)succs, c = ninfs = lastinf = 0; c<bA[k]; c++)
+	{
+		for (h = 0; h<4; h++, w1++) { fscanf(myfile, "%c", w1); }
+		if (succs[c] >= bN[k])
+		{
+			backup = (lastinf || succs[c] != inFinity);
+			if (succs[c] == inFinity)
+			{
+				SclassMap[++ninfs] = c + 1 - lastinf;
+				lastinf = 1;
+			}
+			if (backup) { w1 -= 4; c--; }
+		}
+		else { lastinf = 0; }
+	}
+	fclose(myfile);
+	free(cFilePath);
+	cFilePath = NULL;
+
+	/*******************  S INX FILE   ***********************/
+	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.s.inx"));
+	generate_new_file_path("auxgraph.s.inx", cFolderPath, cFilePath);
+
+	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.s.inx"), "rb")) == NULL)
+	if ((myfile = fopen(cFilePath, "rb")) == NULL)
+	{
+		fprintf(stderr, "error with file auxgraph.s.inx\n");
+		exit(1);
+	}
+	for (w1 = (char *)succInx, c = 0; c<bN[k]; c++)
+	{
+		for (h = 0; h<4; h++, w1++) { fscanf(myfile, "%c", w1); }
+		succInx[c] = SclassMap[succInx[c]];
+	}
+	fclose(myfile);
+	free(cFilePath);
+	cFilePath = NULL;
+
+	/*******************  P ARC FILE   ***********************/
+	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.p.arc"));
+	generate_new_file_path("auxgraph.p.arc", cFolderPath, cFilePath);
+
+	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.p.arc"), "rb")) == NULL)
+	if ((myfile = fopen(cFilePath, "rb")) == NULL)
+	{
+		fprintf(stderr, "error with file auxgraph.p.arc\n");
+		exit(1);
+	}
+	for (w1 = (char *)preds, c = ninfs = lastinf = 0; c<bA[k]; c++)
+	{
+		for (h = 0; h<4; h++, w1++) { fscanf(myfile, "%c", w1); }
+		if (preds[c] >= bN[k])
+		{
+			backup = (lastinf || preds[c] != inFinity);
+			if (preds[c] == inFinity)
+			{
+				SclassMap[++ninfs] = c + 1 - lastinf;
+				lastinf = 1;
+			}
+			if (backup) { w1 -= 4; c--; }
+		}
+		else { lastinf = 0; }
+	}
+	fclose(myfile);
+	free(cFilePath);
+	cFilePath = NULL;
+
+	/*******************  P INX FILE   ***********************/
+	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.p.inx"));
+	generate_new_file_path("auxgraph.p.inx", cFolderPath, cFilePath);
+
+	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.p.inx"), "rb")) == NULL)
+	if ((myfile = fopen(cFilePath, "rb")) == NULL)
+	{
+		fprintf(stderr, "error with file auxgraph.p.inx\n");
+		exit(1);
+	}
+	for (w1 = (char *)predInx, c = 0; c<bN[k]; c++)
+	{
+		for (h = 0; h<4; h++, w1++) { fscanf(myfile, "%c", w1); }
+		predInx[c] = SclassMap[predInx[c]];
+	}
+	fclose(myfile);
+	free(cFilePath);
+	cFilePath = NULL;
+
+	/*******************  J FILE   ***********************/
+	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.j"));
+	generate_new_file_path("auxgraph.j", cFolderPath, cFilePath);
+
+	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.j"), "rb")) == NULL)
+	if ((myfile = fopen(cFilePath, "rb")) == NULL)
+	{
+		fprintf(stderr, "error with file auxgraph.j\n");
+		exit(1);
+	}
+	for (w1 = j, c = 0; c<bN[k]; c++, w1++) { fscanf(myfile, "%c", w1); }
+	fclose(myfile);
+	free(cFilePath);
+	cFilePath = NULL;
+
+	/*******************  MK FILE   ***********************/
+	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.mk"));
+	generate_new_file_path("auxgraph.mk", cFolderPath, cFilePath);
+
+	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.mk"), "rb")) == NULL)
+	if ((myfile = fopen(cFilePath, "rb")) == NULL)
+	{
+		fprintf(stderr, "error with file auxgraph.mk\n");
+		exit(1);
+	}
+	for (w1 = minK, c = 0; c<bN[k]; c++, w1++) { fscanf(myfile, "%c", w1); }
+	fclose(myfile);
+	free(cFilePath);
+	cFilePath = NULL;
+
+	/*******************  LOC FILE   ***********************/
+	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.loc"));
+	generate_new_file_path("auxgraph.loc", cFolderPath, cFilePath);
+
+	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.loc"), "rb")) == NULL)
+	if ((myfile = fopen(cFilePath, "rb")) == NULL)
+	{
+		fprintf(stderr, "error with file auxgraph.loc\n");
+		exit(1);
+	}
+	for (w1 = predLoc, c = 0; c<bN[k]; c++, w1++) { fscanf(myfile, "%c", w1); }
+	fclose(myfile);
+	free(cFilePath);
+	cFilePath = NULL;
+
+	//cfree(SclassMap);
+	free(SclassMap);
 }
+
 
 /* ------------------------------------------------------------------- */
 

@@ -111,6 +111,7 @@ class Greedy_Heuristic
 		const Alternative_Graph& get_complete_alt_graph(int iOptions); //0 - none, 1 - only enabling, 2 - only collision, 3 - both
 		std::pair<bool, size_t> get_robot_owner(size_t uiVtx) const;
 		std::pair<bool, size_t> get_vtx_start_time(size_t uiVtx) const;
+		std::pair<bool, size_t> get_vtx_completion_time(size_t uiVtx) const;
 };
 
 #endif
