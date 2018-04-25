@@ -26,7 +26,7 @@ int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *p
 	nodeXtype c, n;
 	
 	n = iNumVts;
-	long int h = 10 * kVal, k = kVal;
+	long int h = 15 * kVal, k = kVal;
 
 	if (n>MAXSIZE)
 	{
@@ -56,7 +56,6 @@ int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *p
 	else
 	{
 		printf("Final Cost: %d\n", FinalCost);
-		printf("Sequence Length: %d\n", n);
 		if (tour2[0]<n)
 		{
 			for (c = 0; c<n; c++) 

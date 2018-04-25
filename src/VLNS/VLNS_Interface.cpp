@@ -314,14 +314,14 @@ size_t perform_TSP_Move(std::string strTSPFileFolder, std::vector<std::list<size
 	int iRetVal = optimize_tsp(pstAuxNodeInfo, pstCosts, c_uiTourLen, kVal, new_tour, iFirstIter, strTSPFileFolder.c_str(), (int)c_uiStartTime, &iOptSol);
 	assert(0 == iRetVal);
 
-	cout << "TSP SAVINGS: " << vec_rob_sch[std::get<0>(rob_start_end)][std::get<2>(rob_start_end)].m_uiEnd - iOptSol << endl;
+	cout << "TSP SAVINGS: " << (int)(vec_rob_sch[std::get<0>(rob_start_end)][std::get<2>(rob_start_end)].m_uiEnd) - iOptSol << endl;
 	generate_new_tour(std::get<0>(rob_start_end), std::get<1>(rob_start_end), std::get<2>(rob_start_end), rob_seq[std::get<0>(rob_start_end)], new_tour, c_uiTourLen, graph, map_hole_new_ind);
 
 	free(new_tour);
 	new_tour = NULL;
 
 	free_cost_container();
-	return (size_t)(vec_rob_sch[std::get<0>(rob_start_end)].rbegin()->m_uiEnd - (vec_rob_sch[std::get<0>(rob_start_end)][std::get<2>(rob_start_end)].m_uiEnd - iOptSol));
+	return (size_t)( (int)vec_rob_sch[std::get<0>(rob_start_end)].rbegin()->m_uiEnd - (int)((int)vec_rob_sch[std::get<0>(rob_start_end)][std::get<2>(rob_start_end)].m_uiEnd - iOptSol));
 }
 
 //TW- time window

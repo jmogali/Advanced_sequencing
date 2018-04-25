@@ -152,7 +152,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	if (false == bValid) { cout << "Initial seq generated is invalid\n"; }
 	
 	std::string strType;
-	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan;
+	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan = std::numeric_limits<size_t>::max(), uiUpperBoundFilter = std::numeric_limits<size_t>::max();
 	size_t uiStaleCounter, uiTSPLowerBound; //records number of non improving moves in objective
 	Power_Set power;
 	bool bFirst_Feasible_Sequence = false;
@@ -211,8 +211,8 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		/*rob_seq.clear();
 		rob_seq.push_back({ 0,19,21,20,22,23,33,34,31,32,42,30,41,40,39,29,16,15,18,17,8,10,9,12,11,13,14,24,25,35,36,46,47,45,44,43,50,38,37,27,26,7,6,5,4,1 });
 		rob_seq.push_back({ 2,84,83,62,61,52,54,53,56,64,65,75,86,87,89,88,91,90,79,80,69,68,58,57,55,66,67,77,78,76,85,74,63,51,28,48,49,59,60,70,71,72,73,81,82,3 });*/
-
-		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, (size_t)(1.25 * uiBestSol));
+		
+		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, uiUpperBoundFilter);
 		
 #ifdef ENABLE_LEGACY_CODE			
 		int iRetVal_legacy = perform_greedy_scheduling_old(heur_legacy, rob_seq, full_rob_sch_legacy);
@@ -235,7 +235,11 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 #ifdef ENABLE_LEGACY_CODE			
 		uiMakeSpan_legacy = (iRetVal_legacy == 1) ? getMakeSpan_From_Schedule(full_rob_sch_legacy) : std::numeric_limits<size_t>::max();
 #endif			
-		if (uiBestSol > uiMakeSpan)	uiBestSol = uiMakeSpan;	
+		if (uiBestSol > uiMakeSpan)	
+		{
+			uiBestSol = uiMakeSpan;
+			uiUpperBoundFilter = (size_t)(1.25 * uiBestSol);
+		}	
 
 #ifdef ENABLE_LEGACY_CODE
 		if (uiMakeSpan != uiMakeSpan_legacy)
@@ -254,7 +258,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 #ifdef ENABLE_LEGACY_CODE			
 		cout << " Iteration: " << uiIter << " , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") << " , Makespan: " << uiMakeSpan << " , Old Makespan: " << uiMakeSpan_legacy << endl;
 #else			
-		cout << " Iteration: " << uiIter <<" , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") <<" , Makespan: " << uiMakeSpan <<" , Best Sol: "<< uiBestSol<< endl;
+		cout << " Iteration: " << uiIter <<" , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") <<" , Makespan: " << uiMakeSpan <<" , Best Sol: "<< uiBestSol <<" , Comparison cost: "<<vec_late_accep[uiIter % c_uiLate_Acceptace_Length] << endl;
 #endif			
 			
 		bSuccess = iRetVal == 1 ? true : false;		
@@ -287,14 +291,14 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			{
 				bFirst_Feasible_Sequence = true;
 				cout << "Tag: Initial Makespan: " << uiMakeSpan << endl;
-				uiConstructiveMakespan = uiMakeSpan;
+				uiConstructiveMakespan = std::min(uiMakeSpan , uiConstructiveMakespan);
 				std::fill(vec_late_accep.begin(), vec_late_accep.end(), uiMakeSpan);				
 			}
 		}
 
 		if (true == bSuccess)
 		{
-			print_sequence(rob_seq);
+			//print_sequence(rob_seq);
 			
 			if (uiIter % 3 == 0)
 			{
@@ -311,10 +315,11 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		{
 			if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 			{
-				if (bTSP && (uiTSPLowerBound > vec_late_accep[uiIter % c_uiLate_Acceptace_Length]))
+				if ( (bTSP && (uiTSPLowerBound > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])) || bConservativeFound)
 				{
 					rob_seq = old_rob_seq;
-					full_rob_sch = full_rob_sch_prev;					
+					full_rob_sch = full_rob_sch_prev;		
+					cout << "Reverting sequence"<<endl;			
 				}
 				uiStaleCounter++;
 			}
@@ -322,7 +327,8 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			{
 				vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
 				old_rob_seq = rob_seq;
-				full_rob_sch_prev = full_rob_sch;	
+				full_rob_sch_prev = full_rob_sch;
+				cout << "Accepting sequence"<<endl;	
 				uiStaleCounter = 0;
 			}
 			uiSuccesFullIter++;
@@ -333,11 +339,12 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			full_rob_sch = full_rob_sch_prev;
 		}
 		
-		if ( ((false == bConservativeFound) && (false == bTSP)) ||(uiStaleCounter > 10))
+		if ( ((false == bConservativeFound) && (false == bTSP)) ||(uiStaleCounter > 30))
 		{
 			rob_seq.clear();
 			generate_constructive_sequence_VBSS(rob_seq);
 			uiStaleCounter = 0;
+			bFirst_Feasible_Sequence = false;
 		}
 		
 		uiIter++;	

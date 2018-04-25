@@ -18,7 +18,7 @@ const size_t c_uiMaxCriticalPathCandidates = 15;
 const size_t c_uiMaxInfeasibleIters = 10;
 
 //#define PRINT_LOCAL_OPERATOR_MESSAGES
-#define ENABLE_LEGACY_CODE
+//#define ENABLE_LEGACY_CODE
 //#define DATA_DUMP_ENABLE
 
 #endif
