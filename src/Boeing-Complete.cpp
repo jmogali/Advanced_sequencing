@@ -20,9 +20,14 @@
 #include "Alternative_Graph.h"
 #include "Joris_Sequence_File_Parser.h"
 #include "Schedule_Validity_Check.h"
+
+#ifdef __cplusplus
 extern "C" {
+#endif	
 #include "auxgraph.h"
+#ifdef __cplusplus
 }
+#endif
 
 using namespace boost;
 using namespace std;
