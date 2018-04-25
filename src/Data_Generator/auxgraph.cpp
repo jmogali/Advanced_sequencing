@@ -94,7 +94,6 @@ namespace AUX_GRAPH
 
 	void generate_TSP_files(unsigned int32 uiKVal, const char* cFolderPath)
 	{
-		return;
 		/*if (argc != 2)
 		  {fprintf(stderr,"command needs one integer argument (>1)\n"); exit(1); }
 		sscanf (argv[1],"%d",&ktemp);*/

@@ -38,7 +38,7 @@ PROF =
 
 CFLAGS += $(CCOPT) -I$(CPLEXINCDIR) -I$(CONCERTINCDIR) -I$(CPOPTINCDIR) $(CINCDIR) $(DEBUG_OPT) -I$(BOOSTDIR) -c $(PROF)
 CFLAGS += -Wno-deprecated-declarations
-CFLAGS += -fpermissive
+ADD_CFLAGS = -fpermissive
 
 LDFLAGS = -L$(CPOPTLIBDIR) -lcp -L$(CPLEXLIBDIR) -lilocplex -lcplex -L$(CONCERTLIBDIR) -lconcert -lm -pthread -L$(BOOSTLIBDIR)
 
@@ -66,7 +66,7 @@ $(EXECUTABLE): makedir $(SOURCES) $(OBJ_FILES)
 	$(CXX) $(OBJ_FILES) $(LDFLAGS) $(PROF) -o $@
 
 $(OBJ_DIR)/%.o: %.c
-	$(CXX) $(CFLAGS) $< -o $@
+	$(CXX) $(CFLAGS) $(ADD_CFLAGS) $< -o $@
 	
 $(OBJ_DIR)/%.o: %.cpp
 	$(CXX) $(CFLAGS) $< -o $@
