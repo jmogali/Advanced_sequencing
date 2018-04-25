@@ -156,6 +156,13 @@ void ReadAuxgraph (signed char k, char *j, char *minK,
   free(SclassMap);
 }*/
 
+void generate_new_file_path(const char* fileName, const char* folderPath, char* new_file_path)
+{
+	//new_file_path = (char*)malloc(strlen(folderPath) + 1 + strlen(fileName)); /* make space for the new string (should check the return value ...) */
+	strcpy(new_file_path, folderPath); /* copy name into the new var */
+	strcat(new_file_path, fileName);
+}
+
 void ReadAuxgraph(signed char k, char *j, char *minK,
 	nodeXtype *succs, unsigned int32 *succInx,
 	nodeXtype *preds, unsigned int32 *predInx,

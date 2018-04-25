@@ -20,7 +20,9 @@
 #include "Alternative_Graph.h"
 #include "Joris_Sequence_File_Parser.h"
 #include "Schedule_Validity_Check.h"
+#include "auxgraph.h"
 
+/*
 #ifdef __cplusplus
 extern "C" {
 #endif	
@@ -28,9 +30,11 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+*/
 
 using namespace boost;
 using namespace std;
+using namespace AUX_GRAPH;
 
 std::string getFolderName(size_t uiFrames, size_t uiRobots, double dWidth, double dHeight, double dHorSpace, double dVertSpace)
 {
@@ -131,7 +135,8 @@ int main(int argc, char** argv)
 	Node_Partitions partition(graph);
 	
 	//generating files for TSP heuristic
-	generate_TSP_files(uikVal, strTSPFolderPath.c_str());
+	
+	AUX_GRAPH::generate_TSP_files(uikVal, strTSPFolderPath.c_str());
 
 	Local_Search obj_ls(partition, graph, dWeightFactor);
 	obj_ls.perform_local_search(strPlotFolder, strDataDumpFolder, strTSPFolderPath, uikVal);
