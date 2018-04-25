@@ -1,3 +1,6 @@
+#ifndef DYNOPT_H
+#define DYNOPT_H
+
 #include "Dyn_Node_Desc.h"
 #include "Costs_Container.h"
 #include "VLNS_Constants.h"
@@ -516,5 +519,7 @@ costtype FiddleDual (signed char k, nodeXtype n, costtype *shortMatrix,
   h = costsNow[0]+servTime[0];
   return(h);
 }
+
+#endif
 
 #endif

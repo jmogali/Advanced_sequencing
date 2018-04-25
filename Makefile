@@ -5,7 +5,7 @@ LIBFORMAT  = static_pic
 
 # --- DIRECTORIES ---
 
-CCC = g++ -std=c++11
+CXX = g++ -std=c++11
 BASISILOG = /opt/ibm/ILOG/CPLEX_Studio127
 CPOPTDIR   = $(BASISILOG)/cpoptimizer
 CONCERTDIR = $(BASISILOG)/concert
@@ -38,6 +38,7 @@ PROF =
 
 CFLAGS += $(CCOPT) -I$(CPLEXINCDIR) -I$(CONCERTINCDIR) -I$(CPOPTINCDIR) $(CINCDIR) $(DEBUG_OPT) -I$(BOOSTDIR) -c $(PROF)
 CFLAGS += -Wno-deprecated-declarations
+CFLAGS += -fpermissive
 
 LDFLAGS = -L$(CPOPTLIBDIR) -lcp -L$(CPLEXLIBDIR) -lilocplex -lcplex -L$(CONCERTLIBDIR) -lconcert -lm -pthread -L$(BOOSTLIBDIR)
 
@@ -48,22 +49,27 @@ OBJ_DIR   := obj
 SRC_DIRS  := $(shell find $(SRC_DIR) -type d)
 OBJ_DIRS  := $(addprefix $(OBJ_DIR)/,$(SRC_DIRS))
 
-SOURCES   := $(shell find $(SRC_DIR) -name '*.cpp')
-OBJ_FILES := $(addprefix $(OBJ_DIR)/, $(SOURCES:.cpp=.o))
+SOURCES   := $(shell find $(SRC_DIR) -name '*.cpp' -o -name '*.c')
+OBJ_FILES := $(addprefix $(OBJ_DIR)/, $(SOURCES))
+OBJ_FILES := $(OBJ_FILES:.c=.o)
+OBJ_FILES := $(OBJ_FILES:.cpp=.o)
 
-vpath %.cpp $(SRC_DIRS)
+#vpath %.c %.cpp $(SRC_DIRS)
 
 # ---- TARGETS ----
 
 EXECUTABLE=Boeing
 
-all: $(EXECUTABLE)
+all:$(EXECUTABLE)	
 
 $(EXECUTABLE): makedir $(SOURCES) $(OBJ_FILES) 
-	$(CCC) $(OBJ_FILES) $(LDFLAGS) $(PROF) -o $@
+	$(CXX) $(OBJ_FILES) $(LDFLAGS) $(PROF) -o $@
 
+$(OBJ_DIR)/%.o: %.c
+	$(CXX) $(CFLAGS) $< -o $@
+	
 $(OBJ_DIR)/%.o: %.cpp
-	$(CCC) $(CFLAGS) $< -o $@
+	$(CXX) $(CFLAGS) $< -o $@
 
 makedir: $(OBJ_DIRS)
 

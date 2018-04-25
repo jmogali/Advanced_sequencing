@@ -1,3 +1,6 @@
+#ifndef AG_H
+#define AG_H
+
 /* Subroutines for dynamic program for the Traveling Salesman Problem */
 /* www.contrib.andrew.cmu.edu/~neils/tsp/index.html                   */
 /* Neil Simonetti, May 1998                                           */
@@ -446,3 +449,5 @@ nodeXtype BuildSmallMatrix (signed char k, char contRule,
 
   return (levn);
 }
+
+#endif

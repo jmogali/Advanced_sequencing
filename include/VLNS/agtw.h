@@ -1,3 +1,6 @@
+#ifndef AGTW_H
+#define AGTW_H
+
 /* Subroutines for dynamic program for the Traveling Salesman Problem */
 /* www.contrib.andrew.cmu.edu/~neils/tsp/index.html                   */
 /* Neil Simonetti, May 1998                                           */
@@ -360,3 +363,5 @@ nodeXtype BuildSmallTWmatrix (signed char k, char contRule, char maketour,
 
 
 /* ------------------------------------------------------------------- */
+
+#endif
