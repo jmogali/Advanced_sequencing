@@ -39,7 +39,7 @@ void Local_Search::gen_seq_TSP(std::string strTSPFolder, Greedy_Heuristic &heur,
 	std::vector<std::list<size_t>> full_rob_seq;
 	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
 
-	perform_TSP_Move(strTSPFolder, full_rob_seq, full_rob_sch, heur, m_graph, m_en_graph, (int)c_uiKVal);
+	c_uiTargetMakeSpan = perform_TSP_Move(strTSPFolder, full_rob_seq, full_rob_sch, heur, m_graph, m_en_graph, (int)c_uiKVal);
 
 	rob_seq.clear();
 	populate_new_sequence(full_rob_seq, rob_seq);

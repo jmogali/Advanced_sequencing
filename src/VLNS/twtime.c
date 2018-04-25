@@ -20,7 +20,7 @@ long int wB[MAXSIZE],                   /* release times */
 
 void reset_buffers(char k, int maxN, int workN, int maxQ);
 
-int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *pstCosts, int iNumVts, int kVal, int* new_tour, int bFirstIter, const char* cFolderPath, const int c_uiStartTime)
+int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *pstCosts, int iNumVts, int kVal, int* new_tour, int bFirstIter, const char* cFolderPath, const int c_uiStartTime, int *iOpt)
 {
 	costtype FinalCost;
 	nodeXtype c, n;
@@ -45,6 +45,7 @@ int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *p
 	tour1[n] = tour1[0];
 
 	FinalCost = DynOpt_NEW(k, n, h, tour1, tour2, pstCosts, pstAuxNodeInfo, c_uiStartTime);
+	*iOpt = FinalCost;
 
 	if (FinalCost >= (1 << 30)) // no feasible solution found 
 	{
@@ -67,6 +68,11 @@ int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *p
 		else
 		{
 			printf("  A larger value of h must be used to recover the sequence.");
+			for (c = 0; c<n; c++)
+			{
+				//printf(" %d", tour2[c]); 
+				new_tour[c] = tour1[c];
+			}
 		}
 	}
 

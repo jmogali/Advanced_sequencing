@@ -11,7 +11,7 @@
 #include "VLNS_Interface.h"
 
 #ifdef WINDOWS
-	extern "C" int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *pstCosts, int iNumVts, int kVal, int* new_tour, int bFirstIter, const char* cFolderPath, const int c_uiStartTime);
+	extern "C" int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *pstCosts, int iNumVts, int kVal, int* new_tour, int bFirstIter, const char* cFolderPath, const int c_uiStartTime, int *iOpt);
 	extern "C" void free_buffers();
 #else
 	#include "twtime.h"
@@ -288,8 +288,9 @@ size_t populate_cost_container(const size_t c_uiRobot, size_t uiStartInd, size_t
 	return vec_rob_sch[c_uiRobot][uiStartInd].m_uiEnd;
 }
 
-void perform_TSP_Move(std::string strTSPFileFolder, std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, const Greedy_Heuristic &heur, const Layout_LS &graph, const Enabling_Graph &en_graph, int kVal)
+size_t perform_TSP_Move(std::string strTSPFileFolder, std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &vec_rob_sch, const Greedy_Heuristic &heur, const Layout_LS &graph, const Enabling_Graph &en_graph, int kVal)
 {
+	int iOptSol;
 	int iFirstIter = 0;
 	if (pstAuxNodeInfo == (struct Dyn_Node_Desc*)NULL)
 	{
@@ -310,15 +311,17 @@ void perform_TSP_Move(std::string strTSPFileFolder, std::vector<std::list<size_t
 	int* new_tour;
 	new_tour = (int*)malloc(c_uiTourLen * sizeof(int));
 
-	int iRetVal = optimize_tsp(pstAuxNodeInfo, pstCosts, c_uiTourLen, kVal, new_tour, iFirstIter, strTSPFileFolder.c_str(), (int)c_uiStartTime);
+	int iRetVal = optimize_tsp(pstAuxNodeInfo, pstCosts, c_uiTourLen, kVal, new_tour, iFirstIter, strTSPFileFolder.c_str(), (int)c_uiStartTime, &iOptSol);
 	assert(0 == iRetVal);
 
+	cout << "TSP SAVINGS: " << vec_rob_sch[std::get<0>(rob_start_end)][std::get<2>(rob_start_end)].m_uiEnd - iOptSol << endl;
 	generate_new_tour(std::get<0>(rob_start_end), std::get<1>(rob_start_end), std::get<2>(rob_start_end), rob_seq[std::get<0>(rob_start_end)], new_tour, c_uiTourLen, graph, map_hole_new_ind);
 
 	free(new_tour);
 	new_tour = NULL;
 
 	free_cost_container();
+	return (size_t)(vec_rob_sch[std::get<0>(rob_start_end)].rbegin()->m_uiEnd - (vec_rob_sch[std::get<0>(rob_start_end)][std::get<2>(rob_start_end)].m_uiEnd - iOptSol));
 }
 
 //TW- time window

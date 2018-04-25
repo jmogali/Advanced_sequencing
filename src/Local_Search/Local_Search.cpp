@@ -153,7 +153,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	
 	std::string strType;
 	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan;
-	size_t uiStaleCounter; //records number of non improving moves in objective
+	size_t uiStaleCounter, uiTSPLowerBound; //records number of non improving moves in objective
 	Power_Set power;
 	bool bFirst_Feasible_Sequence = false;
 
@@ -298,7 +298,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			
 			if (uiIter % 3 == 0)
 			{
-				gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiMakeSpan, ui_KVal);
+				gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiTSPLowerBound, ui_KVal);
 				bTSP = true;
 			}
 			else
@@ -311,8 +311,11 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		{
 			if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 			{
-				rob_seq = old_rob_seq;
-				full_rob_sch = full_rob_sch_prev;
+				if (bTSP && (uiTSPLowerBound > vec_late_accep[uiIter % c_uiLate_Acceptace_Length]))
+				{
+					rob_seq = old_rob_seq;
+					full_rob_sch = full_rob_sch_prev;					
+				}
 				uiStaleCounter++;
 			}
 			else
@@ -330,7 +333,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			full_rob_sch = full_rob_sch_prev;
 		}
 		
-		if ( ((false == bConservativeFound) && (false == bTSP)) ||(uiStaleCounter > 5))
+		if ( ((false == bConservativeFound) && (false == bTSP)) ||(uiStaleCounter > 10))
 		{
 			rob_seq.clear();
 			generate_constructive_sequence_VBSS(rob_seq);
@@ -488,7 +491,8 @@ int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, std::vector<
 	rob_seq.push_back({ 2,28,74,48,62,85,70,51,63,73,61,55,43,34,46,56,81,66,58,68,83,65,75,89,60,49,78,86,57,69,79,71,87,84,88,82,90,64,72,52,76,67,80,77,59,91,54,3 });*/
 	
 	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
-	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch, strPlotFolder);
+	
+	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch, strPlotFolder, c_uiUpperBound);
 }
 
 int Local_Search::perform_greedy_scheduling_old(Greedy_Heuristic_old &heur_old, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)

@@ -172,6 +172,7 @@ costtype Fiddle_NEW(signed char k, nodeXtype n, struct Costs_Container* pstCost,
 			costsNext[c1] = inFinity;
 		}
 		//printf("%d \n", n1);
+
 		uiEntered = 0;
 		for (c1 = 0; c1<bN[depth[n1]]; c1++)
 		{
