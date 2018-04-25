@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include "twtime.h"
 
 #define MAXSIZE 500
 long int theMatrix[MAXSIZE][MAXSIZE];   /* n by n matrix of costs */
@@ -17,7 +18,6 @@ long int wB[MAXSIZE],                   /* release times */
 #include "solver.h"
 #include "Dyn_Node_Desc.h"
 
-void free_buffers();
 void reset_buffers(char k, int maxN, int workN, int maxQ);
 
 int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *pstCosts, int iNumVts, int kVal, int* new_tour, int bFirstIter, const char* cFolderPath, const int c_uiStartTime)

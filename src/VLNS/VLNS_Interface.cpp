@@ -9,7 +9,13 @@
 #include "Greedy_Heuristic.h"
 #include "Enabling_Graph.h"
 #include "VLNS_Interface.h"
-#include "twtime.h"
+
+#ifdef WINDOWS
+	extern "C" int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *pstCosts, int iNumVts, int kVal, int* new_tour, int bFirstIter, const char* cFolderPath, const int c_uiStartTime);
+	extern "C" void free_buffers();
+#else
+	#include "twtime.h"
+#endif
 
 using namespace std;
 
@@ -66,9 +72,11 @@ void parse_gen_TSP_node_desc(char const* const strFile)
 
 				pstAuxNodeInfo[uiNode].m_Splus = (int*)malloc(uiSplusSize * sizeof(int));
 
+				auto it_vec = elems.rbegin();
 				for (size_t uiCount = 1; uiCount < elems.size(); uiCount++)
 				{
-					pstAuxNodeInfo[uiNode].m_Splus[uiCount - 1] = (atoi)(elems[uiCount].c_str());
+					pstAuxNodeInfo[uiNode].m_Splus[uiCount - 1] = (atoi)((*it_vec).c_str());
+					it_vec++;
 				}				
 			}
 			else if (elems[0] == "S-:")
@@ -242,7 +250,13 @@ size_t populate_cost_container(const size_t c_uiRobot, size_t uiStartInd, size_t
 	pstCosts->m_parProcTime = (int*) malloc(pstCosts->m_iNumVtx * sizeof(int));
 
 	size_t uiStartTime = vec_rob_sch[c_uiRobot][uiStartInd].m_uiStart;
-	size_t uiEndTime = vec_rob_sch[c_uiRobot][uiEndInd].m_uiEnd;
+	size_t uiEndTime;
+	
+	const auto &vec_depo = graph.getDepotMap();
+
+	//need to do this adjustment it last vertex is end depot because there is a pseudo processing time with depot time
+	if(vec_depo.at(c_uiRobot).getToInd() == *it_end) uiEndTime = vec_rob_sch[c_uiRobot][uiEndInd].m_uiEnd + graph.getTime(*it_end);
+	else uiEndTime= vec_rob_sch[c_uiRobot][uiEndInd].m_uiEnd;
 
 	std::unordered_set<size_t> set_vts;
 	for (auto it = it_start; it != rob_seq[c_uiRobot].end(); it++)
