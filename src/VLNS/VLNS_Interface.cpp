@@ -571,7 +571,7 @@ void select_sub_seq_for_opt(const std::vector<std::vector<Vertex_Schedule>> &vec
 					pr_st_end.second = uiEnd;
 				}
 				bStart = false;
-			}					
+			}			
 		}
 	}
 

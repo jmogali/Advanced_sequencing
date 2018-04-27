@@ -26,8 +26,8 @@ int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *p
 	nodeXtype c, n;
 	
 	n = iNumVts;
-	long int h = 20 * kVal, k = kVal;
-	
+	const long int h = 20 * kVal, k = kVal;
+
 	if (n>MAXSIZE)
 	{
 		fprintf(stderr, "problem size too big.\n");

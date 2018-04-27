@@ -144,12 +144,19 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 {
 	std::vector<std::list<size_t>> rob_seq;
 	std::vector<std::list<size_t>> old_rob_seq;
-	bool bConservativeFound, bTSP;
+	bool bConservativeFound, bTSP, bPrintFirstSol = false;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_prev;
+	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_best;
+	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_print_first;
 	
 	generate_constructive_sequence_VBSS(rob_seq);
 	bool bValid = check_validity_of_sequence(rob_seq), bSuccess = true;
-	if (false == bValid) { cout << "Initial seq generated is invalid\n"; }
+	if (false == bValid) 
+	{
+		cout << "Initial seq generated is invalid\n"; 
+		exit(-1);
+	}
+
 	
 	std::string strType;
 	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan = std::numeric_limits<size_t>::max(), uiUpperBoundFilter = std::numeric_limits<size_t>::max();
@@ -239,6 +246,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		{
 			uiBestSol = uiMakeSpan;
 			uiUpperBoundFilter = (size_t)(1.25 * uiBestSol);
+			full_rob_sch_best = full_rob_sch;
 		}	
 
 #ifdef ENABLE_LEGACY_CODE
@@ -290,6 +298,11 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			else
 			{
 				bFirst_Feasible_Sequence = true;
+				if (false == bPrintFirstSol)
+				{
+					bPrintFirstSol = true;
+					full_rob_sch_print_first = full_rob_sch;
+				}
 				cout << "Tag: Initial Makespan: " << uiMakeSpan << endl;
 				uiConstructiveMakespan = std::min(uiMakeSpan , uiConstructiveMakespan);
 				std::fill(vec_late_accep.begin(), vec_late_accep.end(), uiMakeSpan);				
@@ -353,6 +366,8 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	}
 
 	free_VLNS_buffers();
+	print_state_transition_path(strPlotFolder +"Best_Sol.txt" , full_rob_sch_best );
+	print_state_transition_path(strPlotFolder + "Initial_Sol.txt", full_rob_sch_print_first);
 	cout << "Tag: Best Makespan: " << uiBestSol << endl;
 	cout<< "Tag: Total Iterations: " << uiIter << endl;
 	cout << "Tag: Successfull iterations: " << uiSuccesFullIter << endl;
