@@ -417,7 +417,9 @@ std::pair<bool, bool> Hole_Exchange::check_and_resolve_enablers(const std::vecto
 			uiMinTime = std::numeric_limits<size_t>::max();
 			for (auto it = vec_enablers[uiVtx].set.begin(); it != vec_enablers[uiVtx].set.end(); it++)
 			{
-				uiOldTime = map_old_completion_times.at(it->getInd());
+				auto it_find = map_old_completion_times.find(it->getInd());
+				if (map_old_completion_times.end() == it_find) continue;
+				uiOldTime = it_find->second;
 				if (uiOldTime < uiMinTime)
 				{
 					uiMinTime = uiOldTime;
