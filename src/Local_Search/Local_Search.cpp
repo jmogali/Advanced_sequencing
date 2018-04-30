@@ -150,7 +150,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_print_first;
 	
 	generate_constructive_sequence_VBSS(rob_seq);
-	bool bValid = check_validity_of_sequence(rob_seq), bSuccess = false;
+	bool bValid = check_validity_of_sequence(rob_seq), bSuccess = true;
 	if (false == bValid) 
 	{
 		cout << "Initial seq generated is invalid\n"; 
@@ -160,7 +160,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	
 	std::string strType;
 	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan = std::numeric_limits<size_t>::max(), uiUpperBoundFilter = std::numeric_limits<size_t>::max();
-	size_t uiStaleCounter, uiConsInfeas, uiTSPLowerBound; //records number of non improving moves in objective
+	size_t uiStaleCounter, uiTSPLowerBound; //records number of non improving moves in objective
 	Power_Set power;
 	bool bFirst_Feasible_Sequence = false;
 
@@ -312,46 +312,50 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		if (true == bSuccess)
 		{
 			//print_sequence(rob_seq);
-			uiConsInfeas = 0;
+			
 			if (uiIter % 3 == 0)
 			{
 				gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiTSPLowerBound, ui_KVal);
-				uiIter++;
-				continue;
+				bTSP = true;
 			}
 			else
 			{
 				bConservativeFound = gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
 			}
 		}
-		
+
 		if (true == bSuccess)
 		{
+			if (uiMakeSpan < vec_late_accep[uiIter % c_uiLate_Acceptace_Length]) uiStaleCounter = 0;
+			else uiStaleCounter++;
+
 			if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 			{
-				rob_seq = old_rob_seq;
-				full_rob_sch = full_rob_sch_prev;		
-				cout << "Reverting sequence"<<endl;			
-				uiStaleCounter++;
+				if ( (bTSP && (uiTSPLowerBound > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])) || bConservativeFound)
+				{
+					rob_seq = old_rob_seq;
+					full_rob_sch = full_rob_sch_prev;		
+					cout << "Reverting sequence"<<endl;			
+				}				
 			}
 			else
 			{
 				vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
 				old_rob_seq = rob_seq;
 				full_rob_sch_prev = full_rob_sch;
-				cout << "Accepting sequence"<<endl;	
-				uiStaleCounter = 0;
+				cout << "Accepting sequence"<<endl;					
 			}
+
 			uiSuccesFullIter++;
 		}
 		else if (false == bSuccess)
 		{
 			rob_seq = old_rob_seq;
-			full_rob_sch = full_rob_sch_prev;	
-			uiConsInfeas++;
+			full_rob_sch = full_rob_sch_prev;
+			uiStaleCounter++;
 		}
 		
-		if ( (uiStaleCounter > 30 ) || ( uiConsInfeas > 10 ))
+		if ( uiStaleCounter > 15 )
 		{
 			rob_seq.clear();
 			generate_constructive_sequence_VBSS(rob_seq);
