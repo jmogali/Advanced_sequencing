@@ -144,7 +144,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 {
 	std::vector<std::list<size_t>> rob_seq;
 	std::vector<std::list<size_t>> old_rob_seq;
-	bool bConservativeFound, bTSP, bPrintFirstSol = false;
+	bool bConservativeFound, bTSP, bPrintFirstSol = false, bAccept;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_prev;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_best;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_print_first;
@@ -331,21 +331,24 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 
 			if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 			{
-				if ( (bTSP && (uiTSPLowerBound > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])) || bConservativeFound)
+				if ((bTSP && (uiTSPLowerBound > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])) || bConservativeFound)
 				{
 					rob_seq = old_rob_seq;
-					full_rob_sch = full_rob_sch_prev;		
-					cout << "Reverting sequence"<<endl;			
-				}				
+					full_rob_sch = full_rob_sch_prev;
+					cout << "Reverting sequence" << endl;
+					bAccept = false;
+				}
+				else
+					bAccept = true;
 			}
 			else
 			{
 				vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
 				old_rob_seq = rob_seq;
 				full_rob_sch_prev = full_rob_sch;
-				cout << "Accepting sequence"<<endl;					
+				cout << "Accepting sequence"<<endl;	
+				bAccept = true;
 			}
-
 			uiSuccesFullIter++;
 		}
 		else if (false == bSuccess)
@@ -361,6 +364,10 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			generate_constructive_sequence_VBSS(rob_seq);
 			uiStaleCounter = 0;
 			bFirst_Feasible_Sequence = false;
+		}
+		else if (false == bAccept)
+		{
+			generate_new_sequence(full_rob_sch, rob_seq, bSuccess);
 		}
 		
 		uiIter++;	
@@ -432,13 +439,24 @@ void Local_Search::get_Wait_Holes_For_Robot(const std::vector<std::vector<Vertex
 	}	
 }
 
-void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, const bool c_bWait, std::vector<std::list<size_t>> &rob_seq, bool bSuccess)
+void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::vector<std::list<size_t>> &rob_seq, bool bSuccess)
 {
 	size_t uiChoice;
 	std::string strType;
-	bool bChange = false, bWait = false;
+	bool bChange = false, bWait = false;	
 	
-	if (true == bSuccess) bWait = c_bWait;
+	for (size_t uiRobot = 0; uiRobot < full_rob_sch.size(); uiRobot++)
+	{
+		for (auto it = full_rob_sch[uiRobot].begin(); it != full_rob_sch[uiRobot].end(); it++)
+		{
+			if (it->m_uiWait > 0)
+			{
+				bWait = true;
+				break;
+			}					
+		}
+		if (true == bWait) break;
+	}	
 
 	do
 	{

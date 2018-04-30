@@ -35,7 +35,7 @@ class Local_Search
 		bool check_validity_of_schedule(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch);
 		
 		//local search section
-		void generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, const bool c_bWait, std::vector<std::list<size_t>> &rob_seq, bool bSuccess);
+		void generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::vector<std::list<size_t>> &rob_seq, bool bSuccess);
 		bool gen_seq_hole_exchange(Hole_Exchange &hole_exchange, Greedy_Heuristic &heur, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch,std::vector<std::list<size_t>> &rob_seq, size_t &c_uiTargetMakeSpan);
 		void gen_seq_TSP(std::string strTSPFolder, Greedy_Heuristic &heur, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::vector<std::list<size_t>> &rob_seq, size_t &c_uiTargetMakeSpan, const size_t c_uiKVal);
 
