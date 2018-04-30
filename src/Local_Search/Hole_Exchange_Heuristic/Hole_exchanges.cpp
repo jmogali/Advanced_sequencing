@@ -51,6 +51,7 @@ bool Hole_Exchange::perform_heuristic_moves(const std::vector<std::list<size_t>>
 	m_vec_full_rob_sch = full_rob_sch;
 	construct_state_transition_path(full_rob_sch);
 	populate_rob_graphs(alt_graph);
+	m_rob_seq_best.clear();
 
 	populate_robot_owners(rob_seq);	
 	m_uiTargetMakeSpan = uiTargetMakeSpan;
@@ -120,7 +121,11 @@ bool Hole_Exchange::perform_swap_operation()
 		else
 		{
 			cout << "New Makespan: " << m_top_order_dist.get_makespan() << " , Target Makespan: " << m_uiTargetMakeSpan << endl;
-			if (m_uiBestMakeSpan > m_top_order_dist.get_makespan()) m_uiBestMakeSpan = m_top_order_dist.get_makespan();
+			if (m_uiBestMakeSpan > m_top_order_dist.get_makespan())
+			{
+				m_uiBestMakeSpan = m_top_order_dist.get_makespan();
+				m_rob_seq_best = m_rob_seq;
+			}
 		}
 
 		uiIter++;

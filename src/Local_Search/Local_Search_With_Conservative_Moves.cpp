@@ -15,7 +15,8 @@ void Local_Search::populate_new_sequence(const std::vector<std::list<size_t>> &r
 			if ("IV" == m_graph.getType(*it)) continue;
 			rob_sequence_without_IV[uiRobot].emplace_back(*it);
 		}
-	}
+		cout << "Robot: " << uiRobot << " , Hole Length: " << rob_sequence_without_IV.size() << endl;
+	}	
 }
 
 bool Local_Search::gen_seq_hole_exchange(Hole_Exchange &hole_exchange, Greedy_Heuristic &heur, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::vector<std::list<size_t>> &rob_seq, size_t &c_uiTargetMakeSpan)
@@ -28,7 +29,7 @@ bool Local_Search::gen_seq_hole_exchange(Hole_Exchange &hole_exchange, Greedy_He
 	if (true == bImproving)
 	{
 		rob_seq.clear();
-		populate_new_sequence(hole_exchange.get_robot_sequence(), rob_seq);
+		populate_new_sequence(hole_exchange.get_best_robot_sequence(), rob_seq);
 		c_uiTargetMakeSpan = hole_exchange.get_best_makespan_found();		
 	}
 	return bImproving;

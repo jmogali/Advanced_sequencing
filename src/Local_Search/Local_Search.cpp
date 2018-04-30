@@ -245,7 +245,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		if (uiBestSol > uiMakeSpan)	
 		{
 			uiBestSol = uiMakeSpan;
-			uiUpperBoundFilter = (size_t)(1.25 * uiBestSol);
+			uiUpperBoundFilter = (size_t)(1.5 * uiBestSol);
 			full_rob_sch_best = full_rob_sch;
 		}	
 
@@ -321,6 +321,12 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			else
 			{
 				bConservativeFound = gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
+
+				if (false == bConservativeFound)
+				{
+					gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiTSPLowerBound, ui_KVal);
+					bTSP = true;
+				}
 			}
 		}
 
