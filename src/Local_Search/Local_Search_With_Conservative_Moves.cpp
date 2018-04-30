@@ -15,7 +15,7 @@ void Local_Search::populate_new_sequence(const std::vector<std::list<size_t>> &r
 			if ("IV" == m_graph.getType(*it)) continue;
 			rob_sequence_without_IV[uiRobot].emplace_back(*it);
 		}
-		cout << "Robot: " << uiRobot << " , Hole Length: " << rob_sequence_without_IV.size() << endl;
+		cout << "Robot: " << uiRobot << " , Hole Length: " << rob_sequence_without_IV[uiRobot].size() << endl;
 	}	
 }
 

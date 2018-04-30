@@ -320,13 +320,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			}
 			else
 			{
-				bConservativeFound = gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
-
-				if (false == bConservativeFound)
-				{
-					gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiTSPLowerBound, ui_KVal);
-					bTSP = true;
-				}
+				bConservativeFound = gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);				
 			}
 		}
 
