@@ -148,9 +148,12 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_prev;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_best;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_print_first;
+	std::vector<std::vector<Vertex_Schedule>> full_rob_sch;
+	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_legacy;
+
 	
 	generate_constructive_sequence_VBSS(rob_seq);
-	bool bValid = check_validity_of_sequence(rob_seq), bSuccess = true;
+	bool bValid = check_validity_of_sequence(rob_seq), bSuccess = false;
 	if (false == bValid) 
 	{
 		cout << "Initial seq generated is invalid\n"; 
@@ -212,13 +215,19 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		}
 #endif
 
-		std::vector<std::vector<Vertex_Schedule>> full_rob_sch;
-		std::vector<std::vector<Vertex_Schedule>> full_rob_sch_legacy;
+		if (true == bSuccess)
+		{
+			if (uiIter % 3 == 0) gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiTSPLowerBound, ui_KVal);				
+			else gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
+		}
 
+		full_rob_sch.clear();
+		full_rob_sch_legacy.clear();
+		
 		/*rob_seq.clear();
 		rob_seq.push_back({ 0,12,15,16,18,38,40,41,42,43,36,35,34,32,31,30,27,28,19,23,13,14,9,57,69,70,71,72,68,20,22,21,24,25,26,44,45,46,47,49,48,17,6,7,8,10,11,5,4,1 });
 		rob_seq.push_back({ 2,81,84,86,87,78,77,74,73,75,58,55,52,50,61,88,89,90,39,63,65,67,66,64,62,59,60,54,53,51,76,80,79,82,83,85,91,95,94,92,93,37,29,33,56,3 });*/
-		
+
 		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, uiUpperBoundFilter);
 		
 #ifdef ENABLE_LEGACY_CODE			
@@ -311,29 +320,11 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 
 		if (true == bSuccess)
 		{
-			//print_sequence(rob_seq);
-			
-			if (uiIter % 3 == 0)
-			{
-				gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiTSPLowerBound, ui_KVal);
-				bTSP = true;
-			}
-			else
-			{
-				bConservativeFound = gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);				
-			}
-		}
-
-		if (true == bSuccess)
-		{
 			if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 			{
-				if ( (bTSP && (uiTSPLowerBound > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])) || bConservativeFound)
-				{
-					rob_seq = old_rob_seq;
-					full_rob_sch = full_rob_sch_prev;		
-					cout << "Reverting sequence"<<endl;			
-				}
+				rob_seq = old_rob_seq;
+				full_rob_sch = full_rob_sch_prev;		
+				cout << "Reverting sequence"<<endl;							
 				uiStaleCounter++;
 			}
 			else
@@ -350,14 +341,16 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		{
 			rob_seq = old_rob_seq;
 			full_rob_sch = full_rob_sch_prev;
+			uiStaleCounter++;
 		}
 		
-		if ( ((false == bConservativeFound) && (false == bTSP)) ||(uiStaleCounter > 30))
+		if ( uiStaleCounter > 30 )
 		{
 			rob_seq.clear();
 			generate_constructive_sequence_VBSS(rob_seq);
 			uiStaleCounter = 0;
 			bFirst_Feasible_Sequence = false;
+			bSuccess = false;
 		}
 		
 		uiIter++;	
