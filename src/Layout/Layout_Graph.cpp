@@ -77,15 +77,24 @@ bool Layout_Graph::areColliding(Coll_Pair coll_pair) const
 	{
 		auto pr = m_map_IV_hole_pair[uiRobot1].at(uiInd1);	//hole pair
 		if (m_conf_map.find(Coll_Pair(pr.getHole1(), uiRobot1, uiInd2, uiRobot2)) != m_conf_map.end()) return true;
-		else if (m_conf_map.find(Coll_Pair(pr.getHole2(), uiRobot1, uiInd2, uiRobot2)) != m_conf_map.end()) return true;
-		else return false;
+		if (m_conf_map.find(Coll_Pair(pr.getHole2(), uiRobot1, uiInd2, uiRobot2)) != m_conf_map.end()) return true;		
 	}
 	else if (("IV" != strType1) && ("IV" == strType2))
 	{
 		auto pr = m_map_IV_hole_pair[uiRobot2].at(uiInd2);	//hole pair
 		if (m_conf_map.find(Coll_Pair(uiInd1, uiRobot1, pr.getHole1(), uiRobot2)) != m_conf_map.end()) return true;
-		else if (m_conf_map.find(Coll_Pair(uiInd1, uiRobot1, pr.getHole2(), uiRobot2)) != m_conf_map.end()) return true;
-		else return false;
+		if (m_conf_map.find(Coll_Pair(uiInd1, uiRobot1, pr.getHole2(), uiRobot2)) != m_conf_map.end()) return true;		
+	}
+	else
+	{
+		//("IV" == strType1) && ("IV" == strType2)
+		auto pr1 = m_map_IV_hole_pair[uiRobot1].at(uiInd1);	//hole pair
+		auto pr2 = m_map_IV_hole_pair[uiRobot2].at(uiInd2);	//hole pair
+
+		if (m_conf_map.find(Coll_Pair(pr1.getHole1(), uiRobot1, pr2.getHole1(), uiRobot2)) != m_conf_map.end()) return true;
+		if (m_conf_map.find(Coll_Pair(pr1.getHole2(), uiRobot1, pr2.getHole1(), uiRobot2)) != m_conf_map.end()) return true;
+		if (m_conf_map.find(Coll_Pair(pr1.getHole1(), uiRobot1, pr2.getHole2(), uiRobot2)) != m_conf_map.end()) return true;
+		if (m_conf_map.find(Coll_Pair(pr1.getHole2(), uiRobot1, pr2.getHole2(), uiRobot2)) != m_conf_map.end()) return true;
 	}
 	return false;
 }
