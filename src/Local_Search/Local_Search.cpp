@@ -170,7 +170,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		if (uiBestSol > uiMakeSpan)	
 		{
 			uiBestSol = uiMakeSpan;
-			uiUpperBoundFilter = (size_t)(1.25 * uiBestSol);
+			uiUpperBoundFilter = (size_t)(1.5 * uiBestSol);
 			full_rob_sch_best = full_rob_sch;
 		}	
 
