@@ -1,5 +1,4 @@
 #include "Local_Search.h"
-#include <numeric>
 
 size_t getMakeSpan_From_Schedule(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)
 {
@@ -16,84 +15,7 @@ size_t getMakeSpan_From_Schedule(const std::vector<std::vector<Vertex_Schedule>>
 
 Local_Search::Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor) :m_rng(m_rd()) , m_node_data(node_data) , m_graph(graph), m_dWeight_Factor(dWeightFactor), m_en_graph(graph)
 {
-	srand(time(0));	
-}
-
-std::tuple<bool, size_t, size_t> Local_Search::inter_rand_oper(std::vector<std::list<size_t>> &rob_seq, std::string strType)
-{
-	size_t uiRobot1, uiRobot2;
-	bool bChange = false;
-	std::vector<size_t> vec_robots(m_node_data.m_uiNumRobots);
-	std::iota(vec_robots.begin(), vec_robots.end(), 0);
-	std::shuffle(vec_robots.begin(), vec_robots.end(), m_rng);
-
-	for (size_t uiCount1 = 0; uiCount1 < m_node_data.m_uiNumRobots - 1; uiCount1++)
-	{
-		uiRobot1 = vec_robots[uiCount1];
-		for (size_t uiCount2 = uiCount1 + 1; uiCount2 < m_node_data.m_uiNumRobots; uiCount2++)
-		{
-			uiRobot2 = vec_robots[uiCount2];
-			
-			if ("STRING_EXCHANGE" == strType)
-			{
-				bChange = string_exchange(uiRobot1, uiRobot2, rob_seq);
-			}
-			else if ("STRING_RELOCATION" == strType)
-			{
-				bChange = string_relocation(uiRobot1, uiRobot2, rob_seq);
-			}
-			
-			if (true == bChange) return std::make_tuple(true, uiRobot1 , uiRobot2);
-		}		
-	}
-	return std::make_tuple(false , std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
-}
-
-std::pair<bool, size_t> Local_Search::intra_rand_oper(std::vector<std::list<size_t>> &rob_seq, std::string strType)
-{
-	size_t uiRobot;
-	bool bChange = false;
-	std::vector<size_t> vec_robots(m_node_data.m_uiNumRobots);
-	std::iota(vec_robots.begin(), vec_robots.end(), 0);
-	std::shuffle(vec_robots.begin(), vec_robots.end(), m_rng);
-
-	for (size_t uiCount = 0; uiCount < vec_robots.size(); uiCount++)
-	{
-		uiRobot = vec_robots[uiCount];
-
-		if ("SWAP_INTRA_SEQUENCE" == strType)
-		{
-			bChange = swap_intra_sequence(uiRobot , rob_seq);
-		}
-		else if ("STRING_CROSS_INTRA_SEQUENCE" == strType)
-		{
-			bChange = string_cross_intra_sequence(uiRobot, rob_seq , true);			
-		}
-		
-		if (true == bChange) return std::make_pair(true, uiRobot);
-	}
-	return std::make_pair(false , std::numeric_limits<size_t>::max());
-}
-
-std::tuple<bool, size_t, size_t> Local_Search::wait_based_oper(std::vector<std::list<size_t>> &rob_seq, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strType)
-{
-	//<R_Ind, makespan>
-	std::vector<std::pair<size_t, size_t>> vec_rob_ind_mkspan;
-	
-	for (size_t uiRobot = 0; uiRobot < m_node_data.m_uiNumRobots; uiRobot++)
-	{
-		vec_rob_ind_mkspan.emplace_back(std::make_pair(uiRobot, full_rob_sch[uiRobot].rbegin()->m_uiEnd));
-	}
-
-	std::sort(vec_rob_ind_mkspan.begin(), vec_rob_ind_mkspan.end(), sort_by_max_second_val());
-
-	//iterate over all robots
-	for(size_t uiCount = 0; uiCount < vec_rob_ind_mkspan.size(); uiCount++)
-	{
-		auto res = wait_based_swap_for_robot(full_rob_sch, rob_seq, vec_rob_ind_mkspan[uiCount].first, strType);
-		if (true == std::get<0>(res)) return res;
-	}
-	return std::make_tuple(false, std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
+	srand((unsigned)time(0));
 }
 
 void Local_Search::perform_VBSS_search(std::string strFolderPath)
@@ -160,7 +82,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	
 	std::string strType;
 	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan = std::numeric_limits<size_t>::max(), uiUpperBoundFilter = std::numeric_limits<size_t>::max();
-	size_t uiStaleCounter, uiTSPLowerBound; //records number of non improving moves in objective
+	size_t uiStaleCounter = 0, uiTSPLowerBound; //records number of non improving moves in objective
 	Power_Set power;
 	bool bFirst_Feasible_Sequence = false;
 
@@ -195,6 +117,8 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		
 	while (uiIter < 5000000)
 	{
+		if (((std::clock() - start_time) / (double)CLOCKS_PER_SEC) > LS_SEARCH_TIME) break;
+
 		uiMakeSpan = std::numeric_limits<size_t>::max();
 		uiMakeSpan_legacy = std::numeric_limits<size_t>::max();
 		bConservativeFound = false;
@@ -219,6 +143,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		rob_seq.push_back({ 0,12,15,16,18,38,40,41,42,43,36,35,34,32,31,30,27,28,19,23,13,14,9,57,69,70,71,72,68,20,22,21,24,25,26,44,45,46,47,49,48,17,6,7,8,10,11,5,4,1 });
 		rob_seq.push_back({ 2,81,84,86,87,78,77,74,73,75,58,55,52,50,61,88,89,90,39,63,65,67,66,64,62,59,60,54,53,51,76,80,79,82,83,85,91,95,94,92,93,37,29,33,56,3 });*/
 		
+		print_sequence(rob_seq);
 		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, uiUpperBoundFilter);
 		
 #ifdef ENABLE_LEGACY_CODE			
@@ -302,8 +227,8 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 				{
 					bPrintFirstSol = true;
 					full_rob_sch_print_first = full_rob_sch;
-				}
-				cout << "Tag: Initial Makespan: " << uiMakeSpan << endl;
+					cout << "Tag: Initial Makespan: " << uiMakeSpan << endl;
+				}				
 				uiConstructiveMakespan = std::min(uiMakeSpan , uiConstructiveMakespan);
 				std::fill(vec_late_accep.begin(), vec_late_accep.end(), uiMakeSpan);				
 			}
@@ -311,7 +236,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 
 		if (true == bSuccess)
 		{
-			//print_sequence(rob_seq);
+			print_sequence(rob_seq);
 			
 			if (uiIter % 3 == 0)
 			{
@@ -326,10 +251,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 
 		if (true == bSuccess)
 		{
-			if (uiMakeSpan < vec_late_accep[uiIter % c_uiLate_Acceptace_Length]) uiStaleCounter = 0;
-			else uiStaleCounter++;
-
-			if (uiMakeSpan > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
+			if (uiMakeSpan >= vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 			{
 				if ((bTSP && (uiTSPLowerBound > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])) || bConservativeFound)
 				{
@@ -339,15 +261,25 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 					bAccept = false;
 				}
 				else
-					bAccept = true;
+				{
+					if (rob_seq == old_rob_seq) bAccept = false;
+					else bAccept = true;
+				}
+				uiStaleCounter++;
 			}
 			else
 			{
 				vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
-				old_rob_seq = rob_seq;
-				full_rob_sch_prev = full_rob_sch;
-				cout << "Accepting sequence"<<endl;	
-				bAccept = true;
+				
+				if (rob_seq == old_rob_seq) bAccept = false;
+				else
+				{
+					old_rob_seq = rob_seq;
+					full_rob_sch_prev = full_rob_sch;
+					cout << "Accepting sequence" << endl;
+					bAccept = true;					
+				}				
+				uiStaleCounter = 0;
 			}
 			uiSuccesFullIter++;
 		}
@@ -356,9 +288,10 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			rob_seq = old_rob_seq;
 			full_rob_sch = full_rob_sch_prev;
 			uiStaleCounter++;
+			bAccept = false;
 		}
 		
-		if ( uiStaleCounter > 15 )
+		if ( uiStaleCounter > 10 )
 		{
 			rob_seq.clear();
 			generate_constructive_sequence_VBSS(rob_seq);
@@ -367,12 +300,11 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		}
 		else if (false == bAccept)
 		{
-			generate_new_sequence(full_rob_sch, rob_seq, bSuccess);
+			assert(uiStaleCounter <= 15);
+			generate_new_sequence_rand_moves(rob_seq);
 		}
 		
-		uiIter++;	
-
-		if (((std::clock() - start_time) / (double)CLOCKS_PER_SEC) > LS_SEARCH_TIME) break;
+		uiIter++;		
 	}
 
 	free_VLNS_buffers();
@@ -409,120 +341,6 @@ void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size
 			it1 = it2;
 		}
 	}
-}
-
-size_t Local_Search::get_bottleneck_robot(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch)
-{
-	size_t uiMaxMakeSpan = std::numeric_limits<size_t>::min();
-	size_t uiBottle_Neck_Robot = 0;
-	for (size_t uiRobot = 0; uiRobot < m_node_data.m_uiNumRobots; uiRobot++)
-	{
-		if (full_rob_sch[uiRobot].rbegin()->m_uiEnd >= uiMaxMakeSpan)
-		{
-			uiMaxMakeSpan = full_rob_sch[uiRobot].rbegin()->m_uiEnd;
-			uiBottle_Neck_Robot = uiRobot;
-		}
-	}
-	return uiBottle_Neck_Robot;
-}
-
-void Local_Search::get_Wait_Holes_For_Robot(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, size_t uiRobot, std::vector<std::pair<size_t, size_t>> &vec_wait_ind_pos)
-{
-	size_t uiPos = 0;
-	assert(0 == vec_wait_ind_pos.size());
-
-	for (size_t uiInd = 0; uiInd < full_rob_sch[uiRobot].size(); )
-	{
-		if("IV" == m_graph.getType(full_rob_sch[uiRobot][uiInd].m_uiInd)) continue;
-		if (0 < full_rob_sch[uiRobot][uiInd].m_uiWait) vec_wait_ind_pos.emplace_back(std::make_pair(full_rob_sch[uiRobot][uiInd].m_uiInd, uiPos));
-		uiPos++;
-	}	
-}
-
-void Local_Search::generate_new_sequence(const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::vector<std::list<size_t>> &rob_seq, bool bSuccess)
-{
-	size_t uiChoice;
-	std::string strType;
-	bool bChange = false, bWait = false;	
-	
-	for (size_t uiRobot = 0; uiRobot < full_rob_sch.size(); uiRobot++)
-	{
-		for (auto it = full_rob_sch[uiRobot].begin(); it != full_rob_sch[uiRobot].end(); it++)
-		{
-			if (it->m_uiWait > 0)
-			{
-				bWait = true;
-				break;
-			}					
-		}
-		if (true == bWait) break;
-	}	
-
-	do
-	{
-		std::vector<std::list<size_t>> new_rob_seq = rob_seq;
-		
-		// if the sequence was feasible and waits were detected, then try to resolve via wait operations, else do random
-		if( (true == bSuccess) && (true == bWait)) uiChoice = rand() % 5;
-		else uiChoice = rand() % 2;
-		
-#ifdef PRINT_LOCAL_OPERATOR_MESSAGES
-		cout << "Local Search Choice: " << uiChoice << endl;
-#endif
-		
-		if (0 == uiChoice)
-		{
-			strType = rand() % 2 ? "STRING_EXCHANGE" : "STRING_RELOCATION";
-
-#ifdef PRINT_LOCAL_OPERATOR_MESSAGES			
-			cout << "String Type: " << strType << endl;
-#endif
-			
-			auto res = inter_rand_oper(new_rob_seq, strType);
-
-			if (true == std::get<0>(res))
-			{
-				rob_seq[std::get<1>(res)] = new_rob_seq[std::get<1>(res)];
-				rob_seq[std::get<2>(res)] = new_rob_seq[std::get<2>(res)];
-				bChange = true;
-			}
-		}
-		else if(1 == uiChoice)
-		{
-			strType = rand() % 2 ? "SWAP_INTRA_SEQUENCE" : "STRING_CROSS_INTRA_SEQUENCE";
-			
-#ifdef PRINT_LOCAL_OPERATOR_MESSAGES
-			cout << "String Type: " << strType << endl;
-#endif
-			
-			auto res = intra_rand_oper(new_rob_seq, strType);
-			if (true == std::get<0>(res))
-			{
-				rob_seq[std::get<1>(res)] = new_rob_seq[std::get<1>(res)];
-				bChange = true;
-			}
-		}
-		else
-		{
-			strType = rand() % 2 ? "INTER_SEQUENCE" : "INTRA_SEQUENCE";
-			
-#ifdef PRINT_LOCAL_OPERATOR_MESSAGES			
-			cout << "String Type: " << strType << endl;
-#endif
-			
-			auto res = wait_based_oper(new_rob_seq, full_rob_sch, strType);
-			
-			if (true == std::get<0>(res))
-			{
-				rob_seq[std::get<1>(res)] = new_rob_seq[std::get<1>(res)];
-				if (std::numeric_limits<size_t>::max() != std::get<2>(res))
-				{
-					rob_seq[std::get<2>(res)] = new_rob_seq[std::get<2>(res)];
-				}
-				bChange = true;
-			}
-		}
-	} while (false == bChange);
 }
 
 int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder, const size_t c_uiUpperBound)

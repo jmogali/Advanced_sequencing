@@ -1,7 +1,35 @@
 #include "Local_Search.h"
 
+size_t get_best_position_to_insert( size_t uiVtx1, size_t uiVtx2, std::list<size_t> &r, std::mt19937 &rng, size_t uiRobot, const Layout_LS& graph)
+{
+	std::vector<size_t> vec_pos;
+	std::vector<size_t> vec_CDF;
+
+	size_t uiPos = 0 , uiCDF = 0;
+	auto it_next = r.begin();
+	it_next++;
+	for (auto it = r.begin(); it != r.end(); it++, uiPos++)
+	{
+		if (it_next == r.end()) break;
+		if (true == graph.doesEdgeExist(uiRobot, *it, uiVtx1))
+		{
+			if (true == graph.doesEdgeExist(uiRobot, uiVtx2, *it_next))
+			{
+				int iDist = (int)(graph.getEdgeDist(uiRobot, *it, uiVtx1) + graph.getEdgeDist(uiRobot, uiVtx2, *it_next));
+				iDist = iDist - (int)graph.getEdgeDist(uiRobot, *it, *it_next);
+
+				uiCDF += std::max((size_t)(100 * exp(-1.0 * iDist)), (size_t)1);
+				vec_CDF.emplace_back(uiCDF);
+				vec_pos.emplace_back(uiPos + 1);
+			}
+		}
+		it_next++;
+	}
+	return vec_pos[generate_rand_ind_from_cdf(uiCDF, rng, vec_CDF)];
+}
+
 //uiPos1 points to the first location that needs to be removed in r1, uiLen1 is the length to be removed
-bool string_Exchange(std::list<size_t> &r1, const std::pair<size_t, size_t> &pr1, size_t uiRobot1, std::list<size_t> &r2, const std::pair<size_t, size_t> &pr2, size_t uiRobot2, const Layout_LS& graph)
+bool string_Exchange(std::list<size_t> &r1, const std::pair<size_t, size_t> &pr1, size_t uiRobot1, std::list<size_t> &r2, const std::pair<size_t, size_t> &pr2, size_t uiRobot2, std::mt19937 &rng, const Layout_LS& graph)
 {
 	size_t uiPos1 = pr1.first, uiLen1 = pr1.second;
 	size_t uiPos2 = pr2.first, uiLen2 = pr2.second;
@@ -43,15 +71,17 @@ bool string_Exchange(std::list<size_t> &r1, const std::pair<size_t, size_t> &pr1
 	}
 	r2.erase(it2, it_copy2);
 
-	for (size_t uiCount = 0; uiCount < uiLen2; uiCount++)
-	{
-		r1.insert(it_copy1, vec2[uiCount]);
-	}
+	//insert removed sub-strings in position where euclidean distance is minimum
+	uiPos1 = get_best_position_to_insert(vec2[0], vec2[vec2.size() - 1], r1, rng, uiRobot1, graph);
+	auto it_insert = r1.begin();
+	std::advance(it_insert, uiPos1);
+	r1.insert(it_insert, vec2.begin(), vec2.end());
 
-	for (size_t uiCount = 0; uiCount < uiLen1; uiCount++)
-	{
-		r2.insert(it_copy2, vec1[uiCount]);
-	}
+	uiPos2 = get_best_position_to_insert(vec1[0], vec1[vec1.size() - 1], r2, rng, uiRobot2, graph);
+	it_insert = r2.begin();
+	std::advance(it_insert, uiPos2);
+	r2.insert(it_insert, vec1.begin(), vec1.end());
+
 	return true;
 }
 
@@ -165,6 +195,7 @@ size_t compute_and_generate_rand_ind(std::mt19937 &rng, size_t uiLen, const std:
 	return generate_rand_ind_from_cdf(uiCDF , rng, vec_CDF);
 }
 
+//<position, length>
 std::pair<size_t, size_t> get_valid_random_sub_string_for_exchange(size_t uiRobot, const std::vector<std::pair<size_t, size_t>> &vec_pos_len, std::mt19937 &rng, size_t uiLSMaxExchange)
 {
 	size_t uiMaxLen, uiLen, uiInd;
@@ -221,7 +252,7 @@ bool Local_Search::string_exchange(size_t uiRobot1, size_t uiRobot2, std::vector
 	auto pr1 = get_valid_random_sub_string_for_exchange(uiRobot1, vec_pos_len_1, m_rng, c_uiMax_SE_Length);
 	auto pr2 = get_valid_random_sub_string_for_exchange(uiRobot2, vec_pos_len_2, m_rng, c_uiMax_SE_Length);
 
-	bValid = string_Exchange(rob_seq[uiRobot1], pr1, uiRobot1, rob_seq[uiRobot2], pr2, uiRobot2, m_graph);
+	bValid = string_Exchange(rob_seq[uiRobot1], pr1, uiRobot1, rob_seq[uiRobot2], pr2, uiRobot2, m_rng ,m_graph);
 	/*if (bValid)
 	{
 		bValid = check_validity_of_sequence(rob_seq);
@@ -252,15 +283,21 @@ bool Local_Search::string_relocation(size_t uiRobot1, size_t uiRobot2, std::vect
 	if (uiRobot == uiRobot1)
 	{
 		auto pr = get_valid_random_sub_string_for_exchange(uiRobot1, vec_pos_len_1, m_rng, c_uiMax_SE_Length);
-		std::uniform_int_distribution<size_t> unif_pos(1, rob_seq[uiRobot2].size() - 2);
-		uiPosOther = unif_pos(m_rng);
+		auto it_vtx1 = rob_seq[uiRobot1].begin();
+		std::advance(it_vtx1, pr.first);
+		auto it_vtx2 = it_vtx1;
+		std::advance(it_vtx2, pr.second-1);
+		uiPosOther = get_best_position_to_insert(*it_vtx1, *it_vtx2, rob_seq[uiRobot2], m_rng, uiRobot2, m_graph);
 		bValid = string_relocate(rob_seq[uiRobot1], pr, uiRobot1, rob_seq[uiRobot2], uiPosOther, uiRobot2, m_graph);
 	}
 	else
 	{
 		auto pr = get_valid_random_sub_string_for_exchange(uiRobot2, vec_pos_len_2, m_rng, c_uiMax_SE_Length);
-		std::uniform_int_distribution<size_t> unif_pos(1, rob_seq[uiRobot1].size() - 2);
-		uiPosOther = unif_pos(m_rng);
+		auto it_vtx1 = rob_seq[uiRobot2].begin();
+		std::advance(it_vtx1, pr.first);
+		auto it_vtx2 = it_vtx1;
+		std::advance(it_vtx2, pr.second-1);
+		uiPosOther = get_best_position_to_insert(*it_vtx1, *it_vtx2, rob_seq[uiRobot1], m_rng, uiRobot1, m_graph);
 		bValid = string_relocate(rob_seq[uiRobot2], pr, uiRobot2,  rob_seq[uiRobot1], uiPosOther, uiRobot1, m_graph);
 	}	
 
