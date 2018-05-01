@@ -15,17 +15,22 @@ size_t get_best_position_to_insert( size_t uiVtx1, size_t uiVtx2, std::list<size
 		{
 			if (true == graph.doesEdgeExist(uiRobot, uiVtx2, *it_next))
 			{
-				int iDist = (int)(graph.getEdgeDist(uiRobot, *it, uiVtx1) + graph.getEdgeDist(uiRobot, uiVtx2, *it_next));
-				iDist = iDist - (int)graph.getEdgeDist(uiRobot, *it, *it_next);
+				if (true == graph.doesEdgeExist(uiRobot, *it, *it_next))
+				{
+					int iDist = (int)(graph.getEdgeDist(uiRobot, *it, uiVtx1) + graph.getEdgeDist(uiRobot, uiVtx2, *it_next));
+					iDist = iDist - (int)graph.getEdgeDist(uiRobot, *it, *it_next);
 
-				uiCDF += std::max((size_t)(100 * exp(-1.0 * iDist)), (size_t)1);
-				vec_CDF.emplace_back(uiCDF);
-				vec_pos.emplace_back(uiPos + 1);
+					uiCDF += std::max((size_t)(100 * exp(-1.0 * iDist)), (size_t)1);
+					vec_CDF.emplace_back(uiCDF);
+					vec_pos.emplace_back(uiPos + 1);
+				}
 			}
 		}
 		it_next++;
 	}
-	return vec_pos[generate_rand_ind_from_cdf(uiCDF, rng, vec_CDF)];
+	
+	if (0 == vec_pos.size()) return std::numeric_limits<size_t>::max();
+	else return vec_pos[generate_rand_ind_from_cdf(uiCDF, rng, vec_CDF)];
 }
 
 //uiPos1 points to the first location that needs to be removed in r1, uiLen1 is the length to be removed
@@ -162,7 +167,7 @@ size_t generate_rand_ind_from_cdf(const size_t uiNormFactor, std::mt19937 &rng, 
 {
 	std::uniform_int_distribution<size_t> unif_pdf(0, uiNormFactor);
 	size_t uiRandVal = unif_pdf(rng);
-	size_t uiPrev = 0, uiCurr, uiInd = -1;
+	size_t uiPrev = 0, uiCurr, uiInd = std::numeric_limits<size_t>::max();
 
 	for (size_t uiCount = 0; uiCount < vec_CDF.size(); uiCount++)
 	{
@@ -176,7 +181,7 @@ size_t generate_rand_ind_from_cdf(const size_t uiNormFactor, std::mt19937 &rng, 
 		uiPrev = uiCurr;
 	}
 
-	assert(uiInd != -1);
+	assert(uiInd != std::numeric_limits<size_t>::max());
 	return uiInd;
 }
 
@@ -188,7 +193,7 @@ size_t compute_and_generate_rand_ind(std::mt19937 &rng, size_t uiLen, const std:
 	//compute CDF
 	for (size_t uiCount = 0; uiCount < vec_pos_len.size(); uiCount++)
 	{
-		uiCDF += std::max(vec_pos_len[uiCount].second - uiLen + 1, (size_t)0);
+		uiCDF += std::max(vec_pos_len[uiCount].second - uiLen + 1, (size_t)1);
 		vec_CDF.push_back(uiCDF);
 	}
 
@@ -211,7 +216,7 @@ std::pair<size_t, size_t> get_valid_random_sub_string_for_exchange(size_t uiRobo
 	return std::make_pair(vec_pos_len[uiInd].first + uiDisp, uiLen);
 }
 
-void get_common_nodes_in_seq(size_t uiRobot, size_t uiOtherRobot, std::vector<std::list<size_t>> &rob_seq, const Node_Partitions& node_data, std::vector<std::pair<size_t, size_t>> &vec_pos_len)
+void get_common_nodes_in_seq(size_t uiRobot, size_t uiOtherRobot, const std::vector<std::list<size_t>> &rob_seq, const Node_Partitions& node_data, std::vector<std::pair<size_t, size_t>> &vec_pos_len)
 {
 	const auto &comm_nodes = node_data.get_common_nodes(uiRobot, uiOtherRobot);
 	bool bBegin = false;
