@@ -66,7 +66,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 {
 	std::vector<std::list<size_t>> rob_seq;
 	std::vector<std::list<size_t>> old_rob_seq;
-	bool bPrintFirstSol = false, bRandGen;
+	bool bPrintFirstSol = false, bTSP, bRandGen;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_prev;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_best;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_print_first;
@@ -163,13 +163,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		uiMakeSpan = (iRetVal == 1) ? getMakeSpan_From_Schedule(full_rob_sch) : std::numeric_limits<size_t>::max();
 #ifdef ENABLE_LEGACY_CODE			
 		uiMakeSpan_legacy = (iRetVal_legacy == 1) ? getMakeSpan_From_Schedule(full_rob_sch_legacy) : std::numeric_limits<size_t>::max();
-#endif			
-		if (uiBestSol > uiMakeSpan)	
-		{
-			uiBestSol = uiMakeSpan;
-			uiUpperBoundFilter = (size_t)(1.5 * uiBestSol);
-			full_rob_sch_best = full_rob_sch;
-		}	
+#endif				
 
 #ifdef ENABLE_LEGACY_CODE
 		if (uiMakeSpan != uiMakeSpan_legacy)
@@ -261,15 +255,24 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 					rob_seq = rob_seq_before_TSP;
 					full_rob_sch = full_rob_sch_before_TSP;
 				}
+				bTSP = true;
 			}
 			else
 			{
 				gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
+				bTSP = false;
 			}
 		}
 
 		if (true == bSuccess)
 		{
+			if (uiBestSol > uiMakeSpan)
+			{
+				uiBestSol = uiMakeSpan;
+				uiUpperBoundFilter = (size_t)(1.5 * uiBestSol);
+				full_rob_sch_best = full_rob_sch;
+			}
+
 			if (uiMakeSpan >= vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 			{				
 				rob_seq = old_rob_seq;
@@ -288,7 +291,8 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 					old_rob_seq = rob_seq;
 					full_rob_sch_prev = full_rob_sch;
 					cout << "Accepting sequence" << endl;
-					bRandGen = false;
+					if(bTSP) bRandGen = true; //when TSP is true, we already have the greedy schedule, so we need to perturb for next iterations
+					else bRandGen = false;
 				}
 				uiStaleCounter = 0;
 			}
