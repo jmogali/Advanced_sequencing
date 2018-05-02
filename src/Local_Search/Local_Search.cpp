@@ -269,7 +269,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			if (uiBestSol > uiMakeSpan)
 			{
 				uiBestSol = uiMakeSpan;
-				uiUpperBoundFilter = (size_t)(1.75 * uiBestSol);
+				uiUpperBoundFilter = (size_t)(2.0 * uiBestSol);
 				full_rob_sch_best = full_rob_sch;
 			}
 
@@ -316,7 +316,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		}
 		else if (true == bRandGen)
 		{
-			assert(uiStaleCounter <= 15);
+			assert(uiStaleCounter <= 10);
 			generate_new_sequence_rand_moves(rob_seq);
 		}
 		

@@ -5,7 +5,7 @@
 #include "Windows_Linux.h"
 
 const size_t c_uiMax_SE_Length = 2;
-const size_t c_uiLate_Acceptace_Length = 20;
+const size_t c_uiLate_Acceptace_Length = 25;
 const size_t LS_SEARCH_TIME = 600;
 const int c_iWaitSwapRange = 5;
 const size_t c_uiMaxWaitEventsPerRobot = 3;
