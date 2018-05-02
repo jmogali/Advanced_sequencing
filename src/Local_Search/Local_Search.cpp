@@ -66,7 +66,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 {
 	std::vector<std::list<size_t>> rob_seq;
 	std::vector<std::list<size_t>> old_rob_seq;
-	bool bConservativeFound, bTSP, bPrintFirstSol = false, bAccept;
+	bool bPrintFirstSol = false, bRandGen;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_prev;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_best;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_print_first;
@@ -82,7 +82,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	
 	std::string strType;
 	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan = std::numeric_limits<size_t>::max(), uiUpperBoundFilter = std::numeric_limits<size_t>::max();
-	size_t uiStaleCounter = 0, uiTSPLowerBound, uiNumRestart = 0; //records number of non improving moves in objective
+	size_t uiStaleCounter = 0, uiTSPLowerBound , uiTSPMkSpan, uiNumRestart = 0; //records number of non improving moves in objective
 	Power_Set power;
 	bool bFirst_Feasible_Sequence = false;
 
@@ -121,9 +121,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 
 		uiMakeSpan = std::numeric_limits<size_t>::max();
 		uiMakeSpan_legacy = std::numeric_limits<size_t>::max();
-		bConservativeFound = false;
-		bTSP = false;
-		
+				
 		bValid = check_validity_of_sequence(rob_seq);
 #ifdef WINDOWS		
 		assert(true == bValid);
@@ -239,45 +237,59 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			
 			if (uiIter % 3 == 0)
 			{
+				const auto rob_seq_before_TSP = rob_seq;
+				const auto full_rob_sch_before_TSP = full_rob_sch;
+				
 				gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiTSPLowerBound, ui_KVal);
-				bTSP = true;
+				
+				full_rob_sch.clear();
+				iRetVal = heur.compute_greedy_sol(rob_seq, full_rob_sch, strPlotFolder, uiMakeSpan);
+
+				if (iRetVal == 1)
+				{
+					uiTSPMkSpan = getMakeSpan_From_Schedule(full_rob_sch);
+					cout << "TSP MakeSpan: " << uiTSPMkSpan << endl;
+					if (uiTSPMkSpan <= uiMakeSpan) uiMakeSpan = uiTSPMkSpan;
+					else
+					{
+						rob_seq = rob_seq_before_TSP;
+						full_rob_sch = full_rob_sch_before_TSP;
+					}					
+				}
+				else
+				{
+					rob_seq = rob_seq_before_TSP;
+					full_rob_sch = full_rob_sch_before_TSP;
+				}
 			}
 			else
 			{
-				bConservativeFound = gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
+				gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
 			}
 		}
 
 		if (true == bSuccess)
 		{
 			if (uiMakeSpan >= vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
-			{
-				if ((bTSP && (uiTSPLowerBound > vec_late_accep[uiIter % c_uiLate_Acceptace_Length])) || bConservativeFound)
-				{
-					rob_seq = old_rob_seq;
-					full_rob_sch = full_rob_sch_prev;
-					cout << "Reverting sequence" << endl;
-					bAccept = false;
-				}
-				else
-				{
-					if (rob_seq == old_rob_seq) bAccept = false;
-					else bAccept = true;
-				}
+			{				
+				rob_seq = old_rob_seq;
+				full_rob_sch = full_rob_sch_prev;
+				cout << "Reverting sequence" << endl;
+				bRandGen = true;				
 				uiStaleCounter++;
 			}
 			else
 			{
 				vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
-				
-				if (rob_seq == old_rob_seq) bAccept = false;
+
+				if (rob_seq == old_rob_seq) bRandGen = true;
 				else
 				{
 					old_rob_seq = rob_seq;
 					full_rob_sch_prev = full_rob_sch;
 					cout << "Accepting sequence" << endl;
-					bAccept = true;					
-				}				
+					bRandGen = false;
+				}
 				uiStaleCounter = 0;
 			}
 			uiSuccesFullIter++;
@@ -287,7 +299,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			rob_seq = old_rob_seq;
 			full_rob_sch = full_rob_sch_prev;
 			uiStaleCounter++;
-			bAccept = false;
+			bRandGen = true;
 		}
 		
 		if ( uiStaleCounter > 10 )
@@ -298,7 +310,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			bFirst_Feasible_Sequence = false;
 			uiNumRestart++;
 		}
-		else if (false == bAccept)
+		else if (true == bRandGen)
 		{
 			assert(uiStaleCounter <= 15);
 			generate_new_sequence_rand_moves(rob_seq);
