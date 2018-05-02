@@ -5,7 +5,7 @@ struct String_Info
 	const size_t m_uiPos;
 	const size_t m_uiLen;
 	const double m_dAvgDist;
-	String_Info(size_t uiPos, size_t uiLen, size_t dAvgDist) : m_uiPos(uiPos), m_uiLen(uiLen), m_dAvgDist(dAvgDist) {};
+	String_Info(size_t uiPos, size_t uiLen, double dAvgDist) : m_uiPos(uiPos), m_uiLen(uiLen), m_dAvgDist(dAvgDist) {};
 };
 
 size_t get_best_position_to_insert( size_t uiVtx1, size_t uiVtx2, std::list<size_t> &r, std::mt19937 &rng, size_t uiRobot, const Layout_LS& graph)
@@ -221,20 +221,20 @@ size_t compute_and_generate_rand_ind(std::mt19937 &rng, const size_t c_uiLen, co
 //<position, length>
 std::pair<size_t, size_t> get_valid_random_sub_string_for_exchange(size_t uiRobot, const std::vector<String_Info> &vec_pos_len, std::mt19937 &rng, size_t uiLSMaxExchange)
 {
-	size_t uiMaxLen, uiLen, uiInd;
+	size_t uiMaxLen, uiInd;
 	
 	uiMaxLen = getMaxLen(vec_pos_len);
 	assert(std::numeric_limits<size_t>::min() != uiMaxLen);
-	uiLen = generate_bounded_sub_string_length(uiMaxLen , rng, uiLSMaxExchange);	
+	const size_t c_uiLen = generate_bounded_sub_string_length(uiMaxLen , rng, uiLSMaxExchange);	
 
-	uiInd = compute_and_generate_rand_ind(rng, uiLen, vec_pos_len);
-	assert(vec_pos_len[uiInd].m_uiLen >= uiLen);
+	uiInd = compute_and_generate_rand_ind(rng, c_uiLen, vec_pos_len);
+	assert(vec_pos_len[uiInd].m_uiLen >= c_uiLen);
 	
 	size_t uiDisp;
-	if (vec_pos_len[uiInd].m_uiLen == uiLen) uiDisp = 0;
-	else uiDisp = rand() % (vec_pos_len[uiInd].m_uiLen - uiLen + 1);
+	if (vec_pos_len[uiInd].m_uiLen == c_uiLen) uiDisp = 0;
+	else uiDisp = rand() % (vec_pos_len[uiInd].m_uiLen - c_uiLen + 1);
 		
-	return std::make_pair(vec_pos_len[uiInd].m_uiPos + uiDisp, uiLen);
+	return std::make_pair(vec_pos_len[uiInd].m_uiPos + uiDisp, c_uiLen);
 }
 
 void get_common_nodes_in_seq(size_t uiRobot, size_t uiOtherRobot, const std::vector<std::list<size_t>> &rob_seq, const Node_Partitions& node_data, std::vector<String_Info> &vec_pos_len, const Layout_LS &graph)
