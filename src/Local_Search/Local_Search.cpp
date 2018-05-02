@@ -269,7 +269,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			if (uiBestSol > uiMakeSpan)
 			{
 				uiBestSol = uiMakeSpan;
-				uiUpperBoundFilter = (size_t)(1.5 * uiBestSol);
+				uiUpperBoundFilter = (size_t)(1.75 * uiBestSol);
 				full_rob_sch_best = full_rob_sch;
 			}
 
@@ -291,7 +291,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 					old_rob_seq = rob_seq;
 					full_rob_sch_prev = full_rob_sch;
 					cout << "Accepting sequence" << endl;
-					if(bTSP) bRandGen = true; //when TSP is true, we already have the greedy schedule, so we need to perturb for next iterations
+					if(bTSP) bRandGen = true; //when TSP is true, we already have the greedy schedule, so we need to perturb for next iteration
 					else bRandGen = false;
 				}
 				uiStaleCounter = 0;

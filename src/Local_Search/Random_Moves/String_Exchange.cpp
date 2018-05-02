@@ -1,5 +1,13 @@
 #include "Local_Search.h"
 
+struct String_Info
+{
+	const size_t m_uiPos;
+	const size_t m_uiLen;
+	const double m_dAvgDist;
+	String_Info(size_t uiPos, size_t uiLen, size_t dAvgDist) : m_uiPos(uiPos), m_uiLen(uiLen), m_dAvgDist(dAvgDist) {};
+};
+
 size_t get_best_position_to_insert( size_t uiVtx1, size_t uiVtx2, std::list<size_t> &r, std::mt19937 &rng, size_t uiRobot, const Layout_LS& graph)
 {
 	std::vector<size_t> vec_pos;
@@ -142,13 +150,13 @@ bool string_relocate(std::list<size_t> &r1, const std::pair<size_t, size_t> &pr1
 	return true;
 }
 
-size_t getMaxLen(const std::vector<std::pair<size_t, size_t>> &vec_pos_len)
+size_t getMaxLen(const std::vector<String_Info> &vec_pos_len)
 {
 	size_t uiMaxLen = std::numeric_limits<size_t>::min();
 
 	for (size_t uiCount = 0; uiCount < vec_pos_len.size(); uiCount++)
 	{
-		uiMaxLen = std::max(uiMaxLen, vec_pos_len[uiCount].second);
+		uiMaxLen = std::max(uiMaxLen, vec_pos_len[uiCount].m_uiLen);
 	}
 
 	return uiMaxLen;
@@ -192,7 +200,7 @@ size_t generate_rand_ind_from_cdf(const size_t uiNormFactor, std::mt19937 &rng, 
 	return uiInd;
 }
 
-size_t compute_and_generate_rand_ind(std::mt19937 &rng, size_t uiLen, const std::vector<std::pair<size_t, size_t>> &vec_pos_len)
+size_t compute_and_generate_rand_ind(std::mt19937 &rng, const size_t c_uiLen, const std::vector<String_Info> &vec_pos_len)
 {
 	size_t uiCDF = 0;
 	std::vector<size_t> vec_CDF;
@@ -200,7 +208,10 @@ size_t compute_and_generate_rand_ind(std::mt19937 &rng, size_t uiLen, const std:
 	//compute CDF
 	for (size_t uiCount = 0; uiCount < vec_pos_len.size(); uiCount++)
 	{
-		uiCDF += std::max(vec_pos_len[uiCount].second - uiLen + 1, (size_t)0);
+		if (vec_pos_len[uiCount].m_uiLen >= c_uiLen)
+		{
+			uiCDF += (size_t)(100 * exp(-.01 * vec_pos_len[uiCount].m_dAvgDist));
+		}
 		vec_CDF.push_back(uiCDF);
 	}
 
@@ -208,7 +219,7 @@ size_t compute_and_generate_rand_ind(std::mt19937 &rng, size_t uiLen, const std:
 }
 
 //<position, length>
-std::pair<size_t, size_t> get_valid_random_sub_string_for_exchange(size_t uiRobot, const std::vector<std::pair<size_t, size_t>> &vec_pos_len, std::mt19937 &rng, size_t uiLSMaxExchange)
+std::pair<size_t, size_t> get_valid_random_sub_string_for_exchange(size_t uiRobot, const std::vector<String_Info> &vec_pos_len, std::mt19937 &rng, size_t uiLSMaxExchange)
 {
 	size_t uiMaxLen, uiLen, uiInd;
 	
@@ -217,21 +228,24 @@ std::pair<size_t, size_t> get_valid_random_sub_string_for_exchange(size_t uiRobo
 	uiLen = generate_bounded_sub_string_length(uiMaxLen , rng, uiLSMaxExchange);	
 
 	uiInd = compute_and_generate_rand_ind(rng, uiLen, vec_pos_len);
-	assert(vec_pos_len[uiInd].second >= uiLen);
+	assert(vec_pos_len[uiInd].m_uiLen >= uiLen);
 	
 	size_t uiDisp;
-	if (vec_pos_len[uiInd].second == uiLen) uiDisp = 0;
-	else uiDisp = rand() % (vec_pos_len[uiInd].second - uiLen + 1);
+	if (vec_pos_len[uiInd].m_uiLen == uiLen) uiDisp = 0;
+	else uiDisp = rand() % (vec_pos_len[uiInd].m_uiLen - uiLen + 1);
 		
-	return std::make_pair(vec_pos_len[uiInd].first + uiDisp, uiLen);
+	return std::make_pair(vec_pos_len[uiInd].m_uiPos + uiDisp, uiLen);
 }
 
-void get_common_nodes_in_seq(size_t uiRobot, size_t uiOtherRobot, const std::vector<std::list<size_t>> &rob_seq, const Node_Partitions& node_data, std::vector<std::pair<size_t, size_t>> &vec_pos_len)
+void get_common_nodes_in_seq(size_t uiRobot, size_t uiOtherRobot, const std::vector<std::list<size_t>> &rob_seq, const Node_Partitions& node_data, std::vector<String_Info> &vec_pos_len, const Layout_LS &graph)
 {
 	const auto &comm_nodes = node_data.get_common_nodes(uiRobot, uiOtherRobot);
 	bool bBegin = false;
-	size_t uiStart, uiInd = 0;;
-	
+	size_t uiStart, uiInd = 0;
+	double dAvgDist;
+	const auto& vec_depo = graph.getDepotMap();
+	const auto& stOtherRobotDepoLoc = vec_depo.at(uiOtherRobot).getLoc();
+
 	for (auto it = rob_seq[uiRobot].begin(); it != rob_seq[uiRobot].end(); it++, uiInd++)
 	{
 		if (comm_nodes.find(*it) != comm_nodes.end())
@@ -240,27 +254,30 @@ void get_common_nodes_in_seq(size_t uiRobot, size_t uiOtherRobot, const std::vec
 			{
 				uiStart = uiInd;
 				bBegin = true;
+				dAvgDist = 0;
 			}			
 		}
 		else
 		{
 			if (true == bBegin)
 			{
-				vec_pos_len.emplace_back(uiStart , uiInd - uiStart);
+				vec_pos_len.emplace_back(String_Info(uiStart , uiInd - uiStart, (dAvgDist/(double)(uiInd - uiStart))));
 				bBegin = false;
 			}
 		}
+
+		if(true == bBegin) dAvgDist += stOtherRobotDepoLoc.getDist_XY(graph.getLoc(*it));
 	}
 }
 
 bool Local_Search::string_exchange(size_t uiRobot1, size_t uiRobot2, std::vector<std::list<size_t>> &rob_seq)
 {
 	bool bValid;
-	std::vector<std::pair<size_t, size_t>> vec_pos_len_1;   // first is index, second is length
-	std::vector<std::pair<size_t, size_t>> vec_pos_len_2;
+	std::vector<String_Info> vec_pos_len_1;   // first is index, second is length
+	std::vector<String_Info> vec_pos_len_2;
 	
-	get_common_nodes_in_seq(uiRobot1, uiRobot2, rob_seq, m_node_data, vec_pos_len_1);
-	get_common_nodes_in_seq(uiRobot2, uiRobot1, rob_seq, m_node_data, vec_pos_len_2);
+	get_common_nodes_in_seq(uiRobot1, uiRobot2, rob_seq, m_node_data, vec_pos_len_1, m_graph);
+	get_common_nodes_in_seq(uiRobot2, uiRobot1, rob_seq, m_node_data, vec_pos_len_2, m_graph);
 
 	if ((vec_pos_len_1.size() == 0) || (vec_pos_len_2.size() == 0)) return false;
 
@@ -282,13 +299,13 @@ bool Local_Search::string_exchange(size_t uiRobot1, size_t uiRobot2, std::vector
 
 bool Local_Search::string_relocation(size_t uiRobot1, size_t uiRobot2, std::vector<std::list<size_t>> &rob_seq)
 {
-	std::vector<std::pair<size_t, size_t>> vec_pos_len_1;   // first is index, second is length
-	std::vector<std::pair<size_t, size_t>> vec_pos_len_2;
+	std::vector<String_Info> vec_pos_len_1;   // first is index, second is length
+	std::vector<String_Info> vec_pos_len_2;
 	size_t uiRobot , uiPosOther;
 	bool bValid;
 
-	get_common_nodes_in_seq(uiRobot1, uiRobot2, rob_seq, m_node_data, vec_pos_len_1);
-	get_common_nodes_in_seq(uiRobot2, uiRobot1, rob_seq, m_node_data, vec_pos_len_2);
+	get_common_nodes_in_seq(uiRobot1, uiRobot2, rob_seq, m_node_data, vec_pos_len_1, m_graph);
+	get_common_nodes_in_seq(uiRobot2, uiRobot1, rob_seq, m_node_data, vec_pos_len_2, m_graph);
 
 	if ((vec_pos_len_1.size() == 0) && (vec_pos_len_2.size() == 0)) return false;
 	if (vec_pos_len_1.size() == 0) { uiRobot = uiRobot2; }
