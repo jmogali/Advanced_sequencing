@@ -61,6 +61,8 @@ std::tuple<bool, size_t, size_t> Local_Search::inter_rand_oper(std::vector<std::
 	std::iota(vec_robots.begin(), vec_robots.end(), 0);
 	std::shuffle(vec_robots.begin(), vec_robots.end(), m_rng);
 
+	cout << strType << endl;
+
 	for (size_t uiCount1 = 0; uiCount1 < m_node_data.m_uiNumRobots - 1; uiCount1++)
 	{
 		uiRobot1 = vec_robots[uiCount1];
@@ -90,6 +92,8 @@ std::pair<bool, size_t> Local_Search::intra_rand_oper(std::vector<std::list<size
 	std::vector<size_t> vec_robots(m_node_data.m_uiNumRobots);
 	std::iota(vec_robots.begin(), vec_robots.end(), 0);
 	std::shuffle(vec_robots.begin(), vec_robots.end(), m_rng);
+
+	cout << strType << endl;
 
 	for (size_t uiCount = 0; uiCount < vec_robots.size(); uiCount++)
 	{

@@ -82,7 +82,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	
 	std::string strType;
 	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan = std::numeric_limits<size_t>::max(), uiUpperBoundFilter = std::numeric_limits<size_t>::max();
-	size_t uiStaleCounter = 0, uiTSPLowerBound; //records number of non improving moves in objective
+	size_t uiStaleCounter = 0, uiTSPLowerBound, uiNumRestart = 0; //records number of non improving moves in objective
 	Power_Set power;
 	bool bFirst_Feasible_Sequence = false;
 
@@ -297,6 +297,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			generate_constructive_sequence_VBSS(rob_seq);
 			uiStaleCounter = 0;
 			bFirst_Feasible_Sequence = false;
+			uiNumRestart++;
 		}
 		else if (false == bAccept)
 		{
@@ -312,6 +313,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	print_state_transition_path(strPlotFolder + "Initial_Sol.txt", full_rob_sch_print_first);
 	cout << "Tag: Best Makespan: " << uiBestSol << endl;
 	cout<< "Tag: Total Iterations: " << uiIter << endl;
+	cout << "Tag: Number Of Restarts: " << uiNumRestart << endl;
 	cout << "Tag: Successfull iterations: " << uiSuccesFullIter << endl;
 	double dSuccPercent = (double)(100.0 * uiSuccesFullIter)/((double)(uiIter * 1.0));
 	cout<< "Tag: Success %: " << dSuccPercent << endl; 
