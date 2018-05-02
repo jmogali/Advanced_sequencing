@@ -234,10 +234,10 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 				const auto rob_seq_before_TSP = rob_seq;
 				const auto full_rob_sch_before_TSP = full_rob_sch;
 				
-				gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiTSPLowerBound, ui_KVal);
-				
+				gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiTSPLowerBound, ui_KVal);				
+
 				full_rob_sch.clear();
-				iRetVal = heur.compute_greedy_sol(rob_seq, full_rob_sch, strPlotFolder, uiMakeSpan);
+				iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, uiMakeSpan);
 
 				if (iRetVal == 1)
 				{
@@ -269,7 +269,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			if (uiBestSol > uiMakeSpan)
 			{
 				uiBestSol = uiMakeSpan;
-				uiUpperBoundFilter = (size_t)(2.0 * uiBestSol);
+				uiUpperBoundFilter = (size_t)(1.5 * uiBestSol);
 				full_rob_sch_best = full_rob_sch;
 			}
 
