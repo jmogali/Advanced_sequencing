@@ -77,14 +77,21 @@ bool string_Exchange(std::list<size_t> &r1, const std::pair<size_t, size_t> &pr1
 	r2.erase(it2, it_copy2);
 
 	//insert removed sub-strings in position where euclidean distance is minimum
-	uiPos1 = get_best_position_to_insert(vec2[0], vec2[vec2.size() - 1], r1, rng, uiRobot1, graph);
+	size_t uiInsertPos1;
+	
+	if (1 == uiPos1) uiInsertPos1 = 1;
+	else uiInsertPos1 = get_best_position_to_insert(vec2[0], vec2[vec2.size() - 1], r1, rng, uiRobot1, graph);
+
 	auto it_insert = r1.begin();
-	std::advance(it_insert, uiPos1);
+	std::advance(it_insert, uiInsertPos1);
 	r1.insert(it_insert, vec2.begin(), vec2.end());
 
-	uiPos2 = get_best_position_to_insert(vec1[0], vec1[vec1.size() - 1], r2, rng, uiRobot2, graph);
+	size_t uiInsertPos2;
+	if (1 == uiPos2) uiInsertPos2 = 1;
+	else uiInsertPos2 = get_best_position_to_insert(vec1[0], vec1[vec1.size() - 1], r2, rng, uiRobot2, graph);
+
 	it_insert = r2.begin();
-	std::advance(it_insert, uiPos2);
+	std::advance(it_insert, uiInsertPos2);
 	r2.insert(it_insert, vec1.begin(), vec1.end());
 
 	return true;
@@ -165,15 +172,15 @@ size_t generate_bounded_sub_string_length(size_t uiMaxLen, std::mt19937 &rng, si
 
 size_t generate_rand_ind_from_cdf(const size_t uiNormFactor, std::mt19937 &rng, const std::vector<size_t> &vec_CDF)
 {
-	std::uniform_int_distribution<size_t> unif_pdf(0, uiNormFactor);
-	size_t uiRandVal = unif_pdf(rng);
+	std::uniform_real_distribution<> unif_pdf(0, (double)uiNormFactor);
+	double dRandVal = unif_pdf(rng);
 	size_t uiPrev = 0, uiCurr, uiInd = std::numeric_limits<size_t>::max();
 
 	for (size_t uiCount = 0; uiCount < vec_CDF.size(); uiCount++)
 	{
 		uiCurr = vec_CDF[uiCount];
 		if (uiPrev == uiCurr) continue;
-		if ((uiPrev <= uiRandVal) && (uiRandVal <= uiCurr))
+		if ((uiPrev <= dRandVal) && (dRandVal <= uiCurr))
 		{
 			uiInd = uiCount;
 			break;
@@ -193,7 +200,7 @@ size_t compute_and_generate_rand_ind(std::mt19937 &rng, size_t uiLen, const std:
 	//compute CDF
 	for (size_t uiCount = 0; uiCount < vec_pos_len.size(); uiCount++)
 	{
-		uiCDF += std::max(vec_pos_len[uiCount].second - uiLen + 1, (size_t)1);
+		uiCDF += std::max(vec_pos_len[uiCount].second - uiLen + 1, (size_t)0);
 		vec_CDF.push_back(uiCDF);
 	}
 
@@ -211,7 +218,10 @@ std::pair<size_t, size_t> get_valid_random_sub_string_for_exchange(size_t uiRobo
 
 	uiInd = compute_and_generate_rand_ind(rng, uiLen, vec_pos_len);
 	assert(vec_pos_len[uiInd].second >= uiLen);
-	size_t uiDisp = rand() % (vec_pos_len[uiInd].second - uiLen + 1);
+	
+	size_t uiDisp;
+	if (vec_pos_len[uiInd].second == uiLen) uiDisp = 0;
+	else uiDisp = rand() % (vec_pos_len[uiInd].second - uiLen + 1);
 		
 	return std::make_pair(vec_pos_len[uiInd].first + uiDisp, uiLen);
 }
