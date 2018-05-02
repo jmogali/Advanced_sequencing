@@ -98,16 +98,14 @@ void Local_Search::gen_seq_VBSS_march_for_robot(std::vector<std::unordered_set<s
 			std::list<std::pair<size_t, double>> list_dist;
 			size_t uiVtx;
 			uiVtx = vec_rob_curr_node[uiRobot];
-			auto loc2 = m_graph.getLoc(uiVtx);
-
+			
 			for (auto it_cand = set_rem_enabled_holes.begin(); it_cand != set_rem_enabled_holes.end(); it_cand++)
 			{
 				if (true == m_graph.doesEdgeExist(uiRobot, uiVtx, *it_cand))
 				{
 					if (vec_com_hole_par[uiRobot].end() != vec_com_hole_par[uiRobot].find(*it_cand))
 					{
-						auto loc1 = m_graph.getLoc(*it_cand);
-						list_dist.push_back(std::make_pair(*it_cand, loc2.getDist_XY(loc1)));
+						list_dist.push_back(std::make_pair(*it_cand, (m_graph.getEdgeDist(uiRobot, uiVtx, *it_cand)/10.0)));
 					}
 				}
 			}
