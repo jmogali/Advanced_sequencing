@@ -422,8 +422,11 @@ size_t Hole_Exchange::find_vtx_owner(size_t uiVtx)
 	return std::numeric_limits<size_t>::max(); //should never occur
 }
 
-bool sort_by_distance(const Cand_for_picking& lhs, const Cand_for_picking &rhs)
+bool sort_by_distance_wait(const Cand_for_picking& lhs, const Cand_for_picking &rhs)
 {
+	if (lhs.m_uiPredWait > rhs.m_uiPredWait) return true;
+	else if (lhs.m_uiPredWait < rhs.m_uiPredWait) return false;
+
 	if (lhs.m_uiDist > rhs.m_uiDist) return true;
 	else if(lhs.m_uiDist < rhs.m_uiDist) return false;
 	else if (lhs.m_uiDist == rhs.m_uiDist)
@@ -438,8 +441,11 @@ bool sort_by_distance(const Cand_for_picking& lhs, const Cand_for_picking &rhs)
 	else return lhs.m_uiHole.getInd() < rhs.m_uiHole.getInd(); //dummy
 }
 
-bool sort_by_flexbility(const Cand_for_picking& lhs, const Cand_for_picking &rhs)
+bool sort_by_flexbility_wait(const Cand_for_picking& lhs, const Cand_for_picking &rhs)
 {
+	if (lhs.m_uiPredWait > rhs.m_uiPredWait) return true;
+	else if (lhs.m_uiPredWait < rhs.m_uiPredWait) return false;
+
 	int iFlex1 = (int)lhs.m_uiMaxTime - (int)lhs.m_uiMinTime;
 	int iFlex2 = (int)rhs.m_uiMaxTime - (int)rhs.m_uiMinTime;
 	

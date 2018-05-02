@@ -19,17 +19,18 @@ void Hole_Exchange::get_cand_vertex_critical_path(size_t uiChoice, std::list<siz
 			list_best_cand.rbegin()->m_uiMinTime = std::get<1>(res);
 			list_best_cand.rbegin()->m_uiMaxTime = std::get<2>(res);
 			list_best_cand.rbegin()->m_uiDist = compute_hole_dist_from_to_neigh_holes(uiVtx);
+			list_best_cand.rbegin()->m_uiPredWait = compute_predecessor_wait_time(uiVtx);
 		}		
 	}	
 
-	list_best_cand.sort(sort_by_distance);
+	list_best_cand.sort(sort_by_distance_wait);
 	if (list_best_cand.size() > c_uiMaxCriticalPathCandidates)
 	{
 		auto it_last = list_best_cand.begin();
 		std::advance(it_last, c_uiMaxCriticalPathCandidates);
 		list_best_cand.erase(it_last, list_best_cand.end());
 	}
-	list_best_cand.sort(sort_by_flexbility);
+	list_best_cand.sort(sort_by_flexbility_wait);
 }
 
 void Hole_Exchange::get_cand_for_insertion(const size_t c_uiHole, const size_t c_uiMinTime, const size_t c_uiMaxTime, std::list<Cand_for_insertion> &list_cand_insertion, const std::pair<size_t, size_t> &taboo_hole_pair)
@@ -148,6 +149,32 @@ std::tuple<bool, size_t, size_t> Hole_Exchange::compute_enabler_flexibility(cons
 	if (true == res.first) uiMaxTime = res.second;
 
 	return std::make_tuple(res.first, uiMinTime, uiMaxTime);
+}
+
+size_t Hole_Exchange::compute_predecessor_wait_time(const size_t c_uiHole)
+{
+	assert("H" == m_graph.getType(c_uiHole));
+	const size_t c_uiRobot = m_hole_rob_owner.at(c_uiHole);
+	auto it = std::find(m_rob_seq[c_uiRobot].begin(), m_rob_seq[c_uiRobot].end(), c_uiHole);
+	auto it_prevHole = it;
+	it_prevHole--;
+	int iWaitTime = 0;
+	while ("IV" == m_graph.getType(*it_prevHole))
+	{
+		iWaitTime += (int)m_map_completion_times.at(*it_prevHole) - (int)(m_map_start_times.at(*it_prevHole) + m_graph.getTime(*it_prevHole));		
+		it_prevHole--;
+	}	
+	iWaitTime += (int)m_map_completion_times.at(*it_prevHole) - (int)(m_map_start_times.at(*it_prevHole) + m_graph.getTime(*it_prevHole));
+#ifdef WINDOWS	
+	assert(iWaitTime >= 0);
+#else
+	if (iWaitTime < 0)
+	{
+		cout << "Mistake in computation of wait times" << endl;
+		exit(-1);
+	}
+#endif
+	return (size_t)iWaitTime;
 }
 
 size_t Hole_Exchange::compute_hole_dist_from_to_neigh_holes(const size_t c_uiHole)

@@ -51,11 +51,12 @@ struct Cand_for_picking
 	N_Ind m_uiHole;
 	size_t m_uiMinTime, m_uiMaxTime;
 	size_t m_uiDist;
+	size_t m_uiPredWait; //predecessor wait time (include predecessor IV and its predecessor hole)
 	Cand_for_picking(size_t c_uiHole) :m_uiHole(c_uiHole) {};
 };
 
-bool sort_by_distance(const Cand_for_picking& lhs, const Cand_for_picking &rhs);
-bool sort_by_flexbility(const Cand_for_picking& lhs, const Cand_for_picking &rhs);
+bool sort_by_distance_wait(const Cand_for_picking& lhs, const Cand_for_picking &rhs);
+bool sort_by_flexbility_wait(const Cand_for_picking& lhs, const Cand_for_picking &rhs);
 
 class Hole_Exchange
 {
@@ -88,6 +89,7 @@ class Hole_Exchange
 		void get_cand_vertex_critical_path(size_t uiChoice, std::list<size_t> &critical_path, std::list<Cand_for_picking> &list_best_cand); //<vtx, min time, max time>
 		void get_cand_for_insertion(const size_t c_uiHole, const size_t c_uiMinTime, const size_t c_uiMaxTime, std::list<Cand_for_insertion> &list_cand_insertion, const std::pair<size_t, size_t> &taboo_hole_pair);
 		std::tuple<bool, size_t, size_t> compute_enabler_flexibility(const size_t uiVtx, const size_t c_uiMakeSpan);
+		size_t compute_predecessor_wait_time(const size_t c_uiHole);
 		size_t compute_hole_dist_from_to_neigh_holes(const size_t c_uiHole);
 		size_t compute_min_time(const size_t uiVtx);
 		std::pair<bool , size_t> compute_max_time(const size_t uiVtx, const size_t c_uiMakeSpan);
