@@ -143,7 +143,6 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		rob_seq.push_back({ 0,12,15,16,18,38,40,41,42,43,36,35,34,32,31,30,27,28,19,23,13,14,9,57,69,70,71,72,68,20,22,21,24,25,26,44,45,46,47,49,48,17,6,7,8,10,11,5,4,1 });
 		rob_seq.push_back({ 2,81,84,86,87,78,77,74,73,75,58,55,52,50,61,88,89,90,39,63,65,67,66,64,62,59,60,54,53,51,76,80,79,82,83,85,91,95,94,92,93,37,29,33,56,3 });*/
 		
-		print_sequence(rob_seq);
 		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, uiUpperBoundFilter);
 		
 #ifdef ENABLE_LEGACY_CODE			
@@ -236,7 +235,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 
 		if (true == bSuccess)
 		{
-			print_sequence(rob_seq);
+			//print_sequence(rob_seq);
 			
 			if (uiIter % 3 == 0)
 			{
