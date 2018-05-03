@@ -323,7 +323,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 #ifdef WINDOWS
 			assert(false == rob_seq.empty());
 #else
-			if (false == rob_seq.empty())
+			if (true == rob_seq.empty())
 			{
 				cout << "Empty sequence fed to random move operator\n";
 				exit(-1);
