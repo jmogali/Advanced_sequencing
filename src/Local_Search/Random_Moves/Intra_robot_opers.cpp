@@ -114,44 +114,63 @@ bool doIntersect(const Layout_LS &graph, std::list<size_t>::const_iterator it_11
 	return doIntersect(loc11, loc12, loc21, loc22);
 }
 
-bool Local_Search::string_cross_intra_sequence(size_t uiRobot, std::vector<std::list<size_t>> &rob_seq, bool bDist)
+bool Check_if_sub_sequence_enabled(const std::set<size_t> &set_comp_verts_before_seg , std::list<size_t>::const_iterator it_start, std::list<size_t>::const_iterator it_end, const Layout_LS &graph)
 {
-	std::list<size_t> &seq = rob_seq[uiRobot];
+	const auto &vec_enablers = graph.get_Enablers();
+	size_t uiHole;
+	std::set<size_t> set_reversed_segment_verts;
+
+	for (auto it = it_end; it != it_start; it--)
+	{
+		uiHole = *it;
+		for (auto it_enabler = vec_enablers[uiHole].set.begin(); it_enabler != vec_enablers[uiHole].set.end(); it_enabler++)
+		{
+			if (set_comp_verts_before_seg.end() != set_comp_verts_before_seg.find(it_enabler->getInd())) continue;
+			if (set_reversed_segment_verts.end() != set_reversed_segment_verts.find(it_enabler->getInd())) continue;
+			else return false;
+		}
+		set_reversed_segment_verts.emplace(*it);
+	}
+	return true;
+}
+
+bool Local_Search::Two_opt_intra_sequence(const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_seq)
+{
+	std::list<size_t> &seq = rob_seq[c_uiRobot];
 	if (seq.size() <= 3) return false;
-	bool bIntersect;
 	int iDist;
-	
+	std::set<size_t> set_comp_verts_before_seg;
+
 	for (auto it1 = seq.begin(); it1 != seq.end(); it1++)
 	{
+		set_comp_verts_before_seg.emplace(*it1);
+
 		auto it_next_1 = it1;
 		it_next_1++;		
-		if (*it_next_1 == m_node_data.m_rob_depo[uiRobot].second) { break; }
+		if (*it_next_1 == m_node_data.m_rob_depo[c_uiRobot].second) { break; }
 		
 		auto it2 = it_next_1;
 		it2++;                 // we increment this so that the common point of connecting the line segments *it1, *it_next_1 = *it2 , *it_next_2 does not show up as intersection
 		
 		for (; it2 != seq.end(); it2++)
 		{
-			if (*it2 == m_node_data.m_rob_depo[uiRobot].second) { break; }
+			if (*it2 == m_node_data.m_rob_depo[c_uiRobot].second) { break; }
 			auto it_next_2 = it2;
 			it_next_2++;
 			
-			if (false == m_graph.doesEdgeExist(uiRobot, *it1, *it2)) continue;
-			if (false == m_graph.doesEdgeExist(uiRobot, *it_next_1, *it_next_2)) continue;
+			if (false == m_graph.doesEdgeExist(c_uiRobot, *it1, *it2)) continue;
+			if (false == m_graph.doesEdgeExist(c_uiRobot, *it_next_1, *it_next_2)) continue;
 				
-			if (bDist)
-			{				
-				iDist = (int)(m_graph.getEdgeDist(uiRobot, *it1, *it_next_1) + m_graph.getEdgeDist(uiRobot, *it2, *it_next_2));
-				iDist = iDist - (int)(m_graph.getEdgeDist(uiRobot, *it1, *it2) + m_graph.getEdgeDist(uiRobot, *it_next_1, *it_next_2));
-				if (iDist > 0) continue;
-			}
+			iDist = (int)(m_graph.getEdgeDist(c_uiRobot, *it1, *it_next_1) + m_graph.getEdgeDist(c_uiRobot, *it2, *it_next_2));
+			iDist = iDist - (int)(m_graph.getEdgeDist(c_uiRobot, *it1, *it2) + m_graph.getEdgeDist(c_uiRobot, *it_next_1, *it_next_2));
 			
-			bIntersect = doIntersect(m_graph, it1, it_next_1, it2, it_next_2);
-			
-			if (bIntersect)
+			if (iDist > 0) continue;
+			else
 			{
+				if (false == Check_if_sub_sequence_enabled(set_comp_verts_before_seg, it1, it2, m_graph)) continue;
+
 				std::reverse(it_next_1 , it_next_2);
-				return true;
+				return true;				
 			}
 		}
 	}

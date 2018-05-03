@@ -37,7 +37,10 @@ void Local_Search::generate_new_sequence_rand_moves(std::vector<std::list<size_t
 		}
 		else
 		{
-			strType = "SWAP_INTRA_SEQUENCE";
+			uiChoice = rand() % 1; //note that 2-opt is disabled
+			if(0 == uiChoice) strType = "SWAP_INTRA_SEQUENCE";
+			else if (1 == uiChoice) strType = "TWO_OPT";
+			
 
 #ifdef PRINT_LOCAL_OPERATOR_MESSAGES
 			cout << "String Type: " << strType << endl;
@@ -102,6 +105,10 @@ std::pair<bool, size_t> Local_Search::intra_rand_oper(std::vector<std::list<size
 		if ("SWAP_INTRA_SEQUENCE" == strType)
 		{
 			bChange = swap_intra_sequence(uiRobot, rob_seq);
+		}
+		else if ("TWO_OPT" == strType)
+		{
+			bChange = Two_opt_intra_sequence(uiRobot, rob_seq);
 		}
 
 		if (true == bChange) return std::make_pair(true, uiRobot);

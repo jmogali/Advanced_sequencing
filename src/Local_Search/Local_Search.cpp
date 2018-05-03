@@ -22,7 +22,7 @@ void Local_Search::perform_VBSS_search(std::string strFolderPath)
 {
 	std::clock_t start_time;
 	start_time = std::clock();
-	size_t uiIter = 0, uiMakeSpan,uiBestSol = std::numeric_limits<size_t>::max(), uiSuccesFullIter = 0;
+	size_t uiIter = 0, uiMakeSpan,uiBestSol = std::numeric_limits<size_t>::max(), uiUpperBoundFilter = std::numeric_limits<size_t>::max(), uiSuccesFullIter = 0;
 	Power_Set power;
 	Greedy_Heuristic heur(m_node_data.m_uiNumRobots, m_graph, power);
 
@@ -40,12 +40,16 @@ void Local_Search::perform_VBSS_search(std::string strFolderPath)
 			continue;
 		}
 
-		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strFolderPath, (size_t)(1.25 * uiBestSol));
+		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strFolderPath, uiUpperBoundFilter);
 		uiMakeSpan = (iRetVal == 1) ? getMakeSpan_From_Schedule(full_rob_sch) : std::numeric_limits<size_t>::max();
 
 		cout << " Iteration: " << uiIter << " , " << (iRetVal == 1 ? "SUCCESS " : "UNSUCCESSFULL ") << " , Makespan: " << uiMakeSpan << " , Best Sol: " << uiBestSol << endl;
 
-		if (uiBestSol > uiMakeSpan)	uiBestSol = uiMakeSpan;
+		if (uiBestSol > uiMakeSpan)
+		{
+			uiBestSol = uiMakeSpan;
+			uiUpperBoundFilter = (size_t)(c_dUpperBoundFilterConstant * uiBestSol);			
+		}
 		
 		bSuccess = iRetVal == 1 ? true : false;
 		if (true == bSuccess) uiSuccesFullIter++;
@@ -269,7 +273,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			if (uiBestSol > uiMakeSpan)
 			{
 				uiBestSol = uiMakeSpan;
-				uiUpperBoundFilter = (size_t)(1.5 * uiBestSol);
+				uiUpperBoundFilter = (size_t)(c_dUpperBoundFilterConstant * uiBestSol);
 				full_rob_sch_best = full_rob_sch;
 			}
 
@@ -310,7 +314,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			bRandGen = true;
 		}
 		
-		if ( uiStaleCounter > 10 )
+		if ( uiStaleCounter > c_uiConsecutive_Late_Accep_Failure )
 		{
 			rob_seq.clear();
 			generate_constructive_sequence_VBSS(rob_seq);
