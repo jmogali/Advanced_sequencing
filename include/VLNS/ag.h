@@ -178,6 +178,12 @@ void ReadAuxgraph(signed char k, char *j, char *minK,
 
 	/*******************  LIM FILE   ***********************/
 	char *cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.lim"));
+	if (NULL == cFilePath)
+	{
+		fprintf(stderr, "allocation failed for auxgraph.lim file path generation\n");
+		exit(1);
+	}
+
 	generate_new_file_path("auxgraph.lim", cFolderPath, cFilePath);
 
 	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.lim"), "r")) == NULL)
@@ -205,6 +211,12 @@ void ReadAuxgraph(signed char k, char *j, char *minK,
 	/*******************  S ARC FILE   ***********************/
 
 	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.s.arc"));
+	if (NULL == cFilePath)
+	{
+		fprintf(stderr, "allocation failed for auxgraph.s.arc file path generation\n");
+		exit(1);
+	}
+
 	generate_new_file_path("auxgraph.s.arc", cFolderPath, cFilePath);
 
 	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.s.arc"), "rb")) == NULL)
@@ -234,6 +246,11 @@ void ReadAuxgraph(signed char k, char *j, char *minK,
 
 	/*******************  S INX FILE   ***********************/
 	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.s.inx"));
+	if (NULL == cFilePath)
+	{
+		fprintf(stderr, "allocation failed for auxgraph.s.inx file path generation\n");
+		exit(1);
+	}
 	generate_new_file_path("auxgraph.s.inx", cFolderPath, cFilePath);
 
 	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.s.inx"), "rb")) == NULL)
@@ -253,7 +270,13 @@ void ReadAuxgraph(signed char k, char *j, char *minK,
 
 	/*******************  P ARC FILE   ***********************/
 	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.p.arc"));
-	generate_new_file_path("auxgraph.p.arc", cFolderPath, cFilePath);
+	if (NULL == cFilePath)
+	{
+		fprintf(stderr, "allocation failed for auxgraph.p.arc file path generation\n");
+		exit(1);
+	}
+
+	generate_new_file_path("auxgraph.p.arc", cFolderPath, cFilePath);	
 
 	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.p.arc"), "rb")) == NULL)
 	if ((myfile = fopen(cFilePath, "rb")) == NULL)
@@ -282,6 +305,11 @@ void ReadAuxgraph(signed char k, char *j, char *minK,
 
 	/*******************  P INX FILE   ***********************/
 	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.p.inx"));
+	if (NULL == cFilePath)
+	{
+		fprintf(stderr, "allocation failed for auxgraph.p.inx file path generation\n");
+		exit(1);
+	}
 	generate_new_file_path("auxgraph.p.inx", cFolderPath, cFilePath);
 
 	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.p.inx"), "rb")) == NULL)
@@ -301,6 +329,11 @@ void ReadAuxgraph(signed char k, char *j, char *minK,
 
 	/*******************  J FILE   ***********************/
 	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.j"));
+	if (NULL == cFilePath)
+	{
+		fprintf(stderr, "allocation failed for auxgraph.j file path generation\n");
+		exit(1);
+	}
 	generate_new_file_path("auxgraph.j", cFolderPath, cFilePath);
 
 	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.j"), "rb")) == NULL)
@@ -316,6 +349,11 @@ void ReadAuxgraph(signed char k, char *j, char *minK,
 
 	/*******************  MK FILE   ***********************/
 	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.mk"));
+	if (NULL == cFilePath)
+	{
+		fprintf(stderr, "allocation failed for auxgraph.mk file path generation\n");
+		exit(1);
+	}
 	generate_new_file_path("auxgraph.mk", cFolderPath, cFilePath);
 
 	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.mk"), "rb")) == NULL)
@@ -331,6 +369,11 @@ void ReadAuxgraph(signed char k, char *j, char *minK,
 
 	/*******************  LOC FILE   ***********************/
 	cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.loc"));
+	if (NULL == cFilePath)
+	{
+		fprintf(stderr, "allocation failed for auxgraph.loc file path generation\n");
+		exit(1);
+	}
 	generate_new_file_path("auxgraph.loc", cFolderPath, cFilePath);
 
 	//if ((myfile = fopen(strcat(strcpy(d2, d1), "/auxgraph.loc"), "rb")) == NULL)

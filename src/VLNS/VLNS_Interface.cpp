@@ -54,6 +54,11 @@ void parse_gen_TSP_node_desc(char const* const strFile)
 				size_t uiTotalNodes = (size_t)(atoi)(elems[1].c_str());
 				uiTotalAuxNodes = uiTotalNodes;
 				pstAuxNodeInfo = (Dyn_Node_Desc*)malloc(uiTotalNodes * sizeof(Dyn_Node_Desc));
+				if (NULL == pstAuxNodeInfo)
+				{
+					cout << "Allocation failed for Aux node" << endl;
+					exit(-1);
+				}
 			}
 			else if (elems[0] == "Node:")
 			{
@@ -71,6 +76,11 @@ void parse_gen_TSP_node_desc(char const* const strFile)
 				}
 
 				pstAuxNodeInfo[uiNode].m_Splus = (int*)malloc(uiSplusSize * sizeof(int));
+				if (NULL == pstAuxNodeInfo[uiNode].m_Splus)
+				{
+					cout << "Allocation failed for uiNode: " << uiNode << " in aux node" << endl;
+					exit(-1);
+				}
 
 				auto it_vec = elems.rbegin();
 				for (size_t uiCount = 1; uiCount < elems.size(); uiCount++)
@@ -91,6 +101,11 @@ void parse_gen_TSP_node_desc(char const* const strFile)
 				}
 
 				pstAuxNodeInfo[uiNode].m_Sminus = (int*)malloc(uiSminusSize * sizeof(int));
+				if (NULL == pstAuxNodeInfo[uiNode].m_Sminus)
+				{
+					cout << "Allocation failed for node: " << uiNode << " in Sminus" << endl;
+					exit(-1);
+				}
 
 				for (size_t uiCount = 1; uiCount < elems.size(); uiCount++)
 				{
@@ -245,9 +260,26 @@ size_t populate_cost_container(const size_t c_uiRobot, size_t uiStartInd, size_t
 	assert(*it_end == vec_rob_sch[c_uiRobot][uiEndInd].m_uiInd);
 
 	pstCosts = (struct Costs_Container*) malloc(sizeof(Costs_Container));
+	if (NULL == pstCosts)
+	{
+		cout << "Allocation failed for pstCosts" << endl;
+		exit(-1);
+	}
+
 	pstCosts->m_iNumVtx = (int)map_hole_new_ind.size();
 	pstCosts->m_parTimeWindows = (struct Hole_Overlap_Enabler_Info*) malloc(pstCosts->m_iNumVtx * sizeof(Hole_Overlap_Enabler_Info));
+	if (NULL == pstCosts->m_parTimeWindows)
+	{
+		cout << "Allocation failed for time windows in pstCosts" << endl;
+		exit(-1);
+	}
+	
 	pstCosts->m_parProcTime = (int*) malloc(pstCosts->m_iNumVtx * sizeof(int));
+	if (NULL == pstCosts->m_parProcTime)
+	{
+		cout << "Allocation failed for proc time in pstCosts" << endl;
+		exit(-1);
+	}
 
 	size_t uiStartTime = vec_rob_sch[c_uiRobot][uiStartInd].m_uiStart;
 	size_t uiEndTime;
@@ -279,9 +311,20 @@ size_t populate_cost_container(const size_t c_uiRobot, size_t uiStartInd, size_t
 	}
 
 	pstCosts->m_pparTravTime = (int**)malloc(pstCosts->m_iNumVtx * sizeof(int*));
+	if (NULL == pstCosts->m_pparTravTime)
+	{
+		cout << "Allocation failed for travel time cost matrix in pstCosts" <<endl;
+		exit(-1);
+	}
+
 	for (uiHole = 0; uiHole < (unsigned int)pstCosts->m_iNumVtx; uiHole++)
 	{
 		pstCosts->m_pparTravTime[uiHole] = (int*)malloc(pstCosts->m_iNumVtx * sizeof(int));
+		if (NULL == pstCosts->m_pparTravTime[uiHole])
+		{
+			cout << "Allocation failed for travel time cost matrix in pstCosts for hole: " << uiHole <<endl;
+			exit(-1);
+		}
 	}
 
 	populate_traversal_times(*it_start, *it_end, c_uiRobot, map_hole_new_ind, graph);
@@ -310,6 +353,11 @@ size_t perform_TSP_Move(std::string strTSPFileFolder, std::vector<std::list<size
 
 	int* new_tour;
 	new_tour = (int*)malloc(c_uiTourLen * sizeof(int));
+	if (NULL == new_tour)
+	{
+		cout << "Allocation failed for new tour" << endl;
+		exit(-1);
+	}
 
 	int iRetVal = optimize_tsp(pstAuxNodeInfo, pstCosts, c_uiTourLen, kVal, new_tour, iFirstIter, strTSPFileFolder.c_str(), (int)c_uiStartTime, &iOptSol);
 	assert(0 == iRetVal);
@@ -362,6 +410,12 @@ void populate_TW_info(const size_t c_uiVtx, const size_t c_uiRobot, struct Inter
 	{
 		pstCosts->m_parTimeWindows[uiHole].m_uiNumIntervals = 1;
 		pstCosts->m_parTimeWindows[uiHole].m_parIntervals = (struct Interval*)malloc(sizeof(struct Interval));
+		if (NULL == pstCosts->m_parTimeWindows[uiHole].m_parIntervals)
+		{
+			cout << "Allocation failed for intervals in time window of hole: " << uiHole << endl;
+			exit(-1);
+		}
+
 		pstCosts->m_parTimeWindows[uiHole].m_parIntervals[0].m_uiLow = stHorizon.m_uiLow;
 		pstCosts->m_parTimeWindows[uiHole].m_parIntervals[0].m_uiHigh = stHorizon.m_uiHigh;
 	}
@@ -374,6 +428,11 @@ void populate_TW_info(const size_t c_uiVtx, const size_t c_uiRobot, struct Inter
 		if (vec_taboo_regions.begin()->m_uiHigh < stHorizon.m_uiHigh) pstCosts->m_parTimeWindows[uiHole].m_uiNumIntervals++;
 		
 		pstCosts->m_parTimeWindows[uiHole].m_parIntervals = (Interval*)malloc(pstCosts->m_parTimeWindows[uiHole].m_uiNumIntervals * sizeof(Interval));
+		if(NULL == pstCosts->m_parTimeWindows[uiHole].m_parIntervals)
+		{
+			cout << "Allocation failed for intervals in time window of hole: " << uiHole << endl;
+			exit(-1);
+		}
 
 		if (stHorizon.m_uiLow < vec_taboo_regions[vec_taboo_regions.size()-1].m_uiLow)
 		{
@@ -433,7 +492,15 @@ void populate_enabler_info(const size_t c_uiVtx, const size_t c_uiRobot, const G
 	}
 
 	pstCosts->m_parTimeWindows[uiHole].m_uiNumEnablers = (unsigned int)set_enablers.size();
-	if(set_enablers.size() > 0)pstCosts->m_parTimeWindows[uiHole].m_piEnablers = (int*)malloc(set_enablers.size() * sizeof(int));
+	if (set_enablers.size() > 0)
+	{
+		pstCosts->m_parTimeWindows[uiHole].m_piEnablers = (int*)malloc(set_enablers.size() * sizeof(int));
+		if (NULL == pstCosts->m_parTimeWindows[uiHole].m_piEnablers)
+		{
+			cout << "Allocation failed in enablers of time window for hole: " << uiHole << " in pstCosts" << endl;
+			exit(-1);
+		}
+	}
 	else pstCosts->m_parTimeWindows[uiHole].m_piEnablers = NULL;
 
 	size_t uiEnablerCount = 0;
@@ -522,10 +589,10 @@ void free_Aux_Node_Info_container()
 {
 	for (size_t uiNodes = 0; uiNodes < uiTotalAuxNodes; uiNodes++)
 	{
-		free(pstAuxNodeInfo[uiNodes].m_Sminus);
+		if(NULL != pstAuxNodeInfo[uiNodes].m_Sminus) free(pstAuxNodeInfo[uiNodes].m_Sminus);
 		pstAuxNodeInfo[uiNodes].m_Sminus = NULL;
 
-		free(pstAuxNodeInfo[uiNodes].m_Splus);
+		if(NULL != pstAuxNodeInfo[uiNodes].m_Splus) free(pstAuxNodeInfo[uiNodes].m_Splus);
 		pstAuxNodeInfo[uiNodes].m_Splus = NULL;
 	}
 

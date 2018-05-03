@@ -274,6 +274,12 @@ namespace AUX_GRAPH
 
 		/*************   Node Description **************/
 		cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxnode_desc.nod"));
+		if (NULL == cFilePath)
+		{
+			fprintf(stderr, "allocation failed for auxnode_desc.nod file path generation\n");
+			exit(1);
+		}
+
 		generate_new_file_path("auxnode_desc.nod", cFolderPath, cFilePath);
 
 		//if ((myfile = fopen("auxnode_desc.nod", "w")) == NULL)
@@ -314,6 +320,12 @@ namespace AUX_GRAPH
 
 		/*************   Lim Description **************/
 		cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.lim"));
+		if (NULL == cFilePath)
+		{
+			fprintf(stderr, "allocation failed for auxgraph.lim file path generation\n");
+			exit(1);
+		}
+
 		generate_new_file_path("auxgraph.lim", cFolderPath, cFilePath);
 		//if ((myfile = fopen("auxgraph.lim", "w")) == NULL)
 		if ((myfile = fopen(cFilePath, "w")) == NULL)
@@ -328,6 +340,11 @@ namespace AUX_GRAPH
 
 		/*************   INX.S Description **************/
 		cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.s.inx"));
+		if (NULL == cFilePath)
+		{
+			fprintf(stderr, "allocation failed for auxgraph.s.inx file path generation\n");
+			exit(1);
+		}
 		generate_new_file_path("auxgraph.s.inx", cFolderPath, cFilePath);
 		//if ((myfile = fopen("auxgraph.s.inx", "wb")) == NULL)
 		if ((myfile = fopen(cFilePath, "wb")) == NULL)
@@ -342,6 +359,11 @@ namespace AUX_GRAPH
 
 		/*************   INX.P Description **************/
 		cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.p.inx"));
+		if (NULL == cFilePath)
+		{
+			fprintf(stderr, "allocation failed for auxgraph.p.inx file path generation\n");
+			exit(1);
+		}
 		generate_new_file_path("auxgraph.p.inx", cFolderPath, cFilePath);
 		//if ((myfile = fopen("auxgraph.p.inx", "wb")) == NULL)
 		if ((myfile = fopen(cFilePath, "wb")) == NULL)
@@ -356,6 +378,11 @@ namespace AUX_GRAPH
 
 		/*************   ARC.S Description **************/
 		cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.s.arc"));
+		if (NULL == cFilePath)
+		{
+			fprintf(stderr, "allocation failed for auxgraph.s.arc file path generation\n");
+			exit(1);
+		}
 		generate_new_file_path("auxgraph.s.arc", cFolderPath, cFilePath);
 		//if ((myfile = fopen("auxgraph.s.arc", "wb")) == NULL)
 		if ((myfile = fopen(cFilePath, "wb")) == NULL)
@@ -373,6 +400,11 @@ namespace AUX_GRAPH
 
 		/*************   ARC.P Description **************/
 		cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.p.arc"));
+		if (NULL == cFilePath)
+		{
+			fprintf(stderr, "allocation failed for auxgraph.p.arc file path generation\n");
+			exit(1);
+		}
 		generate_new_file_path("auxgraph.p.arc", cFolderPath, cFilePath);
 		//if ((myfile = fopen("auxgraph.p.arc", "wb")) == NULL)
 		if ((myfile = fopen(cFilePath, "wb")) == NULL)
@@ -390,6 +422,11 @@ namespace AUX_GRAPH
 
 		/*************   AUXGRAPH.J Description **************/
 		cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.j"));
+		if (NULL == cFilePath)
+		{
+			fprintf(stderr, "allocation failed for auxgraph.j file path generation\n");
+			exit(1);
+		}
 		generate_new_file_path("auxgraph.j", cFolderPath, cFilePath);
 		//if ((myfile = fopen("auxgraph.j", "wb")) == NULL)
 		if ((myfile = fopen(cFilePath, "wb")) == NULL)
@@ -404,6 +441,11 @@ namespace AUX_GRAPH
 
 		/*************   AUXGRAPH.MK Description **************/
 		cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.mk"));
+		if (NULL == cFilePath)
+		{
+			fprintf(stderr, "allocation failed for auxgraph.mk file path generation\n");
+			exit(1);
+		}
 		generate_new_file_path("auxgraph.mk", cFolderPath, cFilePath);
 		//if ((myfile = fopen("auxgraph.mk", "wb")) == NULL)
 		if ((myfile = fopen(cFilePath, "wb")) == NULL)
@@ -418,6 +460,11 @@ namespace AUX_GRAPH
 
 		/*************   AUXGRAPH.LOC Description **************/
 		cFilePath = (char*)malloc(strlen(cFolderPath) + 1 + strlen("auxgraph.loc"));
+		if (NULL == cFilePath)
+		{
+			fprintf(stderr, "allocation failed for auxgraph.loc file path generation\n");
+			exit(1);
+		}
 		generate_new_file_path("auxgraph.loc", cFolderPath, cFilePath);
 		//if ((myfile = fopen("auxgraph.loc", "wb")) == NULL)
 		if ((myfile = fopen(cFilePath, "wb")) == NULL)
