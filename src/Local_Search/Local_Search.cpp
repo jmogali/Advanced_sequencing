@@ -275,11 +275,15 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 
 			if (uiMakeSpan >= vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 			{				
-				rob_seq = old_rob_seq;
-				full_rob_sch = full_rob_sch_prev;
-				cout << "Reverting sequence" << endl;
-				bRandGen = true;				
-				uiStaleCounter++;
+				if (false == old_rob_seq.empty())
+				{
+					rob_seq = old_rob_seq;
+					full_rob_sch = full_rob_sch_prev;
+					cout << "Reverting sequence" << endl;
+					bRandGen = true;
+					uiStaleCounter++;
+				}
+				else bRandGen = false;
 			}
 			else
 			{
@@ -316,7 +320,15 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		}
 		else if (true == bRandGen)
 		{
-			assert(uiStaleCounter <= 10);
+#ifdef WINDOWS
+			assert(false == rob_seq.empty());
+#else
+			if (false == rob_seq.empty())
+			{
+				cout << "Empty sequence fed to random move operator\n";
+				exit(-1);
+			}
+#endif
 			generate_new_sequence_rand_moves(rob_seq);
 		}
 		
@@ -364,12 +376,7 @@ int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, std::vector<
 {
 	std::vector<std::list<size_t>> full_rob_seq;
 	
-	/*rob_seq.clear();
-	rob_seq.push_back({ 0,44,41,40,37,53,33,31,39,50,21,35,11,32,20,19,10,16,24,15,26,4,38,5,22,9,29,12,23,42,27,30,36,8,18,7,6,25,17,13,45,47,14,1 });
-	rob_seq.push_back({ 2,28,74,48,62,85,70,51,63,73,61,55,43,34,46,56,81,66,58,68,83,65,75,89,60,49,78,86,57,69,79,71,87,84,88,82,90,64,72,52,76,67,80,77,59,91,54,3 });*/
-	
 	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
-	
 	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch, strPlotFolder, c_uiUpperBound);
 }
 

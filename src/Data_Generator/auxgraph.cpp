@@ -306,7 +306,9 @@ namespace AUX_GRAPH
 		}
 		fclose(myfile);
 		free(Sminus);
+		Sminus = NULL;
 		free(Splus);
+		Splus = NULL;
 		free(cFilePath);
 		cFilePath = NULL;
 
@@ -431,14 +433,34 @@ namespace AUX_GRAPH
 		/*************   EOD   **************/
 
 		free(SclassMap);
+		SclassMap = NULL;
+
 		free(succs);
+		succs = NULL;
+
 		free(succInx);
+		succInx = NULL;
+
 		free(preds);
+		preds = NULL;
+
 		free(predInx);
+		predInx = NULL;
+
 		free(predLoc);
+		predLoc = NULL;
+
 		free(predCount);
+		predCount = NULL;
+
 		free(j);
+		j = NULL;
+
 		free(minK);
+		minK = NULL;
+
+		w1 = NULL;
+
 		for (c = 1; c < k + 1; c++) { printf("[%d-%d]", c, counter[c]); } printf("\nDONE\n");
 	}
 }
