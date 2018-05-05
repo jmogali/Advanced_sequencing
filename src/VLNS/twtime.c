@@ -51,6 +51,7 @@ int optimize_tsp(struct Dyn_Node_Desc *pstAuxNodeInfo, struct Costs_Container *p
 	{
 		printf("Could not find a feasible solution.\n");
 		printf("Problem may or may not be feasible.\n");
+		exit(-1);
 		return -1;
 	}
 	else
