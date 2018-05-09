@@ -92,6 +92,7 @@ int main(int argc, char** argv)
 	double dVertSpace = 1.0;
 	double dWeightFactor = 1;
 	unsigned int uikVal = 13;
+	size_t uiSimulNum = 1;
 #else
 	size_t uiFrames = (size_t) atoi(argv[1]);
 	size_t uiRobots = (size_t)atoi(argv[2]);
@@ -101,6 +102,7 @@ int main(int argc, char** argv)
 	double dVertSpace = atof(argv[6]);
 	double dWeightFactor = atof(argv[7]);
 	unsigned int uikVal = (size_t)atoi(argv[8]);
+	size_t uiSimulNum = (size_t)atoi(argv[9]);
 #endif
 
 	Boeing_Fuesalage obj(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace, "DEFAULT");
@@ -139,7 +141,7 @@ int main(int argc, char** argv)
 	AUX_GRAPH::generate_TSP_files(uikVal, strTSPFolderPath.c_str());
 		
 	Local_Search obj_ls(partition, graph, dWeightFactor);
-	obj_ls.perform_local_search(strPlotFolder, strDataDumpFolder, strTSPFolderPath, uikVal);
+	obj_ls.perform_local_search(strPlotFolder, strDataDumpFolder, strTSPFolderPath, uikVal, uiSimulNum);
 	//obj_ls.perform_VBSS_search(strPlotFolder);	
 
 	cout << "Tag: \n\n\n";

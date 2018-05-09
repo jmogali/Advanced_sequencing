@@ -58,7 +58,7 @@ class Local_Search
 
 	public:
 		Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor);
-		void perform_local_search(std::string strFolderPath, std::string strDataDumpFolder, std::string strTSPFolder, size_t ui_KVal);
+		void perform_local_search(std::string strFolderPath, std::string strDataDumpFolder, std::string strTSPFolder, size_t ui_KVal, size_t uiSimulNum);
 		void perform_VBSS_search(std::string strFolderPath);
 		inline const Enabling_Graph& get_Enabling_graph() { return m_en_graph; };
 };

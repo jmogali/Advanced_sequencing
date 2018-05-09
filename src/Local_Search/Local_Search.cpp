@@ -66,7 +66,7 @@ void Local_Search::perform_VBSS_search(std::string strFolderPath)
 	cout << "Tag: Accumulated Results: " << uiBestSol << ","<< uiSuccesFullIter << ","<< dSuccPercent <<endl;	
 }
 
-void Local_Search::perform_local_search(std::string strPlotFolder, std::string strDataDumpFolder, std::string strTSPFolder, size_t ui_KVal)
+void Local_Search::perform_local_search(std::string strPlotFolder, std::string strDataDumpFolder, std::string strTSPFolder, size_t ui_KVal, size_t uiSimulNum)
 {
 	std::vector<std::list<size_t>> rob_seq;
 	std::vector<std::list<size_t>> old_rob_seq;
@@ -345,9 +345,9 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	}
 
 	free_VLNS_buffers();
-	print_state_transition_path(strPlotFolder +"Best_Sol.txt" , full_rob_sch_best );
-	print_state_transition_path(strPlotFolder + "Initial_Sol.txt", full_rob_sch_print_first);
-	print_best_solution_progress(strPlotFolder + "Solution_Progress.txt", vec_impr_sol);
+	print_state_transition_path(strPlotFolder +"Best_Sol_"+ to_string(uiSimulNum) +".txt" , full_rob_sch_best );
+	print_state_transition_path(strPlotFolder + "Initial_Sol_"+to_string(uiSimulNum) +".txt", full_rob_sch_print_first);
+	print_best_solution_progress(strPlotFolder + "Solution_Progress_"+ to_string(uiSimulNum) + ".csv", vec_impr_sol);
 	cout << "Tag: Initial Makespan: " << uiFirstSol << endl;
 	cout << "Tag: Best Makespan: " << uiBestSol << endl;
 	cout<< "Tag: Total Iterations: " << uiIter << endl;
