@@ -8,6 +8,6 @@ Boeing
 *.list~
 *.sh~
 *.txt~
-Results_txt.2
+Results.txt_2
 Sequence_Info/
 TSP_Aux/
