@@ -6,5 +6,6 @@ Boeing
 *.txt
 *.csv
 *.list~
+*.sh~
 Sequence_Info/
 TSP_Aux/
