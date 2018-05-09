@@ -4,5 +4,7 @@ Graphical_plots/
 Boeing
 *.bak
 *.txt
+*.csv
+*.list~
 Sequence_Info/
 TSP_Aux/

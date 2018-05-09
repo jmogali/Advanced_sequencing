@@ -13,7 +13,7 @@ touch ${outputFile}_2
 echo "${prefix}${message}" > ${outputFile}
 echo "${prefix}${header}" >> ${outputFile}
 
-bTSPInstances=bash cat Batch_Files.list | parallel -P 4 -k --eta >> ${outputFile}
+bTSPInstances=bash cat Solution_Progress.list | parallel -P 1 -k --eta >> ${outputFile}
 #bTSPInstances=bash cat Batch_Files_varying_K.list | parallel -P 4 -k --eta >> ${outputFile}
 
 #printf " " "${bTSPInstances[@]}" | parallel -P 1 -k --eta --colsep ' ' ' 0 1 0 2 512' >> ${outputFile}
