@@ -347,6 +347,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	free_VLNS_buffers();
 	print_state_transition_path(strPlotFolder +"Best_Sol_"+ to_string(uiSimulNum) +".txt" , full_rob_sch_best );
 	print_state_transition_path(strPlotFolder + "Initial_Sol_"+to_string(uiSimulNum) +".txt", full_rob_sch_print_first);
+	vec_impr_sol.push_back(std::make_pair(uiBestSol, 100));
 	print_best_solution_progress(strPlotFolder + "Solution_Progress_"+ to_string(uiSimulNum) + ".csv", vec_impr_sol);
 	cout << "Tag: Initial Makespan: " << uiFirstSol << endl;
 	cout << "Tag: Best Makespan: " << uiBestSol << endl;
