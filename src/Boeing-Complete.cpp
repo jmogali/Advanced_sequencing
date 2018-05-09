@@ -110,13 +110,19 @@ int main(int argc, char** argv)
 	std::string strDatasetFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Dataset/";
 	std::string strPlotFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Graphical_Plots/";
 	std::string strDataDumpFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Sequence_Info/";
-	std::string strTSPFolderPath = "G:/Visual_Studio_Projects/Boeing-Advanced/TSP_Aux/";
+	std::string strTSPFolderPath = "G:/Visual_Studio_Projects/Boeing-Advanced/TSP_Aux/" + to_string(uiSimulNum) + "/";
 #else
 	std::string strDatasetFolder = "Dataset/";
 	std::string strPlotFolder = "Graphical_Plots/";
 	std::string strDataDumpFolder = "Sequence_Info/";
 	std::string strTSPFolderPath = "TSP_Aux/";
 #endif	
+
+#ifdef WINDOWS
+	_mkdir(strTSPFolderPath.c_str());
+#else
+	mkdir(strTSPFolderPath.c_str(), S_IRWXU);
+#endif
 	
 	std::string strFolder = getFolderName(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace);
 	std::string strFilePath = generate_data(obj, strDatasetFolder, strFolder);
