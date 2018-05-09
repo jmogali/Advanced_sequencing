@@ -74,6 +74,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_prev;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_best;
 	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_print_first;
+	std::vector<std::pair<size_t, double>> vec_impr_sol;
 	
 	generate_constructive_sequence_VBSS(rob_seq);
 	bool bValid = check_validity_of_sequence(rob_seq), bSuccess = true;
@@ -85,7 +86,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 
 	
 	std::string strType;
-	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan = std::numeric_limits<size_t>::max(), uiUpperBoundFilter = std::numeric_limits<size_t>::max();
+	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiFirstSol = std::numeric_limits<size_t>::max(), uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan = std::numeric_limits<size_t>::max(), uiUpperBoundFilter = std::numeric_limits<size_t>::max();
 	size_t uiStaleCounter = 0, uiTSPLowerBound , uiTSPMkSpan, uiNumRestart = 0; //records number of non improving moves in objective
 	Power_Set power;
 	bool bFirst_Feasible_Sequence = false;
@@ -142,8 +143,8 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		std::vector<std::vector<Vertex_Schedule>> full_rob_sch_legacy;
 
 		/*rob_seq.clear();
-		rob_seq.push_back({ 0,12,15,16,18,38,40,41,42,43,36,35,34,32,31,30,27,28,19,23,13,14,9,57,69,70,71,72,68,20,22,21,24,25,26,44,45,46,47,49,48,17,6,7,8,10,11,5,4,1 });
-		rob_seq.push_back({ 2,81,84,86,87,78,77,74,73,75,58,55,52,50,61,88,89,90,39,63,65,67,66,64,62,59,60,54,53,51,76,80,79,82,83,85,91,95,94,92,93,37,29,33,56,3 });*/
+		rob_seq.push_back({ 0,35,37,36,39,38,41,40,43,42,45,44,47,46,49,48,12,10,11,8,9,6,7,4,5,34,33,32,31,30,29,28,27,14,13,16,15,18,17,20,19,22,21,24,23,26,25,1 });
+		rob_seq.push_back({ 2,81,83,82,85,84,87,86,89,88,91,90,93,92,95,94,80,79,78,77,76,75,74,73,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,56,57,54,55,52,53,50,51,3 });*/
 		
 		int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, uiUpperBoundFilter);
 		
@@ -223,6 +224,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 					bPrintFirstSol = true;
 					full_rob_sch_print_first = full_rob_sch;
 					cout << "Tag: Initial Makespan: " << uiMakeSpan << endl;
+					uiFirstSol = uiMakeSpan;
 				}				
 				uiConstructiveMakespan = std::min(uiMakeSpan , uiConstructiveMakespan);
 				std::fill(vec_late_accep.begin(), vec_late_accep.end(), uiMakeSpan);				
@@ -273,6 +275,9 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 			if (uiBestSol > uiMakeSpan)
 			{
 				uiBestSol = uiMakeSpan;
+				double dTimeComp = ((std::clock() - start_time) / (double)CLOCKS_PER_SEC);
+				double dPercTimeComp = ((double)dTimeComp * 100 / LS_SEARCH_TIME);
+				vec_impr_sol.push_back(std::make_pair(uiBestSol, dPercTimeComp));
 				uiUpperBoundFilter = (size_t)(c_dUpperBoundFilterConstant * uiBestSol);
 				full_rob_sch_best = full_rob_sch;
 			}
@@ -342,13 +347,15 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	free_VLNS_buffers();
 	print_state_transition_path(strPlotFolder +"Best_Sol.txt" , full_rob_sch_best );
 	print_state_transition_path(strPlotFolder + "Initial_Sol.txt", full_rob_sch_print_first);
+	print_best_solution_progress(strPlotFolder + "Solution_Progress.txt", vec_impr_sol);
+	cout << "Tag: Initial Makespan: " << uiFirstSol << endl;
 	cout << "Tag: Best Makespan: " << uiBestSol << endl;
 	cout<< "Tag: Total Iterations: " << uiIter << endl;
 	cout << "Tag: Number Of Restarts: " << uiNumRestart << endl;
 	cout << "Tag: Successfull iterations: " << uiSuccesFullIter << endl;
 	double dSuccPercent = (double)(100.0 * uiSuccesFullIter)/((double)(uiIter * 1.0));
 	cout<< "Tag: Success %: " << dSuccPercent << endl; 
-	cout<< "Tag: Accumulated Result: "<< uiConstructiveMakespan << "," << uiBestSol<< "," << uiSuccesFullIter<< "," << dSuccPercent <<endl;
+	cout<< "Tag: Accumulated Result: "<< uiFirstSol <<","<<uiConstructiveMakespan << "," << uiBestSol<< "," << uiSuccesFullIter<< "," << dSuccPercent <<endl;
 }
 
 void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &full_rob_seq)

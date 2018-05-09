@@ -70,3 +70,16 @@ void Local_Search::print_state_transition_path(std::string strFilePath, const st
 	}
 	myFile.close();
 }
+
+void Local_Search::print_best_solution_progress(std::string strFilePath, const std::vector<std::pair<size_t, double>> &vec_impr_sol)
+{
+	ofstream myFile;
+	std::string str_solution_progress = strFilePath;
+	myFile.open(str_solution_progress.c_str());
+
+	for (size_t uiCount = 0; uiCount < vec_impr_sol.size(); uiCount++)
+	{
+		myFile << vec_impr_sol[uiCount].second << "," << vec_impr_sol[uiCount].first << endl;
+	}
+	myFile.close();
+}
