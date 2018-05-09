@@ -115,7 +115,7 @@ int main(int argc, char** argv)
 	std::string strDatasetFolder = "Dataset/";
 	std::string strPlotFolder = "Graphical_Plots/";
 	std::string strDataDumpFolder = "Sequence_Info/";
-	std::string strTSPFolderPath = "TSP_Aux/";
+	std::string strTSPFolderPath = "TSP_Aux/" + to_string(uiSimulNum) + "/";
 #endif	
 
 #ifdef WINDOWS
