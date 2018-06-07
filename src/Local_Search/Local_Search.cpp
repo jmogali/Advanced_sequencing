@@ -83,8 +83,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		cout << "Initial seq generated is invalid\n"; 
 		exit(-1);
 	}
-
-	
+		
 	std::string strType;
 	size_t uiIter = 0, uiMakeSpan, uiMakeSpan_legacy, uiFirstSol = std::numeric_limits<size_t>::max(), uiBestSol = std::numeric_limits<size_t>::max(), uiConstructiveMakespan = std::numeric_limits<size_t>::max(), uiUpperBoundFilter = std::numeric_limits<size_t>::max();
 	size_t uiStaleCounter = 0, uiTSPLowerBound , uiTSPMkSpan, uiNumRestart = 0; //records number of non improving moves in objective
@@ -346,7 +345,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 
 	free_VLNS_buffers();
 	print_state_transition_path(strPlotFolder +"Best_Sol_"+ to_string(uiSimulNum) +".txt" , full_rob_sch_best );
-	print_state_transition_path(strPlotFolder + "Initial_Sol_"+to_string(uiSimulNum) +".txt", full_rob_sch_print_first);
+	print_state_transition_path(strPlotFolder + "Best_Seed_Sol_"+to_string(uiSimulNum) +".txt", full_rob_sch_print_first);
 	vec_impr_sol.push_back(std::make_pair(uiBestSol, 100));
 	print_best_solution_progress(strPlotFolder + "Solution_Progress_"+ to_string(uiSimulNum) + ".csv", vec_impr_sol);
 	cout << "Tag: Initial Makespan: " << uiFirstSol << endl;
