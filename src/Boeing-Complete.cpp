@@ -76,7 +76,7 @@ int main(int argc, char** argv)
 	std::string strOutputFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Output/" ;
 #else
 	std::string strTSPFolderPath = "TSP_Aux/" + to_string(c_uiSimulNum) + "/";
-	std::string strPlotFolder = "Output/";
+	std::string strOutputFolder = "Output/";
 #endif
 
 #ifdef WINDOWS
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 	_mkdir(strOutputFolder.c_str());
 #else
 	mkdir(strTSPFolderPath.c_str(), S_IRWXU);
-	mkdir(strResultsFolder.c_str(), S_IRWXU);
+	mkdir(strOutputFolder.c_str(), S_IRWXU);
 #endif
 
 	Data_Parser parser(strFilePath);
