@@ -66,6 +66,7 @@ void Local_Search::print_state_transition_path(std::string strFilePath, const st
 		{
 			myFile << vec_state_path[uiState].m_vec_rob_vtx[uiRobot] << " ";
 		}
+		myFile << vec_state_path[uiState].m_uiTime;
 		myFile << endl;
 	}
 	myFile.close();
