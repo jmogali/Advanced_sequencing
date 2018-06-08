@@ -1,6 +1,7 @@
 Dataset/
 obj/
 Graphical_plots/
+Output/
 Boeing
 *.bak
 *.txt
