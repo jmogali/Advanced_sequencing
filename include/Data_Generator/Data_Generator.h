@@ -8,6 +8,7 @@
 #include "Boeing_Fuesalage.h"
 #include "Layout_Boeing.h"
 #include <fstream>
+#include "Windows_Linux.h"
 
 class Data_Generator 
 {
@@ -34,6 +35,14 @@ class Data_Generator
 		void compute_v_iv_pair_colls(const std::vector<map_rob_ind_id_pair> &map_iv_inds, size_t uiRobot1, size_t uiRobot2, const Boeing_Fuesalage &boeing);
 		void compute_enablers(const std::set<size_t> &set_st_vert, const Boeing_Fuesalage &boeing);
 	
+#ifdef TOOL_MODE
+		void add_hole_info(std::string strHoleFile);		
+		void set_start_locs(std::set<size_t> &set_st_vert);
+		void add_edge_iv_info(std::string strDistFile, const std::set<size_t> &set_st_vert);
+		void add_edge_iv_info(size_t uiRobot, double dTime, size_t uiGraphInd1, size_t uiGraphInd2, size_t uiIndex);
+		void compute_enablers(std::string strEnablerFile, std::set<size_t> &set_st_vert);
+#endif
+
 	//Print files
 		void print_header_info(std::string strFileName, ofstream &myFile);
 		void print_node_description(ofstream &myFile);
@@ -46,6 +55,12 @@ class Data_Generator
 		Data_Generator(size_t uiNumRobots , size_t uiNumHoles , const std::vector<Robot> &vec_robots);
 		void populate_data(const Boeing_Fuesalage &boeing);
 		void print_data_files(std::string strFolder, std::string strFileName);
+
+#ifdef TOOL_MODE
+		Data_Generator(size_t uiNumRobots, size_t uiNumHoles);
+		static size_t count_holes_in_file(std::string strHoleFile);
+		void parse_tool_files(std::string strHoleFile, std::string strDistFile, std::string strEnablerFile);
+#endif
 };
 
 #endif

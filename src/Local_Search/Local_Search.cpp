@@ -305,6 +305,10 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 					cout << "Accepting sequence" << endl;
 					if(bTSP) bRandGen = true; //when TSP is true, we already have the greedy schedule, so we need to perturb for next iteration
 					else bRandGen = false;
+
+#ifdef TOOL_MODE
+					bRandGen = false;
+#endif
 				}
 				uiStaleCounter = 0;
 			}
@@ -321,6 +325,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		if ( uiStaleCounter > c_uiConsecutive_Late_Accep_Failure )
 		{
 			rob_seq.clear();
+			cout << "RESTART \n";
 			generate_constructive_sequence_VBSS(rob_seq);
 			uiStaleCounter = 0;
 			bFirst_Feasible_Sequence = false;

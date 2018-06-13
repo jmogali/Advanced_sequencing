@@ -237,9 +237,11 @@ std::pair<size_t, size_t> get_valid_random_sub_string_for_exchange(size_t uiRobo
 	return std::make_pair(vec_pos_len[uiInd].m_uiPos + uiDisp, c_uiLen);
 }
 
-void get_common_nodes_in_seq(size_t uiRobot, size_t uiOtherRobot, const std::vector<std::list<size_t>> &rob_seq, const Node_Partitions& node_data, std::vector<String_Info> &vec_pos_len, const Layout_LS &graph)
+bool get_common_nodes_in_seq(size_t uiRobot, size_t uiOtherRobot, const std::vector<std::list<size_t>> &rob_seq, const Node_Partitions& node_data, std::vector<String_Info> &vec_pos_len, const Layout_LS &graph)
 {
+	if (false == node_data.doContain_common_nodes(uiRobot, uiOtherRobot)) return false;
 	const auto &comm_nodes = node_data.get_common_nodes(uiRobot, uiOtherRobot);
+	
 	bool bBegin = false;
 	size_t uiStart, uiInd = 0;
 	double dAvgDist;
@@ -268,6 +270,7 @@ void get_common_nodes_in_seq(size_t uiRobot, size_t uiOtherRobot, const std::vec
 
 		if(true == bBegin) dAvgDist += stOtherRobotDepoLoc.getDist_XY(graph.getLoc(*it));
 	}
+	return true;
 }
 
 bool Local_Search::string_exchange(size_t uiRobot1, size_t uiRobot2, std::vector<std::list<size_t>> &rob_seq)
@@ -276,8 +279,11 @@ bool Local_Search::string_exchange(size_t uiRobot1, size_t uiRobot2, std::vector
 	std::vector<String_Info> vec_pos_len_1;   // first is index, second is length
 	std::vector<String_Info> vec_pos_len_2;
 	
-	get_common_nodes_in_seq(uiRobot1, uiRobot2, rob_seq, m_node_data, vec_pos_len_1, m_graph);
-	get_common_nodes_in_seq(uiRobot2, uiRobot1, rob_seq, m_node_data, vec_pos_len_2, m_graph);
+	bValid = get_common_nodes_in_seq(uiRobot1, uiRobot2, rob_seq, m_node_data, vec_pos_len_1, m_graph);
+	if (false == bValid) return false;
+
+	bValid = get_common_nodes_in_seq(uiRobot2, uiRobot1, rob_seq, m_node_data, vec_pos_len_2, m_graph);
+	if (false == bValid) return false;
 
 	if ((vec_pos_len_1.size() == 0) || (vec_pos_len_2.size() == 0)) return false;
 
@@ -304,8 +310,11 @@ bool Local_Search::string_relocation(size_t uiRobot1, size_t uiRobot2, std::vect
 	size_t uiRobot , uiPosOther;
 	bool bValid;
 
-	get_common_nodes_in_seq(uiRobot1, uiRobot2, rob_seq, m_node_data, vec_pos_len_1, m_graph);
-	get_common_nodes_in_seq(uiRobot2, uiRobot1, rob_seq, m_node_data, vec_pos_len_2, m_graph);
+	bValid = get_common_nodes_in_seq(uiRobot1, uiRobot2, rob_seq, m_node_data, vec_pos_len_1, m_graph);
+	if (false == bValid) return false;
+
+	bValid = get_common_nodes_in_seq(uiRobot2, uiRobot1, rob_seq, m_node_data, vec_pos_len_2, m_graph);
+	if (false == bValid) return false;
 
 	if ((vec_pos_len_1.size() == 0) && (vec_pos_len_2.size() == 0)) return false;
 	if (vec_pos_len_1.size() == 0) { uiRobot = uiRobot2; }

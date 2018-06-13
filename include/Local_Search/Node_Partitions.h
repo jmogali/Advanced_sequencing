@@ -16,6 +16,7 @@ class Node_Partitions
 		void populate_containers(const Layout_LS &graph);
 
 	public:
+		inline bool doContain_common_nodes(size_t uiRobot1, size_t uiRobot2) const { return m_map_pair_rob_com_nodes.find(Or_Pair(uiRobot1, uiRobot2)) == m_map_pair_rob_com_nodes.end() ? false : true; };
 		inline const std::unordered_set<size_t>& get_common_nodes(size_t uiRobot1, size_t uiRobot2) const { return m_map_pair_rob_com_nodes.at(Or_Pair(uiRobot1, uiRobot2)).set; };
 		bool isLocalVertex(size_t uiInd) const;  // is local the hole can be accessed by only one robot
 		inline const Local_Robots& get_common_robots_for_Ind(size_t uiInd) const { return m_map_common_nodes.at(uiInd); };

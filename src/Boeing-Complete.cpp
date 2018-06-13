@@ -66,17 +66,17 @@ std::string generate_data(const Boeing_Fuesalage &boeing, std::string strDataset
 #ifdef TOOL_MODE
 int main(int argc, char** argv)
 {
-	std::string strFilePath = argv[1];
+	std::string strDataSetFolder = argv[1];
 	const double c_dWeightFactor = atof(argv[2]);
 	const unsigned int c_uikVal = (size_t)atoi(argv[3]);
 	const size_t c_uiSimulNum = (size_t)atoi(argv[4]);
 
 #ifdef WINDOWS
 	std::string strTSPFolderPath = "G:/Visual_Studio_Projects/Boeing-Advanced/TSP_Aux/" + to_string(c_uiSimulNum) + "/";
-	std::string strOutputFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Output/" ;
+	std::string strOutputFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Output/" ;	
 #else
 	std::string strTSPFolderPath = "TSP_Aux/" + to_string(c_uiSimulNum) + "/";
-	std::string strOutputFolder = "Output/";
+	std::string strOutputFolder = "Output/";	
 #endif
 
 #ifdef WINDOWS
@@ -86,6 +86,19 @@ int main(int argc, char** argv)
 	mkdir(strTSPFolderPath.c_str(), S_IRWXU);
 	mkdir(strOutputFolder.c_str(), S_IRWXU);
 #endif
+
+	std::string strHoleFile = strDataSetFolder + "/S1_Left.csv";
+	std::string strDistFile = strDataSetFolder +"/LCFD_S1_left_distances.csv";
+	std::string strEnablerFile = strDataSetFolder  + "/LCFD_S1_left_adjacencies.csv";
+
+	const size_t c_uiNumRobots = 2;
+	const size_t c_uiNumHoles = Data_Generator::count_holes_in_file(strHoleFile);
+	Data_Generator obj(c_uiNumRobots, c_uiNumHoles);
+	obj.parse_tool_files(strHoleFile, strDistFile, strEnablerFile);
+
+	std::string strFileName = "data.txt";
+	obj.print_data_files(strDataSetFolder , strFileName);
+	std::string strFilePath = strDataSetFolder + "/"+ strFileName;
 
 	Data_Parser parser(strFilePath);
 	std::pair<size_t, size_t> pr;

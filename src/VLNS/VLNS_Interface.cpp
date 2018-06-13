@@ -644,16 +644,6 @@ void select_sub_seq_for_opt(const std::vector<std::vector<Vertex_Schedule>> &vec
 		}
 	}
 
-#ifdef TOOL_MODE
-	const size_t c_uiTSPAllowableMaxLength = 50; // Adjust this untill the error message disappears, msg : "A larger value of h must be used to recover the sequence"
-	if (uiEnd - uiStart > c_uiTSPAllowableMaxLength)
-	{
-		size_t uiAdjustOffset = rand() % (uiEnd - uiStart - c_uiTSPAllowableMaxLength);
-		uiStart = uiStart + uiAdjustOffset;
-		uiEnd = uiStart + c_uiTSPAllowableMaxLength;
-	}
-#endif
-
 	//adjust start and end so they begin and end at hole locations
 	while ("IV" == graph.getType(vec_rob_sch[ui_Bottleneck_robot][pr_st_end.first].m_uiInd)) pr_st_end.first++;
 	while ("IV" == graph.getType(vec_rob_sch[ui_Bottleneck_robot][pr_st_end.second].m_uiInd)) pr_st_end.second--;

@@ -12,6 +12,10 @@ void Local_Search::generate_new_sequence_rand_moves(std::vector<std::list<size_t
 		std::vector<std::list<size_t>> new_rob_seq = rob_seq;
 		uiChoice = rand() % 3;
 
+#ifdef TOOL_MODE
+		uiChoice = 2;
+#endif
+
 #ifdef PRINT_LOCAL_OPERATOR_MESSAGES
 		cout << "Local Search Choice: " << uiChoice << endl;
 #endif
