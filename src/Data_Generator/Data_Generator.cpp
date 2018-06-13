@@ -515,6 +515,7 @@ void Data_Generator::add_edge_iv_info(std::string strDistFile, const std::set<si
 
 	for (size_t uiHole = 0; uiHole < m_handle.m_uiNumHoles - 1; uiHole++)
 	{
+		//MAKESPAN CHANGE: change dTime variable to a small positive integer if return time to depot is not to be included
 		double dTime = m_handle.getDepotMap().at(uiRobot).getLoc().getDist_XYZ(m_handle.getHolesMap().at(uiHole + (2*c_uiNumRobots)).getLoc());
 		add_edge_iv_info(uiRobot, dTime, (2 * c_uiNumRobots) + uiHole, (2 * uiRobot) + 1, uiIndex);
 		//map_iv_inds[uiRobot].emplace(uiIndex, std::make_pair(std::make_pair(uiHole, "H"), std::make_pair(uiRobot, "D")));
