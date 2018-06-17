@@ -306,7 +306,7 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 					if(bTSP) bRandGen = true; //when TSP is true, we already have the greedy schedule, so we need to perturb for next iteration
 					else bRandGen = false;
 
-#ifdef TOOL_MODE
+#ifdef SINGLE_ROBOT_MODE
 					bRandGen = false;
 #endif
 				}

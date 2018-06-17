@@ -17,6 +17,7 @@
 #include <random>
 #include "Local_Search.h"
 #include "auxgraph.h"
+#include "Special_Parser.h"
 
 
 using namespace boost;
@@ -63,7 +64,7 @@ std::string generate_data(const Boeing_Fuesalage &boeing, std::string strDataset
 	return strFilePath;
 }
 
-#ifdef TOOL_MODE
+#ifdef SINGLE_ROBOT_MODE
 int main(int argc, char** argv)
 {
 	std::string strDataSetFolder = argv[1];
@@ -90,11 +91,15 @@ int main(int argc, char** argv)
 	std::string strHoleFile = strDataSetFolder + "/S1_Left.csv";
 	std::string strDistFile = strDataSetFolder +"/LCFD_S1_left_distances.csv";
 	std::string strEnablerFile = strDataSetFolder  + "/LCFD_S1_left_adjacencies.csv";
+	std::string strFilledHoles = strDataSetFolder + "/S1_Left_Filled_holes.csv";
+
+	Special_Parser obj_parser;
+	obj_parser.parse_files(strHoleFile, strDistFile, strEnablerFile, strFilledHoles);
 
 	const size_t c_uiNumRobots = 2;
-	const size_t c_uiNumHoles = Data_Generator::count_holes_in_file(strHoleFile);
+	const size_t c_uiNumHoles = obj_parser.get_num_holes() + 1; //adding dummy hole
 	Data_Generator obj(c_uiNumRobots, c_uiNumHoles);
-	obj.parse_tool_files(strHoleFile, strDistFile, strEnablerFile);
+	obj.parse_single_robot_case(obj_parser);
 
 	std::string strFileName = "data.txt";
 	obj.print_data_files(strDataSetFolder , strFileName);

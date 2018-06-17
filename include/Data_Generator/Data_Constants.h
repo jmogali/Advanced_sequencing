@@ -8,7 +8,7 @@
 const size_t TIME_MULT_FAC = 100;
 const double ROBOT_SPEED = 0.25;
 
-#ifdef TOOL_MODE
+#ifdef SINGLE_ROBOT_MODE
 const size_t TIME_PER_HOLE = 30;
 #else
 const size_t TIME_PER_HOLE = 40;

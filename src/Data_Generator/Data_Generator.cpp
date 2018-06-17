@@ -379,76 +379,52 @@ void Data_Generator::compute_enablers(const std::set<size_t> &set_st_vert, const
 	}
 }
 
-#ifdef TOOL_MODE
+#ifdef SINGLE_ROBOT_MODE
 
 Data_Generator::Data_Generator(size_t uiNumRobots, size_t uiNumHoles):m_handle(uiNumRobots, uiNumHoles)
 { }
 
-size_t Data_Generator::count_holes_in_file(std::string strHoleFile)
+void Data_Generator::add_hole_info(const Special_Parser &boeing)
 {
-	ifstream myFile(strHoleFile);
-	std::string line;
-	size_t uiNumHoles= 0;
-
-	if (myFile.is_open())
+	const size_t c_uiOffset = 2 * m_handle.m_uiNumRobots;
+	
+	for (size_t uiIndex = 0; uiIndex < boeing.m_uiNumHoles; uiIndex++)
 	{
-		while (getline(myFile, line))
+		m_handle.add_hole(c_uiOffset + uiIndex, SCALE_TIME(TIME_PER_HOLE), boeing.m_vec_hole_coords[uiIndex]);
+	}
+
+	m_handle.add_hole(c_uiOffset + boeing.m_uiNumHoles, SCALE_TIME(TIME_PER_HOLE), Coordinates(0, 0, 0)); // dummy hole
+}
+
+void Data_Generator::set_start_locs(std::set<size_t> &set_st_vert, const Special_Parser &boeing)
+{
+	const size_t c_uiOffset = 2 * m_handle.m_uiNumRobots;
+	std::string strHole;
+
+	for (auto it = boeing.m_set_comp_holes.begin(); it != boeing.m_set_comp_holes.end(); it++)
+	{
+		strHole = *it;
+		for (auto it_enabled = boeing.m_set_adj_buffer.at(strHole).begin(); it_enabled != boeing.m_set_adj_buffer.at(strHole).end(); it_enabled++)
 		{
-			uiNumHoles++;
+			auto pr = boeing.isValidHole(*it_enabled);
+			if (false == pr.first) continue;
+
+			set_st_vert.emplace(c_uiOffset + pr.second);
 		}
-	}
-
-	uiNumHoles++; // last hole is dummy hole
-	return uiNumHoles;
+	}	
 }
 
-void Data_Generator::add_hole_info(std::string strHoleFile)
-{
-	size_t uiIndex = 2 * m_handle.m_uiNumRobots;
-	size_t c_uiHoleNum = m_handle.m_uiNumHoles;
-
-	ifstream myFile(strHoleFile);
-	std::string line;
-	int iOffset = 0;
-
-	if (myFile.is_open())
-	{
-		while (getline(myFile, line))
-		{
-			std::vector<std::string> elems;
-			boost::split(elems, line, boost::is_any_of(", "));
-			m_handle.add_hole(uiIndex++, SCALE_TIME(TIME_PER_HOLE), Coordinates(atof(elems[1].c_str()), atof(elems[2].c_str()), atof(elems[3].c_str())));
-		}
-	}
-
-	m_handle.add_hole(uiIndex++, SCALE_TIME(TIME_PER_HOLE), Coordinates(0, 0, 0)); // dummy hole
-}
-
-void Data_Generator::set_start_locs(std::set<size_t> &set_st_vert)
-{
-	size_t uiStartHoles = 19 + (2 * m_handle.m_uiNumRobots);
-
-	while (uiStartHoles < (2 * m_handle.m_uiNumRobots) + m_handle.m_uiNumHoles - 1)
-	{
-		set_st_vert.emplace(uiStartHoles);
-		uiStartHoles += 20;
-	}
-
-	//dummy hole is not included here on purpose
-	//set_st_vert.emplace((2 * m_handle.m_uiNumRobots) + m_handle.m_uiNumHoles - 1);
-}
-
-void Data_Generator::parse_tool_files(std::string strHoleFile, std::string strDistFile, std::string strEnablerFile)
+void Data_Generator::parse_single_robot_case(const Special_Parser &boeing)
 {
 	m_handle.add_depot(0, DEPOT_TIME, 0, 1, Coordinates(0,0,0)); // actual data
 	m_handle.add_depot(1, DEPOT_TIME, 2, 3, Coordinates(0, 0, 0)); // dummy robot
 	
-	add_hole_info(strHoleFile);
+	add_hole_info(boeing);
 	std::set<size_t> set_st_vert;
-	set_start_locs(set_st_vert);
+	set_start_locs(set_st_vert, boeing);
 
-	add_edge_iv_info(strDistFile, set_st_vert);
-	compute_enablers(strEnablerFile, set_st_vert);
+	add_edge_iv_info(boeing, set_st_vert);
+	compute_enablers(boeing ,set_st_vert);
 }
 
 void Data_Generator::add_edge_iv_info(size_t uiRobot, double dTime, size_t uiGraphInd1, size_t uiGraphInd2, size_t uiIndex)
@@ -458,127 +434,72 @@ void Data_Generator::add_edge_iv_info(size_t uiRobot, double dTime, size_t uiGra
 	m_handle.add_iv(uiRobot, uiGraphInd1, uiGraphInd2, uiIndex, uiScaledTime);
 }
 
-void Data_Generator::add_edge_iv_info(std::string strDistFile, const std::set<size_t> &set_st_vert)
+void Data_Generator::add_edge_iv_info(const Special_Parser &boeing, const std::set<size_t> &set_st_vert)
 {
-	std::vector<std::vector<double>> vec_dist;
-	vec_dist.resize(m_handle.m_uiNumHoles - 1);
-
-	ifstream myFile(strDistFile);
-	std::string line;
-	size_t uiOffsetRow = 2, uiOffsetColumn = 2, uiLine = 0;
-
-	if (myFile.is_open())
-	{
-		while (getline(myFile, line))
-		{
-			if (uiLine < uiOffsetRow)
-			{
-				uiLine++;
-				continue;
-			}
-
-			std::vector<std::string> elems;
-			boost::split(elems, line, boost::is_any_of(","));
-			
-			for (size_t uiIndex = uiOffsetColumn; uiIndex < elems.size()-1; uiIndex++)
-			{
-				vec_dist[uiLine - uiOffsetRow].push_back(atof(elems[uiIndex].c_str()));
-			}
-
-			if (uiLine - uiOffsetRow == m_handle.m_uiNumHoles - 2) break;
-			uiLine++;
-		}
-	}
-
-	const size_t c_uiNumRobots = m_handle.get_num_robots();
-	size_t uiRobot = 0 , uiIndex = (2* c_uiNumRobots) + (m_handle.m_uiNumHoles);
+	const size_t c_uiNumRobots = m_handle.get_num_robots(), c_ui_Hole_Offset = (2 * c_uiNumRobots) ,c_ui_IV_Offset = (2 * c_uiNumRobots) + (m_handle.m_uiNumHoles);
+	size_t uiRobot = 0, uiIndex = c_ui_IV_Offset;
 	
 	for (auto it = set_st_vert.begin(); it != set_st_vert.end(); it++)
 	{
-		//size_t uiHoleInd = *it - (2 * c_uiNumRobots);
 		double dTime = m_handle.getDepotMap().at(uiRobot).getLoc().getDist_XYZ(m_handle.getHolesMap().at(*it).getLoc());
 		add_edge_iv_info(0, dTime, 2 * uiRobot, *it, uiIndex);
-		//map_iv_inds[uiRobot].emplace(uiIndex, std::make_pair(std::make_pair(uiRobot, "D"), std::make_pair(uiHoleInd, "H")));
 		uiIndex++;
 	}
 
-	for (size_t uiHole1 = 0; uiHole1 < m_handle.m_uiNumHoles-1; uiHole1++)
+	for (size_t uiHole1 = 0; uiHole1 < boeing.m_uiNumHoles; uiHole1++)
 	{
-		for (size_t uiHole2 = 0; uiHole2 < m_handle.m_uiNumHoles - 1; uiHole2++)
+		for (size_t uiHole2 = 0; uiHole2 < boeing.m_uiNumHoles; uiHole2++)
 		{
 			if (uiHole1 == uiHole2) continue;
-			add_edge_iv_info(uiRobot, vec_dist[uiHole1][uiHole2], (2 * c_uiNumRobots) + uiHole1, (2 * c_uiNumRobots) + uiHole2, uiIndex);
-			//map_iv_inds[uiRobot].emplace(uiIndex, std::make_pair(std::make_pair(uiHole1, "H"), std::make_pair(uiHole2, "H")));
+			add_edge_iv_info(uiRobot, boeing.m_vec_dist_buffer[uiHole1][uiHole2], c_ui_Hole_Offset + uiHole1, c_ui_Hole_Offset + uiHole2, uiIndex);
 			uiIndex++;
 		}
 	}
 
-	for (size_t uiHole = 0; uiHole < m_handle.m_uiNumHoles - 1; uiHole++)
+	for (size_t uiHole = 0; uiHole < boeing.m_uiNumHoles; uiHole++)
 	{
 		//MAKESPAN CHANGE: change dTime variable to a small positive integer if return time to depot is not to be included
 		double dTime = m_handle.getDepotMap().at(uiRobot).getLoc().getDist_XYZ(m_handle.getHolesMap().at(uiHole + (2*c_uiNumRobots)).getLoc());
-		add_edge_iv_info(uiRobot, dTime, (2 * c_uiNumRobots) + uiHole, (2 * uiRobot) + 1, uiIndex);
-		//map_iv_inds[uiRobot].emplace(uiIndex, std::make_pair(std::make_pair(uiHole, "H"), std::make_pair(uiRobot, "D")));
+		add_edge_iv_info(uiRobot, dTime, c_ui_Hole_Offset + uiHole, (2 * uiRobot) + 1, uiIndex);
 		uiIndex++;
 	}
 
 	//add edge info for dummy robot and vertex
 	size_t uiDummyrobot = 1;
-	add_edge_iv_info(uiDummyrobot, 1, 2* uiDummyrobot,(2 * c_uiNumRobots) + m_handle.m_uiNumHoles-1, uiIndex);
-	//map_iv_inds[uiDummyrobot].emplace(uiIndex, std::make_pair(std::make_pair(uiDummyrobot, "D"), std::make_pair(m_handle.m_uiNumHoles - 1, "H")));
+	add_edge_iv_info(uiDummyrobot, 1, 2* uiDummyrobot, c_ui_Hole_Offset + m_handle.m_uiNumHoles-1, uiIndex);
 	
 	uiIndex++;
 
-	add_edge_iv_info(uiDummyrobot, 1, (2 * c_uiNumRobots) + m_handle.m_uiNumHoles - 1, (2 * uiDummyrobot) + 1, uiIndex);
-	//map_iv_inds[uiDummyrobot].emplace(uiIndex, std::make_pair(std::make_pair(m_handle.m_uiNumHoles - 1, "H"), std::make_pair(uiDummyrobot, "D")));
+	add_edge_iv_info(uiDummyrobot, 1, c_ui_Hole_Offset + m_handle.m_uiNumHoles - 1, (2 * uiDummyrobot) + 1, uiIndex);
 }
 
-void Data_Generator::compute_enablers(std::string strEnablerFile, std::set<size_t> &set_st_vert)
+void Data_Generator::compute_enablers(const Special_Parser &boeing, std::set<size_t> &set_st_vert)
 {
 	const size_t c_uiNumRobots = m_handle.get_num_robots();
-	//std::vector<std::set<size_t>> vec_enabler_set;
-	//vec_enabler_set.resize(m_handle.m_uiNumHoles);
-
-	ifstream myFile(strEnablerFile);
-	std::string line;
-	size_t uiOffsetRow = 1, uiOffsetColumn = 2, uiLine = 0;
+	const size_t c_uiHoleOffset = 2 * c_uiNumRobots;
 	size_t uiRobot = 0;
+	std::string strHole;
 
 	for (auto it = set_st_vert.begin(); it != set_st_vert.end(); it++)
 	{
 		m_handle.add_enabler(*it, 2* uiRobot);
 	}
 
-	if (myFile.is_open())
+	for (size_t uiHole = 0; uiHole < boeing.m_uiNumHoles; uiHole++)
 	{
-		while (getline(myFile, line))
+		strHole = boeing.m_map_index_hole.at(uiHole);
+		for (auto it_enable = boeing.m_set_adj_buffer.at(strHole).begin(); it_enable != boeing.m_set_adj_buffer.at(strHole).end(); it_enable++)
 		{
-			if (uiLine < uiOffsetRow)
-			{
-				uiLine++;
-				continue;
-			}
+			auto pr = boeing.isValidHole(*it_enable);
+			if (false == pr.first) continue;
 
-			std::vector<std::string> elems;
-			boost::split(elems, line, boost::is_any_of(","));
-
-			for (size_t uiIndex = uiOffsetColumn; uiIndex < elems.size() - 1; uiIndex++)
-			{
-				if (elems[uiIndex] == " T")
-				{
-					//vec_enabler_set[uiLine - uiOffsetRow].emplace(uiIndex - uiOffsetColumn);
-					m_handle.add_enabler(uiIndex - uiOffsetColumn + (2 * c_uiNumRobots), uiLine - uiOffsetRow + (2* c_uiNumRobots));
-				}
-			}
-
-			if (uiLine - uiOffsetRow == m_handle.m_uiNumHoles - 2) break;
-			uiLine++;
+			m_handle.add_enabler(pr.second + c_uiHoleOffset, uiHole + c_uiHoleOffset);
 		}
-	}
+	}	
 
 	//for dummy hole
 	size_t uiDummyRobot = 1;
-	m_handle.add_enabler((2 * c_uiNumRobots) + m_handle.m_uiNumHoles - 1, 2 * uiDummyRobot);
+	m_handle.add_enabler(c_uiHoleOffset + m_handle.m_uiNumHoles - 1, 2 * uiDummyRobot);
 }
 
 #endif
