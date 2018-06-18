@@ -31,8 +31,9 @@ class Special_Parser
 
 	public:
 		void parse_files(std::string strHoleFile, std::string strDistFile, std::string strEnablerFile, std::string strFilledHoles);
-		inline size_t get_num_holes() { return m_uiNumHoles; };
+		inline size_t get_num_holes() const { return m_uiNumHoles; };
 		std::pair<bool, size_t> isValidHole(std::string strHole) const;
+		inline const std::unordered_map<size_t, std::string>& get_index_hole_map() const { return m_map_index_hole; };
 		Special_Parser();
 		friend class Data_Generator;
 };

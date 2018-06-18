@@ -65,6 +65,32 @@ std::string generate_data(const Boeing_Fuesalage &boeing, std::string strDataset
 }
 
 #ifdef SINGLE_ROBOT_MODE
+
+void print_vertex_mapping(const Special_Parser &obj_parser, const size_t c_uiNumRobots, std::string strFilePath)
+{
+	ofstream myFile;
+	std::string str_hole = strFilePath;
+	myFile.open(str_hole.c_str());
+
+	for (size_t uiRobot = 0; uiRobot < c_uiNumRobots; uiRobot++)
+	{
+		myFile << 2 * uiRobot << "- Robot: " << uiRobot << " , start depot \n";
+		myFile << 2 * uiRobot + 1 << "- Robot: " << uiRobot << " , end depot \n";
+	}
+
+	const size_t c_uiHoleOffset = 2 * c_uiNumRobots;
+	const auto& map_index_hole = obj_parser.get_index_hole_map();
+
+	for (auto it = map_index_hole.begin(); it != map_index_hole.end(); it++)
+	{
+		myFile << c_uiHoleOffset + it->first << "- Hole: " << it->second << "\n";
+	}
+	myFile << c_uiHoleOffset + obj_parser.get_num_holes() << "- Dummy Hole";
+
+	myFile.close();
+}
+
+
 int main(int argc, char** argv)
 {
 	std::string strDataSetFolder = argv[1];
@@ -92,6 +118,7 @@ int main(int argc, char** argv)
 	std::string strDistFile = strDataSetFolder +"/LCFD_S1_left_distances.csv";
 	std::string strEnablerFile = strDataSetFolder  + "/LCFD_S1_left_adjacencies.csv";
 	std::string strFilledHoles = strDataSetFolder + "/S1_Left_Filled_holes.csv";
+	std::string strMapFile = strOutputFolder + "/Hole_Reference.txt";
 
 	Special_Parser obj_parser;
 	obj_parser.parse_files(strHoleFile, strDistFile, strEnablerFile, strFilledHoles);
@@ -121,7 +148,8 @@ int main(int argc, char** argv)
 	
 	Local_Search obj_ls(partition, graph, c_dWeightFactor);
 	obj_ls.perform_local_search(strOutputFolder, "", strTSPFolderPath, c_uikVal, c_uiSimulNum);
-	
+	print_vertex_mapping(obj_parser, c_uiNumRobots, strMapFile);
+
 	cout << "Tag: \n\n\n";
 	return 1;
 }
