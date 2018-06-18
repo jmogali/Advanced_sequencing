@@ -234,7 +234,11 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 		{
 			//print_sequence(rob_seq);
 			
-			if (uiIter % 3 == 0)
+#ifdef SINGLE_ROBOT_MODE
+			if (uiIter % 2 == 0)
+#else
+			if(uiIter % 3 == 0)
+#endif
 			{
 				const auto rob_seq_before_TSP = rob_seq;
 				const auto full_rob_sch_before_TSP = full_rob_sch;
