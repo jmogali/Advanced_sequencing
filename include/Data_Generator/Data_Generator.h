@@ -41,7 +41,7 @@ class Data_Generator
 		void set_start_locs(std::set<size_t> &set_st_vert, const Special_Parser &boeing);
 		void add_edge_iv_info(const Special_Parser &boeing, const std::set<size_t> &set_st_vert);
 		void add_edge_iv_info(size_t uiRobot, double dTime, size_t uiGraphInd1, size_t uiGraphInd2, size_t uiIndex);
-		void compute_enablers(const Special_Parser &boeing, std::set<size_t> &set_st_vert);
+		void compute_enablers(const Special_Parser &boeing, const std::set<size_t> &set_st_vert);
 #endif
 
 	//Print files

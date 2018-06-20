@@ -398,7 +398,7 @@ void Data_Generator::add_hole_info(const Special_Parser &boeing)
 
 void Data_Generator::set_start_locs(std::set<size_t> &set_st_vert, const Special_Parser &boeing)
 {
-	const size_t c_uiOffset = 2 * m_handle.m_uiNumRobots;
+	const size_t c_uiHoleOffset = 2 * m_handle.m_uiNumRobots;
 	std::string strHole;
 
 	for (auto it = boeing.m_set_comp_holes.begin(); it != boeing.m_set_comp_holes.end(); it++)
@@ -409,7 +409,7 @@ void Data_Generator::set_start_locs(std::set<size_t> &set_st_vert, const Special
 			auto pr = boeing.isValidHole(*it_enabled);
 			if (false == pr.first) continue;
 
-			set_st_vert.emplace(c_uiOffset + pr.second);
+			set_st_vert.emplace(c_uiHoleOffset + pr.second);
 		}
 	}	
 }
@@ -473,7 +473,7 @@ void Data_Generator::add_edge_iv_info(const Special_Parser &boeing, const std::s
 	add_edge_iv_info(uiDummyrobot, 1, c_ui_Hole_Offset + m_handle.m_uiNumHoles - 1, (2 * uiDummyrobot) + 1, uiIndex);
 }
 
-void Data_Generator::compute_enablers(const Special_Parser &boeing, std::set<size_t> &set_st_vert)
+void Data_Generator::compute_enablers(const Special_Parser &boeing, const std::set<size_t> &set_st_vert)
 {
 	const size_t c_uiNumRobots = m_handle.get_num_robots();
 	const size_t c_uiHoleOffset = 2 * c_uiNumRobots;
@@ -487,13 +487,15 @@ void Data_Generator::compute_enablers(const Special_Parser &boeing, std::set<siz
 
 	for (size_t uiHole = 0; uiHole < boeing.m_uiNumHoles; uiHole++)
 	{
+		if (set_st_vert.end() != set_st_vert.find(uiHole + c_uiHoleOffset)) continue; // we have enablers for these before
 		strHole = boeing.m_map_index_hole.at(uiHole);
+		
 		for (auto it_enable = boeing.m_set_adj_buffer.at(strHole).begin(); it_enable != boeing.m_set_adj_buffer.at(strHole).end(); it_enable++)
 		{
 			auto pr = boeing.isValidHole(*it_enable);
 			if (false == pr.first) continue;
-
-			m_handle.add_enabler(pr.second + c_uiHoleOffset, uiHole + c_uiHoleOffset);
+			
+			m_handle.add_enabler(uiHole + c_uiHoleOffset, pr.second + c_uiHoleOffset);
 		}
 	}	
 
