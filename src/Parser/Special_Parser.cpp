@@ -1,5 +1,7 @@
 #include "Special_Parser.h"
 #include <string>
+#define LARGE_DISTANCE 9999
+#include "Windows_Linux.h"
 
 Special_Parser::Special_Parser() {}
 
@@ -176,10 +178,10 @@ void populate_distance_index_hole_map(std::string strDistFile, std::unordered_ma
 void Special_Parser::populate_distance_buffer(std::string strDistFile)
 {
 	m_vec_dist_buffer.resize(m_uiNumHoles);
-	for (size_t uiHole = 0; uiHole < m_uiNumHoles; uiHole++) m_vec_dist_buffer[uiHole].resize(m_uiNumHoles);
+	for (size_t uiHole = 0; uiHole < m_uiNumHoles; uiHole++) m_vec_dist_buffer[uiHole].resize(m_uiNumHoles, LARGE_DISTANCE);
 
-	std::unordered_map<size_t, std::string> map_index_hole;
-	populate_distance_index_hole_map(strDistFile, map_index_hole);
+	std::unordered_map<size_t, std::string> map_dist_file_index_hole;
+	populate_distance_index_hole_map(strDistFile, map_dist_file_index_hole);
 
 	ifstream myFile(strDistFile);
 	std::string line;
@@ -198,6 +200,8 @@ void Special_Parser::populate_distance_buffer(std::string strDistFile)
 			std::vector<std::string> elems;
 			boost::split(elems, line, boost::is_any_of(","));
 
+			if(1 == elems.size()) break;
+
 			boost::algorithm::trim(elems[0]);
 			boost::algorithm::trim(elems[1]);
 
@@ -208,14 +212,22 @@ void Special_Parser::populate_distance_buffer(std::string strDistFile)
 			size_t uiCheckCount = 0;
 			for (size_t uiIndex = uiOffsetColumn; uiIndex < elems.size() - 1; uiIndex++)
 			{
-				it_find = m_map_hole_index.find(map_index_hole.at(uiIndex - uiOffsetColumn));
+				it_find = m_map_hole_index.find(map_dist_file_index_hole.at(uiIndex - uiOffsetColumn));
 				if (m_map_hole_index.end() == it_find) continue; //either not reachable or complete
 				size_t uiOtherHoleIndex = it_find->second;
 
 				m_vec_dist_buffer[uiHoleIndex][uiOtherHoleIndex] = atof(elems[uiIndex].c_str());
 				uiCheckCount++;
 			}
+#ifdef WINDOWS
 			assert(uiCheckCount = m_uiNumHoles);
+#else
+			if (m_uiNumHoles != uiCheckCount)
+			{
+				cout << "Something wrong with the parser\n";
+				exit(-1);
+			}
+#endif
 			uiLine++;
 		}
 	}
