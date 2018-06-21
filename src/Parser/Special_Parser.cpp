@@ -222,11 +222,7 @@ void Special_Parser::populate_distance_buffer(std::string strDistFile)
 #ifdef WINDOWS
 			assert(uiCheckCount = m_uiNumHoles);
 #else
-			if (m_uiNumHoles != uiCheckCount)
-			{
-				cout << "Something wrong with the parser\n";
-				exit(-1);
-			}
+			
 #endif
 			uiLine++;
 		}
