@@ -76,14 +76,21 @@ void Special_Parser::populate_adjacency_info(std::string strEnablerFile)
 
 			boost::algorithm::trim(elems[1]);
 
-			m_set_adj_buffer.emplace(elems[1], std::set<std::string>());
+			//m_set_adj_buffer.emplace(elems[1], std::set<std::string>());
 
 			for (size_t uiIndex = uiOffsetColumn; uiIndex < elems.size() - 1; uiIndex++)
 			{
 				boost::algorithm::trim(elems[uiIndex]);
 				if (elems[uiIndex] == "T")
 				{
-					m_set_adj_buffer[elems[1]].emplace(map_index_hole.at(uiIndex - uiOffsetColumn));
+					//m_set_adj_buffer[elems[1]].emplace(map_index_hole.at(uiIndex - uiOffsetColumn));
+
+					std::string strHole = map_index_hole.at(uiIndex - uiOffsetColumn);
+					if (m_set_adj_buffer.end() == m_set_adj_buffer.find(strHole))
+					{
+						m_set_adj_buffer.emplace(strHole, std::set<std::string>());
+					}
+					m_set_adj_buffer[strHole].emplace(elems[1]);
 				}
 			}
 			uiLine++;

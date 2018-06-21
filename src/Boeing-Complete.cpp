@@ -130,6 +130,7 @@ int main(int argc, char** argv)
 
 	std::string strFileName = "data.txt";
 	obj.print_data_files(strDataSetFolder , strFileName);
+	print_vertex_mapping(obj_parser, c_uiNumRobots, strMapFile);
 	std::string strFilePath = strDataSetFolder + "/"+ strFileName;
 
 	Data_Parser parser(strFilePath);
@@ -148,8 +149,7 @@ int main(int argc, char** argv)
 	
 	Local_Search obj_ls(partition, graph, c_dWeightFactor);
 	obj_ls.perform_local_search(strOutputFolder, "", strTSPFolderPath, c_uikVal, c_uiSimulNum);
-	print_vertex_mapping(obj_parser, c_uiNumRobots, strMapFile);
-
+	
 	cout << "Tag: \n\n\n";
 	return 1;
 }

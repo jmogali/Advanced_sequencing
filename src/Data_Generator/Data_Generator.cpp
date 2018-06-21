@@ -487,7 +487,6 @@ void Data_Generator::compute_enablers(const Special_Parser &boeing, const std::s
 
 	for (size_t uiHole = 0; uiHole < boeing.m_uiNumHoles; uiHole++)
 	{
-		if (set_st_vert.end() != set_st_vert.find(uiHole + c_uiHoleOffset)) continue; // we have enablers for these before
 		strHole = boeing.m_map_index_hole.at(uiHole);
 		
 		for (auto it_enable = boeing.m_set_adj_buffer.at(strHole).begin(); it_enable != boeing.m_set_adj_buffer.at(strHole).end(); it_enable++)
@@ -495,7 +494,8 @@ void Data_Generator::compute_enablers(const Special_Parser &boeing, const std::s
 			auto pr = boeing.isValidHole(*it_enable);
 			if (false == pr.first) continue;
 			
-			m_handle.add_enabler(uiHole + c_uiHoleOffset, pr.second + c_uiHoleOffset);
+			if (set_st_vert.end() != set_st_vert.find(pr.second + c_uiHoleOffset)) continue; // we have enablers for these before
+			m_handle.add_enabler(pr.second + c_uiHoleOffset, uiHole + c_uiHoleOffset);			
 		}
 	}	
 
