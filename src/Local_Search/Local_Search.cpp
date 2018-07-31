@@ -415,13 +415,13 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 				if (1 == iRetVal)
 				{
 					uiMakeSpan = getMakeSpan_From_Schedule(full_rob_sch);
+					bRestart = false;
+					cout << "RESTART END \n";
 					break;
 				}
 				
 				if (((std::clock() - start_time) / (double)CLOCKS_PER_SEC) > LS_SEARCH_TIME) break;
-			}
-			bRestart = false;
-			cout << "RESTART END \n";
+			}			
 		}
 
 		bool bValid = check_validity_of_sequence(rob_seq);
