@@ -21,7 +21,8 @@ class Boeing_Fuesalage
 		void construct_layout(std::string strategy);
 		void addDepots();
 		void addToolChangeLocs();
-		void add_Tacks_Holes_Default();		
+		void add_Tacks_Holes_Default();	
+		void add_Tacks_Holes_Random();
 
 	public:
 		Boeing_Fuesalage(size_t uiFrames, size_t uiRobots, double dWidth, double dHeight, double dHorSpace, double dVertSpace, std::string strtegy);

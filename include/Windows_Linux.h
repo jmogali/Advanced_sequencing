@@ -2,7 +2,7 @@
 #ifndef WINDOWS_LINUX_H
 #define WINDOWS_LINUX_H
 
-#define SINGLE_ROBOT_MODE
+//#define SINGLE_ROBOT_MODE
 //#define WINDOWS
 #define LINUX
 

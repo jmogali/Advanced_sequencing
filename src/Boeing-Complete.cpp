@@ -19,7 +19,6 @@
 #include "auxgraph.h"
 #include "Special_Parser.h"
 
-
 using namespace boost;
 using namespace std;
 using namespace AUX_GRAPH;
@@ -90,6 +89,44 @@ void print_vertex_mapping(const Special_Parser &obj_parser, const size_t c_uiNum
 	myFile.close();
 }
 
+void parse_files_for_retreiving_task_sequence(std::string strOutputFile, const size_t c_uiNumRobots, const Special_Parser &obj_parser,  std::vector<std::vector<std::string>>& vec_rob_tasks)
+{
+	if (false == vec_rob_tasks.empty())
+	{
+		cout << "Must input empty container \n";
+		exit(-1);
+	}
+
+	vec_rob_tasks.resize(c_uiNumRobots);
+	const size_t c_uiHoleOffset = 2 * c_uiNumRobots;
+	const auto& map_index_hole = obj_parser.get_index_hole_map();
+
+	ifstream myFile(strOutputFile);
+	std::string line;
+	size_t uiRobot = 0;
+
+	if (myFile.is_open())
+	{
+		while (getline(myFile, line))
+		{
+			std::vector<std::string> elems;
+			boost::split(elems, line, boost::is_any_of(" "));
+
+			if (elems[0] == "ROBOT:")
+			{
+				uiRobot = (size_t)(atoi)(elems[1].c_str());
+			}
+			else
+			{
+				size_t uiIndex = (size_t)(atoi)(elems[0].c_str());
+				auto it_find = map_index_hole.find(uiIndex - c_uiHoleOffset);
+				if (map_index_hole.end() == it_find) continue;
+				vec_rob_tasks[uiRobot].emplace_back( it_find->second );
+			}			
+		}
+	}
+	myFile.close();
+}
 
 int main(int argc, char** argv)
 {
@@ -118,7 +155,7 @@ int main(int argc, char** argv)
 	std::string strDistFile = strDataSetFolder +"/LCFD_S1_left_distances.csv";
 	std::string strEnablerFile = strDataSetFolder  + "/LCFD_S1_left_adjacencies.csv";
 	std::string strFilledHoles = strDataSetFolder + "/S1_Left_Filled_holes.csv";
-	std::string strMapFile = strOutputFolder + "/Hole_Reference.txt";
+	std::string strMapFile = strOutputFolder + "/Hole_Reference.txt";	
 
 	Special_Parser obj_parser;
 	obj_parser.parse_files(strHoleFile, strDistFile, strEnablerFile, strFilledHoles);
@@ -150,6 +187,10 @@ int main(int argc, char** argv)
 	Local_Search obj_ls(partition, graph, c_dWeightFactor);
 	obj_ls.perform_local_search(strOutputFolder, "", strTSPFolderPath, c_uikVal, c_uiSimulNum);
 	
+	std::vector<std::vector<std::string>> vec_rob_tasks;
+	parse_files_for_retreiving_task_sequence(strOutputFolder + "Best_Sol_" + to_string(c_uiSimulNum) + ".txt", c_uiNumRobots , obj_parser, vec_rob_tasks);
+	vec_rob_tasks.pop_back();
+
 	cout << "Tag: \n\n\n";
 	return 1;
 }
@@ -160,6 +201,8 @@ int main()
 int main(int argc, char** argv)
 #endif
 {		
+	srand((unsigned)time(0));
+
 #ifdef WINDOWS
 	size_t uiFrames = 8;
 	size_t uiRobots = 2;
@@ -169,7 +212,7 @@ int main(int argc, char** argv)
 	double dVertSpace = 1.0;
 	double dWeightFactor = 1;
 	unsigned int uikVal = 13;
-	size_t uiSimulNum = 1;
+	size_t uiSimulNum = 0;
 #else
 	size_t uiFrames = (size_t) atoi(argv[1]);
 	size_t uiRobots = (size_t)atoi(argv[2]);
@@ -182,7 +225,18 @@ int main(int argc, char** argv)
 	size_t uiSimulNum = (size_t)atoi(argv[9]);
 #endif
 
-	Boeing_Fuesalage obj(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace, "DEFAULT");
+	std::string strStrategy;
+
+#ifdef RANDOM_STRATEGY
+	strStrategy = "RANDOM";
+	uiFrames = 1;
+	dHorSpace = 0.3;
+	dVertSpace = dHorSpace * (dHeight/ dWidth);
+#else
+	strStrategy = "DEFAULT";
+#endif
+
+	Boeing_Fuesalage obj(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace, strStrategy);
 #ifdef WINDOWS
 	std::string strDatasetFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Dataset/";
 	std::string strPlotFolder = "G:/Visual_Studio_Projects/Boeing-Advanced/Graphical_Plots/";
@@ -201,7 +255,12 @@ int main(int argc, char** argv)
 	mkdir(strTSPFolderPath.c_str(), S_IRWXU);
 #endif
 	
+#ifdef RANDOM_STRATEGY
+	std::string strFolder = "Rand_Instance_0";
+#else
 	std::string strFolder = getFolderName(uiFrames, uiRobots, dWidth, dHeight, dHorSpace, dVertSpace);
+#endif
+
 	std::string strFilePath = generate_data(obj, strDatasetFolder, strFolder);
 	strPlotFolder += strFolder+"/";
 	strDataDumpFolder += strFolder + "/";
@@ -219,13 +278,12 @@ int main(int argc, char** argv)
 
 	Node_Partitions partition(graph);
 	
-	//generating files for TSP heuristic
-	
 	//generating files for TSP heuristic	
 	AUX_GRAPH::generate_TSP_files(uikVal, strTSPFolderPath.c_str());
 
 	Local_Search obj_ls(partition, graph, dWeightFactor);
-	obj_ls.perform_local_search(strPlotFolder, strDataDumpFolder, strTSPFolderPath, uikVal, uiSimulNum);
+	//obj_ls.perform_local_search(strPlotFolder, strDataDumpFolder, strTSPFolderPath, uikVal, uiSimulNum);
+	obj_ls.perform_local_search_improved(strPlotFolder, strDataDumpFolder, strTSPFolderPath, uikVal, uiSimulNum);
 	//obj_ls.perform_VBSS_search(strPlotFolder);	
 
 	cout << "Tag: \n\n\n";

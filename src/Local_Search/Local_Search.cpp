@@ -14,9 +14,7 @@ size_t getMakeSpan_From_Schedule(const std::vector<std::vector<Vertex_Schedule>>
 }
 
 Local_Search::Local_Search(const Node_Partitions &node_data, const Layout_LS &graph, const double dWeightFactor) :m_rng(m_rd()) , m_node_data(node_data) , m_graph(graph), m_dWeight_Factor(dWeightFactor), m_en_graph(graph)
-{
-	srand((unsigned)time(0));
-}
+{}
 
 void Local_Search::perform_VBSS_search(std::string strFolderPath)
 {
@@ -367,6 +365,192 @@ void Local_Search::perform_local_search(std::string strPlotFolder, std::string s
 	cout<< "Tag: Accumulated Result: "<< uiFirstSol <<","<<uiConstructiveMakespan << "," << uiBestSol<< "," << uiSuccesFullIter<< "," << dSuccPercent <<endl;
 }
 
+void Local_Search::perform_local_search_improved(std::string strPlotFolder, std::string strDataDumpFolder, std::string strTSPFolder, size_t ui_KVal, size_t uiSimulNum)
+{
+	std::vector<std::list<size_t>> rob_seq;
+	std::vector<std::vector<Vertex_Schedule>> full_rob_sch;
+	bool bRandGen, bRestart = true;
+	std::vector<std::vector<Vertex_Schedule>> full_rob_sch_best;
+	std::vector<std::pair<size_t, double>> vec_impr_sol;
+
+	size_t uiIter = 0, uiMakeSpan, uiBestSol = std::numeric_limits<size_t>::max();
+	size_t uiStaleCounter = 0, uiTSPLowerBound, uiNumRestart = 0;
+	Power_Set power;
+	
+	Greedy_Heuristic heur(m_node_data.m_uiNumRobots, m_graph, power);
+	Hole_Exchange hole_exchange(m_node_data.m_uiNumRobots, m_graph, power, m_en_graph);
+
+#ifdef ENABLE_LEGACY_CODE
+	Greedy_Heuristic_old heur_legacy(m_node_data.m_uiNumRobots, m_graph, power);
+#endif
+
+	std::vector<size_t> vec_late_accep(c_uiLate_Acceptace_Length, std::numeric_limits<size_t>::max());
+	size_t uiSuccesFullIter = 0;
+
+	std::clock_t start_time;
+	start_time = std::clock();
+
+	while (uiIter < 5000000)
+	{
+		if (((std::clock() - start_time) / (double)CLOCKS_PER_SEC) > LS_SEARCH_TIME) break;
+
+		if (bRestart)
+		{
+			std::fill(vec_late_accep.begin(), vec_late_accep.end(), std::numeric_limits<size_t>::max());
+			cout << "RESTART BEGIN \n";
+
+			while (1)
+			{
+				rob_seq.clear();
+				full_rob_sch.clear();
+
+				generate_constructive_sequence_VBSS(rob_seq);
+				bool bValid = check_validity_of_sequence(rob_seq);
+				if (false == bValid)
+				{
+					cout << "Initial seq generated is invalid\n";
+					exit(-1);
+				}
+				int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, std::numeric_limits<size_t>::max());
+				if (1 == iRetVal)
+				{
+					uiMakeSpan = getMakeSpan_From_Schedule(full_rob_sch);
+					break;
+				}
+				
+				if (((std::clock() - start_time) / (double)CLOCKS_PER_SEC) > LS_SEARCH_TIME) break;
+			}
+			bRestart = false;
+			cout << "RESTART END \n";
+		}
+
+		bool bValid = check_validity_of_sequence(rob_seq);
+
+#ifdef WINDOWS		
+		assert(true == bValid);
+#else
+		if (false == bValid)
+		{
+			cout << "Sequence generated is invalid \n";
+			print_sequence(rob_seq);
+			exit(1);
+		}
+#endif
+		if (uiBestSol > uiMakeSpan)
+		{
+			uiBestSol = uiMakeSpan;
+			full_rob_sch_best = full_rob_sch;
+		}
+
+		cout << " Iteration: " << uiIter <<  " , Makespan: " << uiMakeSpan << " , Best Sol: " << uiBestSol << " , Comparison cost: " << vec_late_accep[uiIter % c_uiLate_Acceptace_Length] << endl;
+
+		auto rob_seq_before_oper = rob_seq;
+		auto full_rob_sch_before_oper = full_rob_sch;		
+		
+		if (rand() % 3 == 0)
+		{
+			gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiTSPLowerBound, ui_KVal);
+
+			full_rob_sch.clear();
+			int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, uiMakeSpan);
+
+			if (1 == iRetVal) uiMakeSpan = getMakeSpan_From_Schedule(full_rob_sch);  
+			else uiMakeSpan = std::numeric_limits<size_t>::max();
+		}
+		else
+		{
+			bool bImproving = gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
+			if(false == bImproving) uiMakeSpan = std::numeric_limits<size_t>::max();
+			else
+			{				 
+				full_rob_sch.clear();
+				int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, uiMakeSpan);
+#ifdef WINDOWS					
+				assert(1 == iRetVal);
+#else
+				if (1 != iRetVal)
+				{
+					cout << "Mismatch in hole sequence generation feasibility and SSP scheduler \n";
+					exit(-1);
+				}
+#endif
+				uiMakeSpan = (iRetVal == 1) ? getMakeSpan_From_Schedule(full_rob_sch) : std::numeric_limits<size_t>::max();
+			}
+		}		
+
+		if (uiMakeSpan >= vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
+		{
+			rob_seq = rob_seq_before_oper;
+			full_rob_sch = full_rob_sch_before_oper;
+			bRandGen = true;
+			uiStaleCounter++;
+		}
+		else
+		{
+			vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;	
+			bRandGen = false;
+			uiStaleCounter = 0;
+		}		
+
+		if (uiStaleCounter > c_uiConsecutive_Late_Accep_Failure)
+		{
+			cout << "RESTART \n";
+			bRestart = true;
+		}
+		else if (true == bRandGen)
+		{
+#ifdef WINDOWS
+			assert(false == rob_seq.empty());
+#else
+			if (true == rob_seq.empty())
+			{
+				cout << "Empty sequence fed to random move operator\n";
+				exit(-1);
+			}
+#endif
+			rob_seq_before_oper = rob_seq;
+			size_t uiNumRandOper = 0;			
+
+			while (1)
+			{
+				cout << "PERTURB BEGIN\n";
+				if (uiNumRandOper < c_uiConsecutive_Rand_Oper_Failure)
+				{
+					generate_new_sequence_rand_moves(rob_seq);
+					full_rob_sch.clear();
+					int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, std::numeric_limits<size_t>::max());
+
+					if (1 == iRetVal)
+					{
+						uiMakeSpan = getMakeSpan_From_Schedule(full_rob_sch);
+						break;
+					}
+					else rob_seq = rob_seq_before_oper;					
+				}
+				else
+				{
+					bRestart = true;
+					break;
+				}
+				uiNumRandOper++;
+				cout << "PERTURB END\n";
+			}
+		}
+		uiIter++;
+	}
+
+	free_VLNS_buffers();
+	print_state_transition_path(strPlotFolder + "Best_Sol_" + to_string(uiSimulNum) + ".txt", full_rob_sch_best);
+	vec_impr_sol.push_back(std::make_pair(uiBestSol, 100));
+	print_best_solution_progress(strPlotFolder + "Solution_Progress_" + to_string(uiSimulNum) + ".csv", vec_impr_sol);
+	cout << "Tag: Best Makespan: " << uiBestSol << endl;
+	cout << "Tag: Total Iterations: " << uiIter << endl;
+	cout << "Tag: Number Of Restarts: " << uiNumRestart << endl;
+	cout << "Tag: Successfull iterations: " << uiSuccesFullIter << endl;
+	double dSuccPercent = (double)(100.0 * uiSuccesFullIter) / ((double)(uiIter * 1.0));
+	cout << "Tag: Success %: " << dSuccPercent << endl;	
+}
+
 void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &full_rob_seq)
 {
 	full_rob_seq.resize(m_node_data.m_uiNumRobots);
@@ -395,7 +579,6 @@ void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size
 int Local_Search::perform_greedy_scheduling(Greedy_Heuristic &heur, std::vector<std::list<size_t>> &rob_seq, std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::string strPlotFolder, const size_t c_uiUpperBound)
 {
 	std::vector<std::list<size_t>> full_rob_seq;
-	
 	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
 	return heur.compute_greedy_sol(full_rob_seq, full_rob_sch, strPlotFolder, c_uiUpperBound);
 }

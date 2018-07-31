@@ -145,7 +145,7 @@ void Data_Generator::add_edge_iv_info(size_t uiRobot , const Coordinates &loc1, 
 		dTime = m_vec_robots[uiRobot].compute_time(loc1, loc2);
 	}
 
-	size_t uiScaledTime = SCALE_TIME(dTime);
+	size_t uiScaledTime = 1 > SCALE_TIME(dTime) ? 1 : SCALE_TIME(dTime);
 	m_handle.add_edge(uiRobot, uiGraphInd1, uiGraphInd2, uiScaledTime);
 	m_handle.add_iv(uiRobot, uiGraphInd1, uiGraphInd2, uiIndex, uiScaledTime);	
 }
@@ -354,15 +354,19 @@ void Data_Generator::compute_v_iv_pair_colls(const std::vector<map_rob_ind_id_pa
 void Data_Generator::compute_enablers(const std::set<size_t> &set_st_vert, const Boeing_Fuesalage &boeing)
 {
 	const size_t c_uiNumRobots = m_handle.get_num_robots();
+	bool bAdded;
+
 	for (size_t uiHole1 = 0; uiHole1 < boeing.m_vec_holes.size(); uiHole1++)
 	{
+		bAdded = false;
 		if (set_st_vert.find(uiHole1 + (2 * c_uiNumRobots)) != set_st_vert.end())
 		{
 			for (size_t uiRobot = 0; uiRobot < m_vec_robots.size(); uiRobot++)
 			{
 				if (m_vec_robots[uiRobot].isHoleReachable(boeing.m_vec_holes[uiHole1]))
 				{
-					m_handle.add_enabler( uiHole1 + (2 * c_uiNumRobots) , 2*uiRobot );
+					m_handle.add_enabler(uiHole1 + (2 * c_uiNumRobots), 2 * uiRobot);
+					bAdded = true;
 					//m_handle.add_enabler( uiHole1 + (2 * c_uiNumRobots), (2 * uiRobot) + 1);
 				}
 			}
@@ -373,9 +377,39 @@ void Data_Generator::compute_enablers(const std::set<size_t> &set_st_vert, const
 		{
 			if (uiHole1 == uiHole2) continue;
 			if (false == isProximalEnabling_Neigh_Strategy(boeing.m_vec_holes[uiHole1].getLoc(), boeing.m_vec_holes[uiHole2].getLoc(), boeing.m_dHorSpacing, boeing.m_dVertSpacing)) continue;
-		
+
 			m_handle.add_enabler(uiHole1 + (2 * c_uiNumRobots), uiHole2 + (2 * c_uiNumRobots));
+			bAdded = true;
 		}
+
+		if (false == bAdded)
+		{
+			size_t uiNearestHole;
+			double dNearestDist = std::numeric_limits<double>::max(), dDist;
+			for (size_t uiHole2 = 0; uiHole2 < boeing.m_vec_holes.size(); uiHole2++)
+			{
+				if (uiHole1 == uiHole2) continue;
+				dDist = boeing.m_vec_holes[uiHole1].getLoc().getDist_XY(boeing.m_vec_holes[uiHole2].getLoc());
+
+				if (dDist < dNearestDist)
+				{
+					dNearestDist = dDist;
+					uiNearestHole = uiHole2;
+				}
+			}
+			m_handle.add_enabler(uiHole1 + (2 * c_uiNumRobots), uiNearestHole + (2 * c_uiNumRobots));
+			bAdded = true;
+		}
+
+#ifdef WINDOWS
+		assert(true == bAdded);
+#else
+		if (false == bAdded)
+		{
+			cout << "Hole: " << uiHole1 << " cannot be enabled at all \n";
+			exit(-1);
+		}
+#endif
 	}
 }
 

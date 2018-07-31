@@ -35,12 +35,12 @@ bool Local_Search::gen_seq_hole_exchange(Hole_Exchange &hole_exchange, Greedy_He
 	return bImproving;
 }
 
-void Local_Search::gen_seq_TSP(std::string strTSPFolder, Greedy_Heuristic &heur, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::vector<std::list<size_t>> &rob_seq, size_t &c_uiTargetMakeSpan, const size_t c_uiKVal)
+void Local_Search::gen_seq_TSP(std::string strTSPFolder, Greedy_Heuristic &heur, const std::vector<std::vector<Vertex_Schedule>> &full_rob_sch, std::vector<std::list<size_t>> &rob_seq, size_t &uiTargetMakeSpan, const size_t c_uiKVal)
 {
 	std::vector<std::list<size_t>> full_rob_seq;
 	convert_hole_seq_to_full_seq(rob_seq, full_rob_seq);
 
-	c_uiTargetMakeSpan = perform_TSP_Move(strTSPFolder, full_rob_seq, full_rob_sch, heur, m_graph, m_en_graph, (int)c_uiKVal);
+	uiTargetMakeSpan = perform_TSP_Move(strTSPFolder, full_rob_seq, full_rob_sch, heur, m_graph, m_en_graph, (int)c_uiKVal);
 
 	rob_seq.clear();
 	populate_new_sequence(full_rob_seq, rob_seq);

@@ -1,5 +1,6 @@
 #include "Boeing_Fuesalage.h"
 #include <fstream>
+#include <random>
 
 using namespace std;
 
@@ -18,9 +19,9 @@ void Boeing_Fuesalage::construct_layout(std::string strategy)
 	{
 		add_Tacks_Holes_Default();
 	}
-	else
+	else if("RANDOM" == strategy)
 	{
-		//To be filled later;
+		add_Tacks_Holes_Random();
 	}
 }
 
@@ -93,6 +94,46 @@ void Boeing_Fuesalage::add_Tacks_Holes_Default()
 	}
 }
 
+void Boeing_Fuesalage::add_Tacks_Holes_Random()
+{
+	const size_t c_uiMaxHoles = 200;
+	const size_t c_uiMaxTacks = 20;
+	const double c_depsilon = 0.0001;
+	const double c_dDimRatio = m_dHeight / m_dWidth;
+	size_t uiSampVal;
+
+	std::random_device rd;
+	std::mt19937 e2(rd());
+	std::uniform_real_distribution<> real_dist(c_depsilon, m_dWidth - c_depsilon);
+
+	std::vector<double> vec_x_coord;
+	std::vector<double> vec_y_coord;
+
+	m_vec_tacks.resize(m_uiNumFrames);
+
+	for (size_t uiHole = 0; uiHole < c_uiMaxHoles; uiHole++)
+	{
+		vec_x_coord.push_back(real_dist(e2));
+		vec_y_coord.push_back(real_dist(e2) * c_dDimRatio);
+	}
+	
+	for (size_t uiHole = 0; uiHole < c_uiMaxHoles; uiHole++)
+	{
+		m_vec_holes.push_back(Hole(Coordinates(vec_x_coord[uiHole], vec_y_coord[uiHole], 0.0), "SMALL", 0));
+	}
+
+	std::uniform_int_distribution<int> int_dist(0, c_uiMaxHoles-1);
+	std::set<size_t> set_prev_ind;
+
+	for (size_t uiCount = 0; uiCount < c_uiMaxTacks; uiCount++)
+	{
+		uiSampVal = int_dist(e2);
+		if (set_prev_ind.end() != set_prev_ind.find(uiSampVal)) continue;
+		m_vec_tacks[0].push_back(Coordinates(vec_x_coord[uiSampVal], vec_y_coord[uiSampVal], 0));		
+		set_prev_ind.emplace(uiSampVal);
+	}	
+}
+
 void Boeing_Fuesalage::print_layout(std::string strFolder, std::string strFileName)
 {
 	ofstream hole_file;
@@ -125,14 +166,28 @@ void Boeing_Fuesalage::help_robot_set_up(std::vector<Robot> &vec_Robots) const
 	assert(m_uiNumRobots == 2);
 
 	std::set<size_t> set_frames_0;
-	size_t ui_Max_Frame_0 = (size_t)floor(ROBOT_FRACTION_COVERAGE * m_uiNumFrames);
+	size_t ui_Max_Frame_0;
+
+#ifdef RANDOM_STRATEGY
+	ui_Max_Frame_0 = 1;
+#else
+	ui_Max_Frame_0 = (size_t)floor(ROBOT_FRACTION_COVERAGE * m_uiNumFrames);
+#endif
+	
 	for (size_t uiCount = 0; uiCount < ui_Max_Frame_0; uiCount++)
 		set_frames_0.emplace(uiCount);
 
 	vec_Robots.push_back(Robot(m_vec_depots[0], set_frames_0));
 
 	std::set<size_t> set_frames_1;
-	size_t ui_Min_Frame_1 = m_uiNumFrames - (size_t)ceil(ROBOT_FRACTION_COVERAGE * m_uiNumFrames);
+	size_t ui_Min_Frame_1;
+
+#ifdef RANDOM_STRATEGY
+	ui_Min_Frame_1 = 0;
+#else
+	ui_Min_Frame_1 = m_uiNumFrames - (size_t)ceil(ROBOT_FRACTION_COVERAGE * m_uiNumFrames);
+#endif
+	
 	for (size_t uiCount = ui_Min_Frame_1; uiCount < m_uiNumFrames; uiCount++)
 		set_frames_1.emplace(uiCount);
 
