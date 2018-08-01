@@ -230,7 +230,7 @@ int main(int argc, char** argv)
 #ifdef RANDOM_STRATEGY
 	strStrategy = "RANDOM";
 	uiFrames = 1;
-	dHorSpace = 0.3;
+	dHorSpace = 0.4;
 	dVertSpace = dHorSpace * (dHeight/ dWidth);
 #else
 	strStrategy = "DEFAULT";

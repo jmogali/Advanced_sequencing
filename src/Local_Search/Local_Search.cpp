@@ -404,6 +404,7 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 				rob_seq.clear();
 				full_rob_sch.clear();
 
+				cout << "Performing VBSS\n";
 				generate_constructive_sequence_VBSS(rob_seq);
 				bool bValid = check_validity_of_sequence(rob_seq);
 				if (false == bValid)
@@ -449,6 +450,7 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 		
 		if (rand() % 3 == 0)
 		{
+			cout << "Performing Reorder Move\n";
 			gen_seq_TSP(strTSPFolder, heur, full_rob_sch, rob_seq, uiTSPLowerBound, ui_KVal);
 
 			full_rob_sch.clear();
@@ -459,6 +461,10 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 		}
 		else
 		{
+			cout << "Performing Relocate Move\n";			
+#ifdef LINUX
+			print_sequence(rob_seq);
+#endif
 			bool bImproving = gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
 			if(false == bImproving) uiMakeSpan = std::numeric_limits<size_t>::max();
 			else
@@ -530,6 +536,7 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 				else
 				{
 					bRestart = true;
+					cout << "PERTURB END\n";
 					break;
 				}
 				uiNumRandOper++;
