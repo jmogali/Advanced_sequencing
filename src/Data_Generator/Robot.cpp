@@ -50,11 +50,12 @@ bool Robot::getPoseToPoint(const Coordinates &coord, Polygon &pose)
 	if(false == isPointReachable(coord)) return false;
 
 	Polygon temp;
+	
 	//Temporary
-	temp.outer().push_back(Point(coord.get_X_loc() + 1, coord.get_Y_loc() + 1));
-	temp.outer().push_back(Point(coord.get_X_loc() - 1, coord.get_Y_loc() - 1));
-	temp.outer().push_back(Point(m_loc.get_X_loc() + 1, m_loc.get_Y_loc() + 1));
-	temp.outer().push_back(Point(m_loc.get_X_loc() - 1, m_loc.get_Y_loc() - 1));
+	temp.outer().push_back(Point(coord.get_X_loc() + c_uiRobotThickness, coord.get_Y_loc() + c_uiRobotThickness));
+	temp.outer().push_back(Point(coord.get_X_loc() - c_uiRobotThickness, coord.get_Y_loc() - c_uiRobotThickness));
+	temp.outer().push_back(Point(m_loc.get_X_loc() + c_uiRobotThickness, m_loc.get_Y_loc() + c_uiRobotThickness));
+	temp.outer().push_back(Point(m_loc.get_X_loc() - c_uiRobotThickness, m_loc.get_Y_loc() - c_uiRobotThickness));
 
 	boost::geometry::convex_hull(temp, pose);
 	

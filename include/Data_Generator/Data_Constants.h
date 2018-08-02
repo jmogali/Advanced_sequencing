@@ -14,10 +14,11 @@ const size_t TIME_PER_HOLE = 30;
 const size_t TIME_PER_HOLE = 40;
 #endif
 
-#define RANDOM_STRATEGY
+//#define RANDOM_STRATEGY
 
 const double ROBOT_FRACTION_COVERAGE = 0.7;
 const size_t DEPOT_TIME = 1;
+const size_t c_uiRobotThickness = 1;
 
 #define SCALE_TIME(x) (size_t) floor(TIME_MULT_FAC * x)
 

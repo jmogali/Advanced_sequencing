@@ -140,7 +140,19 @@ void Local_Search::print_state_transition_path(std::string strFilePath, const st
 	std::string str_hole = strFilePath;
 	myFile.open(str_hole.c_str());
 
-	for (size_t uiState = 0; uiState < vec_state_path.size(); uiState++)
+	for (size_t uiRobot = 0; uiRobot < c_uiNumRobots; uiRobot++)
+	{
+		myFile << "Robot: " << uiRobot << endl;
+
+		for (size_t uiCount = 0; uiCount < full_rob_sch[uiRobot].size(); uiCount++)
+		{
+			myFile << full_rob_sch[uiRobot][uiCount].m_uiInd << " : " << full_rob_sch[uiRobot][uiCount].m_uiStart << endl;
+		}
+		myFile << endl;
+	}
+
+
+	/*for (size_t uiState = 0; uiState < vec_state_path.size(); uiState++)
 	{
 		for (size_t uiRobot = 0; uiRobot < c_uiNumRobots; uiRobot++)
 		{
@@ -148,7 +160,7 @@ void Local_Search::print_state_transition_path(std::string strFilePath, const st
 		}
 		myFile << vec_state_path[uiState].m_uiTime;
 		myFile << endl;
-	}
+	}*/
 	myFile.close();
 }
 #endif

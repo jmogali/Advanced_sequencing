@@ -385,8 +385,7 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 #endif
 
 	std::vector<size_t> vec_late_accep(c_uiLate_Acceptace_Length, std::numeric_limits<size_t>::max());
-	size_t uiSuccesFullIter = 0;
-
+	
 	std::clock_t start_time;
 	start_time = std::clock();
 
@@ -398,6 +397,7 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 		{
 			std::fill(vec_late_accep.begin(), vec_late_accep.end(), std::numeric_limits<size_t>::max());
 			cout << "RESTART BEGIN \n";
+			uiNumRestart++;
 
 			while (1)
 			{
@@ -529,6 +529,7 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 					if (1 == iRetVal)
 					{
 						uiMakeSpan = getMakeSpan_From_Schedule(full_rob_sch);
+						vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = std::min(uiMakeSpan, vec_late_accep[uiIter % c_uiLate_Acceptace_Length]);
 						break;
 					}
 					else rob_seq = rob_seq_before_oper;					
@@ -552,10 +553,7 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 	print_best_solution_progress(strPlotFolder + "Solution_Progress_" + to_string(uiSimulNum) + ".csv", vec_impr_sol);
 	cout << "Tag: Best Makespan: " << uiBestSol << endl;
 	cout << "Tag: Total Iterations: " << uiIter << endl;
-	cout << "Tag: Number Of Restarts: " << uiNumRestart << endl;
-	cout << "Tag: Successfull iterations: " << uiSuccesFullIter << endl;
-	double dSuccPercent = (double)(100.0 * uiSuccesFullIter) / ((double)(uiIter * 1.0));
-	cout << "Tag: Success %: " << dSuccPercent << endl;	
+	cout << "Tag: Number Of Restarts: " << uiNumRestart << endl;	
 }
 
 void Local_Search::convert_hole_seq_to_full_seq(const std::vector<std::list<size_t>> &rob_seq, std::vector<std::list<size_t>> &full_rob_seq)

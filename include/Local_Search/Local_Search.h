@@ -47,6 +47,7 @@ class Local_Search
 		bool string_relocation(size_t uiRobot1, size_t uiRobot2, std::vector<std::list<size_t>> &rob_seq);		
 		std::pair<bool, size_t> intra_rand_oper(std::vector<std::list<size_t>> &rob_seq, std::string strType);
 		bool swap_intra_sequence(size_t uiRobot , std::vector<std::list<size_t>> &rob_seq);
+		bool relocate_intra_sequence(size_t uiRobot, std::vector<std::list<size_t>> &rob_seq);
 		bool Two_opt_intra_sequence(const size_t c_uiRobot, std::vector<std::list<size_t>> &rob_seq);
 		
 		//auxillary section

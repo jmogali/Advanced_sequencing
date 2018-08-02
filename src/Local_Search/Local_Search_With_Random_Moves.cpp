@@ -10,7 +10,7 @@ void Local_Search::generate_new_sequence_rand_moves(std::vector<std::list<size_t
 	do
 	{
 		std::vector<std::list<size_t>> new_rob_seq = rob_seq;
-		uiChoice = rand() % 3;
+		uiChoice = rand() % 5;
 
 #ifdef SINGLE_ROBOT_MODE
 		uiChoice = 2;
@@ -22,9 +22,9 @@ void Local_Search::generate_new_sequence_rand_moves(std::vector<std::list<size_t
 
 		if (uiChoice <= 1)
 		{
-			uiChoice = rand() % 2;
+			uiChoice = rand() % 5;
 			if (0 == uiChoice) strType = "STRING_EXCHANGE";
-			else if (1 == uiChoice) strType = "STRING_RELOCATION";
+			else strType = "INTER_STRING_RELOCATION";
 
 #ifdef PRINT_LOCAL_OPERATOR_MESSAGES			
 			cout << "String Type: " << strType << endl;
@@ -41,9 +41,9 @@ void Local_Search::generate_new_sequence_rand_moves(std::vector<std::list<size_t
 		}
 		else
 		{
-			uiChoice = rand() % 1; //note that 2-opt is disabled
+			uiChoice = rand() % 5; 
 			if(0 == uiChoice) strType = "SWAP_INTRA_SEQUENCE";
-			else if (1 == uiChoice) strType = "TWO_OPT";
+			else strType = "INTRA_STRING_RELOCATION";
 			
 
 #ifdef PRINT_LOCAL_OPERATOR_MESSAGES
@@ -81,7 +81,7 @@ std::tuple<bool, size_t, size_t> Local_Search::inter_rand_oper(std::vector<std::
 			{
 				bChange = string_exchange(uiRobot1, uiRobot2, rob_seq);
 			}
-			else if ("STRING_RELOCATION" == strType)
+			else if ("INTER_STRING_RELOCATION" == strType)
 			{
 				bChange = string_relocation(uiRobot1, uiRobot2, rob_seq);
 			}
@@ -110,9 +110,10 @@ std::pair<bool, size_t> Local_Search::intra_rand_oper(std::vector<std::list<size
 		{
 			bChange = swap_intra_sequence(uiRobot, rob_seq);
 		}
-		else if ("TWO_OPT" == strType)
+		else if ("INTRA_STRING_RELOCATION" == strType)
 		{
-			bChange = Two_opt_intra_sequence(uiRobot, rob_seq);
+			//bChange = Two_opt_intra_sequence(uiRobot, rob_seq);
+			bChange = relocate_intra_sequence(uiRobot, rob_seq);
 		}
 
 		if (true == bChange) return std::make_pair(true, uiRobot);

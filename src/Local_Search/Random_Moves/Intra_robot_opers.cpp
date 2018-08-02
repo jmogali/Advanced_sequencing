@@ -41,6 +41,8 @@ std::vector<std::pair<size_t, size_t>> get_valid_pos_length_pair2(std::mt19937 &
 		if (pr1.first == pr2.first) { continue; }
 		else if (pr1.first > pr2.first) { std::swap(pr1, pr2); };
 
+		if (pr2.first - pr1.first > c_uiMaxSwapDiff) continue;
+
 		bValid = check_validity_for_intra_swap(pr1, pr2);
 
 		if (false == bValid) continue;
@@ -102,6 +104,74 @@ bool Local_Search::swap_intra_sequence(size_t uiRobot, std::vector<std::list<siz
 		};
 	}*/
 	return bValid;
+}
+
+bool Local_Search::relocate_intra_sequence(size_t uiRobot, std::vector<std::list<size_t>> &rob_seq)
+{
+	std::list<size_t>& seq = rob_seq[uiRobot];
+	if (seq.size() <= 3) return false;
+
+	size_t uiPos, uiVtx;
+	std::list<size_t>::iterator it_vtx, it_vtx_left, it_vtx_right;
+	
+	while (1)
+	{
+		uiPos = (rand() % (seq.size() - 2)) + 1;
+
+		it_vtx = seq.begin();
+		std::advance(it_vtx, uiPos);
+
+		uiVtx = *it_vtx;
+
+		it_vtx_left = it_vtx;
+		it_vtx_left--;
+
+		it_vtx_right = it_vtx;
+		it_vtx_right++;
+
+		if (false == m_graph.doesEdgeExist(uiRobot, *it_vtx_left, *it_vtx_right)) continue;
+		else break;
+	}	
+	
+	size_t uiStart, uiEnd;
+	
+	uiStart = (size_t)std::max((int)1, (int)uiPos - (int)c_uiMaxRelocateHalfInterval);
+	uiEnd = std::min(seq.size()-2, uiPos + c_uiMaxRelocateHalfInterval);
+
+	std::uniform_int_distribution<size_t> unif_len(uiStart, uiEnd);
+	size_t uiIter = 0;
+
+	while (1)
+	{
+		if (uiIter > 30) return false;
+		uiIter++;
+
+		size_t uiInsertPos = unif_len(m_rng);
+		if (uiInsertPos == uiPos) continue;
+		
+		auto it_insert_left = it_vtx;
+		std::advance(it_insert_left, (int)uiInsertPos - (int)uiPos);
+
+		auto it_insert_right = it_insert_left;
+		it_insert_right++;
+
+		if (false == m_graph.doesEdgeExist(uiRobot, *it_insert_left, *it_vtx)) continue;
+		if (false == m_graph.doesEdgeExist(uiRobot, *it_vtx, *it_insert_right)) continue;
+
+		seq.erase(it_vtx);
+		seq.insert(it_insert_right, uiVtx);
+		break;
+	}
+	
+	/*if (bValid)
+	{
+	bValid = check_validity_of_sequence(rob_seq);
+	if (false == bValid)
+	{
+	return false;
+	};
+	}*/
+	return true;
 }
 
 bool doIntersect(const Layout_LS &graph, std::list<size_t>::const_iterator it_11, std::list<size_t>::const_iterator it_12, std::list<size_t>::const_iterator it_21, std::list<size_t>::const_iterator it_22)
