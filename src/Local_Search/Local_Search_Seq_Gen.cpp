@@ -131,7 +131,8 @@ void Local_Search::gen_seq_VBSS_march_for_robot(std::vector<std::unordered_set<s
 #else
 		if(rob_seq[uiRobot].size() != vec_com_hole_par[uiRobot].size())
 		{
-			cout << "Certain holes are not covered in VBSS march\n";
+			cout << "Tag: Certain holes are not covered in VBSS march\n";
+			cout << "Tag: \n";
 			exit(-1);
 		}
 #endif		
