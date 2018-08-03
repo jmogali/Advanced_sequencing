@@ -464,7 +464,7 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 		{
 			cout << "Performing Relocate Move\n";			
 #ifdef LINUX
-			print_sequence(rob_seq);
+			//print_sequence(rob_seq);
 #endif
 			bool bImproving = gen_seq_hole_exchange(hole_exchange, heur, full_rob_sch, rob_seq, uiMakeSpan);
 			if(false == bImproving) uiMakeSpan = std::numeric_limits<size_t>::max();
@@ -527,20 +527,24 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 					full_rob_sch.clear();
 					int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, std::numeric_limits<size_t>::max());
 
-					if (1 == iRetVal)
+					if (1 == iRetVal) uiMakeSpan = getMakeSpan_From_Schedule(full_rob_sch);
+					else uiMakeSpan = std::numeric_limits<size_t>::max();
+
+					if (uiMakeSpan < vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 					{
-						uiMakeSpan = getMakeSpan_From_Schedule(full_rob_sch);
-						vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = std::min(uiMakeSpan, vec_late_accep[uiIter % c_uiLate_Acceptace_Length]);
+						vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
 						break;
 					}
-					else rob_seq = rob_seq_before_oper;					
+					else rob_seq = rob_seq_before_oper;						
 				}
 				else
 				{
 					bRestart = true;
 					cout << "PERTURB END\n";
+					uiIter = uiIter - 1;
 					break;
 				}
+				uiIter++;
 				uiNumRandOper++;
 				cout << "PERTURB END\n";
 			}

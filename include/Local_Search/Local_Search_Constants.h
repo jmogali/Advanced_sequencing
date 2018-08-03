@@ -20,7 +20,7 @@ const size_t c_uiMaxCriticalPathCandidates = 15;
 const size_t c_uiMaxInfeasibleIters = 10;
 const double c_dUpperBoundFilterConstant = 1.5;
 const size_t c_uiConsecutive_Late_Accep_Failure = (size_t)(1.5 * c_uiLate_Acceptace_Length);
-const size_t c_uiConsecutive_Rand_Oper_Failure = 20;
+const size_t c_uiConsecutive_Rand_Oper_Failure = 25;
 
 //#define PRINT_LOCAL_OPERATOR_MESSAGES
 //#define ENABLE_LEGACY_CODE
