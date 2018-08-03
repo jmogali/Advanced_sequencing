@@ -444,7 +444,7 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 			full_rob_sch_best = full_rob_sch;
 		}
 
-		cout << " Iteration: " << uiIter <<  " , Makespan: " << uiMakeSpan << " , Best Sol: " << uiBestSol << " , Comparison cost: " << vec_late_accep[uiIter % c_uiLate_Acceptace_Length] << endl;
+		cout << " Iteration: " << uiIter <<  " , Input Makespan: " << uiMakeSpan << " , Best Sol: " << uiBestSol << " , Comparison cost: " << vec_late_accep[uiIter % c_uiLate_Acceptace_Length] << endl;
 
 		auto rob_seq_before_oper = rob_seq;
 		auto full_rob_sch_before_oper = full_rob_sch;		
@@ -516,37 +516,38 @@ void Local_Search::perform_local_search_improved(std::string strPlotFolder, std:
 			}
 #endif
 			rob_seq_before_oper = rob_seq;
-			size_t uiNumRandOper = 0;			
-
+			
 			while (1)
 			{
 				cout << "PERTURB BEGIN\n";
-				if (uiNumRandOper < c_uiConsecutive_Rand_Oper_Failure)
+				
+				generate_new_sequence_rand_moves(rob_seq);
+				full_rob_sch.clear();
+				int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, std::numeric_limits<size_t>::max());
+
+				if (1 == iRetVal) uiMakeSpan = getMakeSpan_From_Schedule(full_rob_sch);
+				else uiMakeSpan = std::numeric_limits<size_t>::max();
+
+				if (uiMakeSpan < vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
 				{
-					generate_new_sequence_rand_moves(rob_seq);
-					full_rob_sch.clear();
-					int iRetVal = perform_greedy_scheduling(heur, rob_seq, full_rob_sch, strPlotFolder, std::numeric_limits<size_t>::max());
-
-					if (1 == iRetVal) uiMakeSpan = getMakeSpan_From_Schedule(full_rob_sch);
-					else uiMakeSpan = std::numeric_limits<size_t>::max();
-
-					if (uiMakeSpan < vec_late_accep[uiIter % c_uiLate_Acceptace_Length])
-					{
-						vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
-						break;
-					}
-					else rob_seq = rob_seq_before_oper;						
+					vec_late_accep[uiIter % c_uiLate_Acceptace_Length] = uiMakeSpan;
+					uiStaleCounter = 0;
+					break;
 				}
 				else
 				{
-					bRestart = true;
-					cout << "PERTURB END\n";
-					uiIter = uiIter - 1;
-					break;
+					rob_seq = rob_seq_before_oper;
+					uiStaleCounter++;
 				}
-				uiIter++;
-				uiNumRandOper++;
-				cout << "PERTURB END\n";
+
+				if (uiStaleCounter > c_uiConsecutive_Late_Accep_Failure)
+				{
+					cout << "PERTURB END\n";
+					bRestart = true;
+					break;
+				}				
+				
+				uiIter++;				
 			}
 		}
 		uiIter++;
